@@ -9,10 +9,11 @@
 package com.etesync.syncadapter.ui
 
 import android.Manifest
-import android.app.Activity
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.view.View
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.IdRes
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationManagerCompat
@@ -23,6 +24,9 @@ import com.etesync.syncadapter.R
 import com.etesync.syncadapter.resource.LocalTaskList
 
 class PermissionsActivity : BaseActivity() {
+    private val requestPermissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        refresh()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,31 +66,30 @@ class PermissionsActivity : BaseActivity() {
     }
 
     fun requestCalendarPermissions(v: View) {
-        ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR), 0)
+        requestPermissions.launch(arrayOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR))
     }
 
     fun requestContactsPermissions(v: View) {
-        ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS), 0)
+        requestPermissions.launch(arrayOf(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS))
     }
 
     fun requestOpenTasksPermissions(v: View) {
-        ActivityCompat.requestPermissions(this, ProviderName.OpenTasks.permissions, 0)
+        requestPermissions.launch(ProviderName.OpenTasks.permissions)
     }
 
     fun requestTasksOrgPermissions(v: View) {
-        ActivityCompat.requestPermissions(this, ProviderName.TasksOrg.permissions, 0)
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        refresh()
+        requestPermissions.launch(ProviderName.TasksOrg.permissions)
     }
 
     companion object {
-        private val REQUEST_CODE_ASK_MULTIPLE_PERMISSIONS = 124
-
-        fun requestAllPermissions(activity: Activity) {
-            ActivityCompat.requestPermissions(activity, arrayOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR, Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS) + TASK_PROVIDERS.flatMap { it.permissions.toList() }, REQUEST_CODE_ASK_MULTIPLE_PERMISSIONS)
-        }
+        /** All runtime permissions EteSync uses */
+        val allPermissions: Array<String>
+            get() {
+                val permissions = mutableListOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR, Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS)
+                TASK_PROVIDERS.flatMapTo(permissions) { it.permissions.toList() }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                    permissions += Manifest.permission.POST_NOTIFICATIONS
+                return permissions.toTypedArray()
+            }
     }
 }

@@ -20,9 +20,7 @@ import at.bitfire.ical4android.*
 import com.etebase.client.CollectionAccessLevel
 import com.etesync.syncadapter.CachedCollection
 import com.etesync.syncadapter.log.Logger
-import com.etesync.syncadapter.model.JournalEntity
 import com.etesync.syncadapter.resource.LocalEvent.Companion.COLUMN_UID
-import org.apache.commons.lang3.StringUtils
 import java.util.*
 import java.util.logging.Level
 
@@ -51,21 +49,6 @@ class LocalCalendar private constructor(
 
         val COLUMN_CTAG = Calendars.CAL_SYNC1
 
-        fun create(account: Account, provider: ContentProviderClient, journalEntity: JournalEntity): Uri {
-            val values = valuesFromCollectionInfo(journalEntity, true)
-
-            // ACCOUNT_NAME and ACCOUNT_TYPE are required (see docs)! If it's missing, other apps will crash.
-            values.put(Calendars.ACCOUNT_NAME, account.name)
-            values.put(Calendars.ACCOUNT_TYPE, account.type)
-            values.put(Calendars.OWNER_ACCOUNT, account.name)
-
-            // flag as visible & synchronizable at creation, might be changed by user at any time
-            values.put(Calendars.VISIBLE, 1)
-            values.put(Calendars.SYNC_EVENTS, 1)
-
-            return AndroidCalendar.create(account, provider, values)
-        }
-
         fun create(account: Account, provider: ContentProviderClient, cachedCollection: CachedCollection): Uri {
             val values = valuesFromCachedCollection(cachedCollection, true)
 
@@ -83,39 +66,6 @@ class LocalCalendar private constructor(
 
         fun findByName(account: Account, provider: ContentProviderClient, factory: Factory, name: String): LocalCalendar?
             = AndroidCalendar.find(account, provider, factory, Calendars.NAME + "==?", arrayOf(name)).firstOrNull()
-
-        private fun valuesFromCollectionInfo(journalEntity: JournalEntity, withColor: Boolean): ContentValues {
-            val info = journalEntity.info
-            val values = ContentValues()
-            values.put(Calendars.NAME, info.uid)
-            values.put(Calendars.CALENDAR_DISPLAY_NAME, info.displayName)
-
-            if (withColor)
-                values.put(Calendars.CALENDAR_COLOR, if (info.color != null) info.color else defaultColor)
-
-            if (journalEntity.isReadOnly)
-                values.put(Calendars.CALENDAR_ACCESS_LEVEL, Calendars.CAL_ACCESS_READ)
-            else {
-                values.put(Calendars.CALENDAR_ACCESS_LEVEL, Calendars.CAL_ACCESS_OWNER)
-                values.put(Calendars.CAN_MODIFY_TIME_ZONE, 1)
-                values.put(Calendars.CAN_ORGANIZER_RESPOND, 1)
-            }
-
-            info.timeZone?.let { tzData ->
-                try {
-                    val timeZone = DateUtils.parseVTimeZone(tzData)
-                    timeZone.timeZoneId?.let { tzId ->
-                        values.put(Calendars.CALENDAR_TIME_ZONE, DateUtils.findAndroidTimezoneID(tzId.value))
-                    }
-                } catch(e: IllegalArgumentException) {
-                    Logger.log.log(Level.WARNING, "Couldn't parse calendar default time zone", e)
-                }
-            }
-            values.put(Calendars.ALLOWED_REMINDERS, Reminders.METHOD_ALERT)
-            values.put(Calendars.ALLOWED_AVAILABILITY, StringUtils.join(intArrayOf(Reminders.AVAILABILITY_TENTATIVE, Reminders.AVAILABILITY_FREE, Reminders.AVAILABILITY_BUSY), ","))
-            values.put(Calendars.ALLOWED_ATTENDEE_TYPES, StringUtils.join(intArrayOf(CalendarContract.Attendees.TYPE_OPTIONAL, CalendarContract.Attendees.TYPE_REQUIRED, CalendarContract.Attendees.TYPE_RESOURCE), ", "))
-            return values
-        }
 
         private fun valuesFromCachedCollection(cachedCollection: CachedCollection, withColor: Boolean): ContentValues {
             val values = ContentValues()
@@ -136,17 +86,14 @@ class LocalCalendar private constructor(
             }
 
             values.put(Calendars.ALLOWED_REMINDERS, Reminders.METHOD_ALERT)
-            values.put(Calendars.ALLOWED_AVAILABILITY, StringUtils.join(intArrayOf(Reminders.AVAILABILITY_TENTATIVE, Reminders.AVAILABILITY_FREE, Reminders.AVAILABILITY_BUSY), ","))
-            values.put(Calendars.ALLOWED_ATTENDEE_TYPES, StringUtils.join(intArrayOf(CalendarContract.Attendees.TYPE_OPTIONAL, CalendarContract.Attendees.TYPE_REQUIRED, CalendarContract.Attendees.TYPE_RESOURCE), ", "))
+            values.put(Calendars.ALLOWED_AVAILABILITY, intArrayOf(Reminders.AVAILABILITY_TENTATIVE, Reminders.AVAILABILITY_FREE, Reminders.AVAILABILITY_BUSY).joinToString(","))
+            values.put(Calendars.ALLOWED_ATTENDEE_TYPES, intArrayOf(CalendarContract.Attendees.TYPE_OPTIONAL, CalendarContract.Attendees.TYPE_REQUIRED, CalendarContract.Attendees.TYPE_RESOURCE).joinToString(", "))
             return values
         }
     }
 
     override val url: String?
         get() = name
-
-    fun update(journalEntity: JournalEntity, updateColor: Boolean) =
-            update(valuesFromCollectionInfo(journalEntity, updateColor))
 
     fun update(cachedCollection: CachedCollection, updateColor: Boolean) =
             update(valuesFromCachedCollection(cachedCollection, updateColor))

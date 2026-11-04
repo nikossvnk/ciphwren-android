@@ -14,10 +14,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import at.bitfire.vcard4android.ContactsStorageException
-import com.etesync.syncadapter.App
 import com.etesync.syncadapter.R
 import com.etesync.syncadapter.log.Logger
-import com.etesync.syncadapter.model.ServiceEntity
 import com.etesync.syncadapter.resource.LocalAddressBook
 import com.etesync.syncadapter.ui.setup.LoginActivity
 import java.util.*
@@ -43,8 +41,6 @@ class AccountAuthenticatorService: Service(), OnAccountsUpdateListener {
                 accountNames.add(account.name)
             }
 
-            val data = (context.applicationContext as App).data
-
             // delete orphaned address book accounts
             for (addrBookAccount in am.getAccountsByType(context.getString(R.string.account_type_address_book))) {
                 val addressBook = LocalAddressBook(context, addrBookAccount, null)
@@ -54,14 +50,6 @@ class AccountAuthenticatorService: Service(), OnAccountsUpdateListener {
                 } catch (e: ContactsStorageException) {
                     Logger.log.log(Level.SEVERE, "Couldn't get address book main account", e)
                 }
-
-            }
-
-
-            if (accountNames.isEmpty()) {
-                data.delete(ServiceEntity::class.java).get().value()
-            } else {
-                data.delete(ServiceEntity::class.java).where(ServiceEntity.ACCOUNT.notIn(accountNames)).get().value()
             }
         }
     }

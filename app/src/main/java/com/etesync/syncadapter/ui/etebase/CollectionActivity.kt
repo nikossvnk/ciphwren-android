@@ -5,12 +5,12 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.viewModels
+import androidx.core.content.IntentCompat
 import androidx.fragment.app.commit
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.observe
 import androidx.lifecycle.viewModelScope
 import com.etebase.client.CollectionManager
 import com.etebase.client.ItemMetadata
@@ -29,7 +29,7 @@ class CollectionActivity() : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        account = intent.extras!!.getParcelable(EXTRA_ACCOUNT)!!
+        account = IntentCompat.getParcelableExtra(intent, EXTRA_ACCOUNT, Account::class.java)!!
         val colUid = intent.extras!!.getString(EXTRA_COLLECTION_UID)
         val colType = intent.extras!!.getString(EXTRA_COLLECTION_TYPE)
 
@@ -91,12 +91,13 @@ class AccountViewModel : ViewModel() {
     private val holder = MutableLiveData<AccountHolder>()
 
     fun loadAccount(context: Context, account: Account) {
+        val applicationContext = context.applicationContext
         viewModelScope.launch {
             val accountHolder = withContext(Dispatchers.IO) {
-                val settings = AccountSettings(context, account)
-                val etebaseLocalCache = EtebaseLocalCache.getInstance(context, account.name)
-                val httpClient = HttpClient.Builder(context).setForeground(true).build().okHttpClient
-                val etebase = EtebaseLocalCache.getEtebase(context, httpClient, settings)
+                val settings = AccountSettings(applicationContext, account)
+                val etebaseLocalCache = EtebaseLocalCache.getInstance(applicationContext, account.name)
+                val httpClient = HttpClient.Builder(applicationContext).setForeground(true).build().okHttpClient
+                val etebase = EtebaseLocalCache.getEtebase(applicationContext, httpClient, settings)
                 val colMgr = etebase.collectionManager
                 AccountHolder(
                         account,
@@ -110,7 +111,7 @@ class AccountViewModel : ViewModel() {
     }
 
     fun observe(owner: LifecycleOwner, observer: (AccountHolder) -> Unit) =
-            holder.observe(owner, observer)
+            holder.observe(owner) { observer(it) }
 
     val value: AccountHolder?
         get() = holder.value
@@ -135,7 +136,7 @@ class CollectionViewModel : ViewModel() {
     }
 
     fun observe(owner: LifecycleOwner, observer: (CachedCollection) -> Unit) =
-            collection.observe(owner, observer)
+            collection.observe(owner) { observer(it) }
 
     val value: CachedCollection?
         get() = collection.value
@@ -156,7 +157,7 @@ class ItemsViewModel : ViewModel() {
     }
 
     fun observe(owner: LifecycleOwner, observer: (List<CachedItem>) -> Unit) =
-            cachedItems.observe(owner, observer)
+            cachedItems.observe(owner) { observer(it) }
 
     val value: List<CachedItem>?
         get() = cachedItems.value
@@ -171,5 +172,5 @@ class LoadingViewModel : ViewModel() {
     }
 
     fun observe(owner: LifecycleOwner, observer: (Boolean) -> Unit) =
-            loading.observe(owner, observer)
+            loading.observe(owner) { observer(it) }
 }

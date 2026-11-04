@@ -6,9 +6,11 @@ import android.view.*
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.commit
+import androidx.lifecycle.Lifecycle
 import com.etebase.client.CollectionAccessLevel
 import com.etesync.syncadapter.CachedCollection
 import com.etesync.syncadapter.Constants
@@ -17,18 +19,16 @@ import com.etesync.syncadapter.resource.LocalCalendar
 import com.etesync.syncadapter.ui.BaseActivity
 import com.etesync.syncadapter.ui.WebViewActivity
 import com.etesync.syncadapter.utils.HintManager
-import com.etesync.syncadapter.utils.ShowcaseBuilder
+import com.etesync.syncadapter.utils.HintPopup
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import tourguide.tourguide.ToolTip
 import java.util.*
 
-class ViewCollectionFragment : Fragment() {
+class ViewCollectionFragment : Fragment(), MenuProvider {
     private val collectionModel: CollectionViewModel by activityViewModels()
     private val itemsModel: ItemsViewModel by activityViewModels()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val ret = inflater.inflate(R.layout.view_collection_fragment, container, false)
-        setHasOptionsMenu(true)
 
         if (savedInstanceState == null) {
             collectionModel.observe(this) {
@@ -42,14 +42,15 @@ class ViewCollectionFragment : Fragment() {
         return ret
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        requireActivity().addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
+    }
+
     private fun initUi(inflater: LayoutInflater, container: View, cachedCollection: CachedCollection) {
         val title = container.findViewById<TextView>(R.id.display_name)
         if (!HintManager.getHintSeen(requireContext(), HINT_IMPORT)) {
-            val tourGuide = ShowcaseBuilder.getBuilder(requireActivity())
-                    .setToolTip(ToolTip().setTitle(getString(R.string.tourguide_title)).setDescription(getString(R.string.account_showcase_import)).setGravity(Gravity.BOTTOM))
-                    .setPointer(null)
-            tourGuide.mOverlay.setHoleRadius(0)
-            tourGuide.playOn(title)
+            HintPopup.show(title, R.string.account_showcase_import)
             HintManager.setHintSeen(requireContext(), HINT_IMPORT, true)
         }
 
@@ -103,19 +104,18 @@ class ViewCollectionFragment : Fragment() {
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        super.onCreateOptionsMenu(menu, inflater)
-        inflater.inflate(R.menu.fragment_view_collection, menu)
+    override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+        menuInflater.inflate(R.menu.fragment_view_collection, menu)
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
         val cachedCollection = collectionModel.value
         if (cachedCollection == null) {
             Toast.makeText(context, R.string.loading_error_title, Toast.LENGTH_LONG).show()
-            return super.onOptionsItemSelected(item)
+            return false
         }
 
-        when (item.itemId) {
+        when (menuItem.itemId) {
             R.id.on_edit -> {
                 if (cachedCollection.col.accessLevel == CollectionAccessLevel.Admin) {
                     parentFragmentManager.commit {
@@ -152,8 +152,9 @@ class ViewCollectionFragment : Fragment() {
                     dialog.show()
                 }
             }
+            else -> return false
         }
-        return super.onOptionsItemSelected(item)
+        return true
     }
 
     companion object {

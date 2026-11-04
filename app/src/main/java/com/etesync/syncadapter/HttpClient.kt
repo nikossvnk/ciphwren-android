@@ -63,7 +63,6 @@ class HttpClient private constructor(
 
     class Builder(
             val context: Context? = null,
-            accountSettings: AccountSettings? = null,
             val logger: java.util.logging.Logger = Logger.log
     ) {
         private var certManager: CustomCertManager? = null
@@ -110,15 +109,6 @@ class HttpClient private constructor(
 
                 dbHelper.close()
             }
-
-            // use account settings for authentication
-            accountSettings?.let {
-                addAuthentication(accountSettings.uri!!.host, accountSettings.authToken)
-            }
-        }
-
-        constructor(context: Context?, host: String?, authToken: String): this(context) {
-            addAuthentication(host, authToken)
         }
 
         fun withDiskCache(): Builder {
@@ -146,37 +136,6 @@ class HttpClient private constructor(
         fun setForeground(foreground: Boolean): Builder {
             certManager?.appInForeground = foreground
             return this
-        }
-
-        private fun addAuthentication(host: String?, token: String): Builder {
-            val authHandler = TokenAuthenticator(host, token)
-
-            orig.addNetworkInterceptor(authHandler)
-
-            return this
-        }
-
-        private class TokenAuthenticator internal constructor(internal val host: String?, internal val token: String?) : Interceptor {
-
-            @Throws(IOException::class)
-            override fun intercept(chain: Interceptor.Chain): Response {
-                var request = chain.request()
-
-                /* Only add to the host we want. */
-                if (host == null || request.url.host == host) {
-                    if (token != null && request.header(HEADER_AUTHORIZATION) == null) {
-                        request = request.newBuilder()
-                                .header(HEADER_AUTHORIZATION, "Token $token")
-                                .build()
-                    }
-                }
-
-                return chain.proceed(request)
-            }
-
-            companion object {
-                protected val HEADER_AUTHORIZATION = "Authorization"
-            }
         }
 
         fun build(): HttpClient {

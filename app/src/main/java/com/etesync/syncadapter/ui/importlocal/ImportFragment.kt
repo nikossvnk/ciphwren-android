@@ -3,14 +3,20 @@ package com.etesync.syncadapter.ui.importlocal
 import android.accounts.Account
 import android.app.Activity
 import android.app.Dialog
-import android.app.ProgressDialog
+import android.content.Context
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.os.Bundle
+import android.net.Uri
 import android.provider.CalendarContract
 import android.provider.ContactsContract
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.os.BundleCompat
 import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.commit
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import at.bitfire.ical4android.*
 import at.bitfire.vcard4android.BatchOperation
 import at.bitfire.vcard4android.Contact
@@ -19,7 +25,7 @@ import com.etesync.syncadapter.CachedCollection
 import com.etesync.syncadapter.Constants.*
 import com.etesync.syncadapter.R
 import com.etesync.syncadapter.log.Logger
-import com.etesync.syncadapter.model.CollectionInfo
+import com.etesync.syncadapter.model.CollectionType
 import com.etesync.syncadapter.resource.*
 import com.etesync.syncadapter.syncadapter.ContactsSyncManager
 import com.etesync.syncadapter.ui.Refreshable
@@ -27,173 +33,116 @@ import com.etesync.syncadapter.ui.importlocal.ResultFragment.ImportResult
 import com.etesync.syncadapter.utils.TaskProviderHandling
 import java.io.FileNotFoundException
 import java.io.IOException
-import java.io.InputStream
+import kotlinx.coroutines.launch
 import java.io.InputStreamReader
 
 
 class ImportFragment : DialogFragment() {
-    private lateinit var account: Account
-    private lateinit var uid: String
-    private lateinit var enumType: CollectionInfo.Type
+    private val model by lazy { ViewModelProvider(this)[ImportViewModel::class.java] }
+    private var progressDialog: ImportProgressDialog? = null
+    private var resultDeliveryEnqueued = false
 
-    private var inputStream: InputStream? = null
+    private val fileChooser = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        val uri = result.data?.data
+        if (result.resultCode == Activity.RESULT_OK && uri != null) {
+            val args = requireArguments()
+            model.start(FileImport(
+                BundleCompat.getParcelable(args, KEY_ACCOUNT, Account::class.java)!!,
+                args.getString(KEY_UID)!!,
+                CollectionType.valueOf(args.getString(KEY_TYPE)!!),
+                uri
+            ))
+        } else {
+            dismissAllowingStateLoss()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         isCancelable = false
-        retainInstance = true
+        if (savedInstanceState != null) {
+            model.chooserLaunched = savedInstanceState.getBoolean(KEY_CHOOSER_LAUNCHED)
+        }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                model.state.collect { state ->
+                    progressDialog?.render(state)
+                    val result = state.result
+                    if (result != null && !resultDeliveryEnqueued && !parentFragmentManager.isStateSaved) {
+                        val refreshable = activity as? Refreshable
+                        resultDeliveryEnqueued = true
+                        // Deliver and remove the progress fragment in one non-state-loss transaction.
+                        parentFragmentManager.beginTransaction()
+                            .add(ResultFragment.newInstance(result), "importResult")
+                            .remove(this@ImportFragment)
+                            .runOnCommit {
+                                model.resultDelivered()
+                                refreshable?.refresh()
+                            }
+                            .commit()
+                    }
+                }
+            }
+        }
     }
-
-
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        super.onCreateDialog(savedInstanceState)
-        val progress = ProgressDialog(activity)
-        progress.setTitle(R.string.import_dialog_title)
-        progress.setMessage(getString(R.string.import_dialog_loading_file))
-        progress.setCanceledOnTouchOutside(false)
-        progress.isIndeterminate = false
-        progress.setIcon(R.drawable.ic_import_export_black)
-        progress.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
-
-        if (savedInstanceState == null) {
-            chooseFile()
-        } else {
-            setDialogAddEntries(progress, savedInstanceState.getInt(TAG_PROGRESS_MAX))
-        }
-
-        return progress
+        return ImportProgressDialog(requireContext()).also {
+            progressDialog = it
+            it.render(model.state.value)
+        }.dialog
     }
 
-    private fun setDialogAddEntries(dialog: ProgressDialog, length: Int) {
-        dialog.max = length
-        dialog.setMessage(getString(R.string.import_dialog_adding_entries))
-        Logger.log.info("Adding entries. Total: ${length}")
+    override fun onResume() {
+        super.onResume()
+        if (!model.chooserLaunched) {
+            model.chooserLaunched = true
+            chooseFile()
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        val dialog = dialog as ProgressDialog
-
-        outState.putInt(TAG_PROGRESS_MAX, dialog.max)
+        outState.putBoolean(KEY_CHOOSER_LAUNCHED, model.chooserLaunched)
     }
 
     override fun onDestroyView() {
-        val dialog = dialog
-        // handles https://code.google.com/p/android/issues/detail?id=17423
-        if (dialog != null && retainInstance) {
-            dialog.setDismissMessage(null)
-        }
+        progressDialog = null
         super.onDestroyView()
     }
 
-    fun chooseFile() {
-        val intent = Intent()
-        intent.addCategory(Intent.CATEGORY_OPENABLE)
-        intent.action = Intent.ACTION_GET_CONTENT
-
-        when (enumType) {
-            CollectionInfo.Type.CALENDAR -> intent.type = "text/calendar"
-            CollectionInfo.Type.TASKS -> intent.type = "text/calendar"
-            CollectionInfo.Type.ADDRESS_BOOK -> intent.type = "text/x-vcard"
+    private fun chooseFile() {
+        val type = CollectionType.valueOf(requireArguments().getString(KEY_TYPE)!!)
+        val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            this.type = if (type == CollectionType.ADDRESS_BOOK) "text/x-vcard" else "text/calendar"
         }
-
-        val chooser = Intent.createChooser(
-                intent, getString(R.string.choose_file))
         try {
-            startActivityForResult(chooser, REQUEST_CODE)
+            fileChooser.launch(Intent.createChooser(intent, getString(R.string.choose_file)))
         } catch (e: ActivityNotFoundException) {
-            val data = ImportResult()
-            data.e = Exception("Failed to open file chooser.\nPlease install one.")
-
-            onImportResult(data)
-
-            dismissAllowingStateLoss()
-        }
-
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        when (requestCode) {
-            REQUEST_CODE -> {
-                if (resultCode == Activity.RESULT_OK) {
-                    if (data != null) {
-                        // Get the URI of the selected file
-                        val uri = data.data!!
-                        Logger.log.info("Starting import into ${uid} from file ${uri}")
-                        try {
-                            inputStream = requireActivity().contentResolver.openInputStream(uri)
-
-                            Thread(ImportEntriesLoader()).start()
-                        } catch (e: Exception) {
-                            Logger.log.severe("File select error: ${e.message}")
-
-                            val importResult = ImportResult()
-                            importResult.e = e
-
-                            onImportResult(importResult)
-
-                            dismissAllowingStateLoss()
-                        }
-
-                    }
-                } else {
-                    dismissAllowingStateLoss()
-                }
-            }
-        }
-        super.onActivityResult(requestCode, resultCode, data)
-    }
-
-    fun loadFinished(data: ImportResult) {
-        onImportResult(data)
-
-        Logger.log.info("Finished import")
-
-        dismissAllowingStateLoss()
-
-        if (activity is Refreshable) {
-            (activity as Refreshable).refresh()
+            model.complete(ImportResult().also {
+                it.e = Exception("Failed to open file chooser.\nPlease install one.", e)
+            })
         }
     }
 
-    private inner class ImportEntriesLoader : Runnable {
-        private fun finishParsingFile(length: Int) {
-            if (activity == null) {
-                return
-            }
-
-            requireActivity().runOnUiThread { setDialogAddEntries(dialog as ProgressDialog, length) }
-        }
-
-        private fun entryProcessed() {
-            if (activity == null) {
-                return
-            }
-
-            requireActivity().runOnUiThread {
-                val dialog = dialog as ProgressDialog
-
-                dialog.incrementProgressBy(1)
-            }
-        }
-
-        override fun run() {
-            val result = loadInBackground()
-
-            requireActivity().runOnUiThread { loadFinished(result) }
-        }
-
-        fun loadInBackground(): ImportResult {
+    private class FileImport(
+        private val account: Account,
+        private val uid: String,
+        private val enumType: CollectionType,
+        private val uri: Uri
+    ) : ImportRequest {
+        override suspend fun load(context: Context, progress: ImportViewModel): ImportResult {
             val result = ImportResult()
 
             try {
-                val context = requireContext()
-                val importReader = InputStreamReader(inputStream)
+                val inputStream = context.contentResolver.openInputStream(uri)
+                    ?: throw FileNotFoundException("Failed to open import file.")
+                InputStreamReader(inputStream).use { importReader ->
 
-                if (enumType == CollectionInfo.Type.CALENDAR) {
+                if (enumType == CollectionType.CALENDAR) {
                     val events = Event.eventsFromReader(importReader, null)
-                    importReader.close()
+                    
 
                     if (events.isEmpty()) {
                         Logger.log.warning("Empty/invalid file.")
@@ -203,7 +152,7 @@ class ImportFragment : DialogFragment() {
 
                     result.total = events.size.toLong()
 
-                    finishParsingFile(events.size)
+                    progress.setTotal(events.size)
 
                     val provider = context.contentResolver.acquireContentProviderClient(CalendarContract.CONTENT_URI)
                     if (provider == null) {
@@ -243,11 +192,11 @@ class ImportFragment : DialogFragment() {
                             e.printStackTrace()
                         }
 
-                        entryProcessed()
+                        progress.entryProcessed()
                     }
-                } else if (enumType == CollectionInfo.Type.TASKS) {
+                } else if (enumType == CollectionType.TASKS) {
                     val tasks = Task.tasksFromReader(importReader)
-                    importReader.close()
+                    
 
                     if (tasks.isEmpty()) {
                         Logger.log.warning("Empty/invalid file.")
@@ -257,9 +206,9 @@ class ImportFragment : DialogFragment() {
 
                     result.total = tasks.size.toLong()
 
-                    finishParsingFile(tasks.size)
+                    progress.setTotal(tasks.size)
 
-                    val provider = TaskProviderHandling.getWantedTaskSyncProvider(requireContext())
+                    val provider = TaskProviderHandling.getWantedTaskSyncProvider(context)
                             .let {
                                 if (it == null) {
                                     result.e = Exception("Failed to acquire tasks content provider.")
@@ -298,10 +247,10 @@ class ImportFragment : DialogFragment() {
                                 e.printStackTrace()
                             }
 
-                            entryProcessed()
+                            progress.entryProcessed()
                         }
                     }
-                } else if (enumType == CollectionInfo.Type.ADDRESS_BOOK) {
+                } else if (enumType == CollectionType.ADDRESS_BOOK) {
                     val uidToLocalId = HashMap<String?, Long>()
                     val downloader = ContactsSyncManager.ResourceDownloader(context)
                     val contacts = Contact.fromReader(importReader, downloader)
@@ -314,7 +263,7 @@ class ImportFragment : DialogFragment() {
 
                     result.total = contacts.size.toLong()
 
-                    finishParsingFile(contacts.size)
+                    progress.setTotal(contacts.size)
 
                     val provider = context.contentResolver.acquireContentProviderClient(ContactsContract.RawContacts.CONTENT_URI)
                     if (provider == null) {
@@ -353,7 +302,7 @@ class ImportFragment : DialogFragment() {
                             e.printStackTrace()
                         }
 
-                        entryProcessed()
+                        progress.entryProcessed()
                     }
 
                     for (contact in contacts.filter { contact -> contact.group }) {
@@ -377,10 +326,11 @@ class ImportFragment : DialogFragment() {
                             e.printStackTrace()
                         }
 
-                        entryProcessed()
+                        progress.entryProcessed()
                     }
 
                     provider.release()
+                }
                 }
 
                 return result
@@ -401,37 +351,25 @@ class ImportFragment : DialogFragment() {
         }
     }
 
-    fun onImportResult(importResult: ImportResult) {
-        val fragment = ResultFragment.newInstance(importResult)
-        parentFragmentManager.commit(true) {
-            add(fragment, "importResult")
-        }
-    }
-
     companion object {
-        private val REQUEST_CODE = 6384 // onActivityResult request
-
-        private val TAG_PROGRESS_MAX = "progressMax"
-
-        fun newInstance(account: Account, info: CollectionInfo): ImportFragment {
-            val ret = ImportFragment()
-            ret.account = account
-            ret.uid = info.uid!!
-            ret.enumType = info.enumType!!
-            return ret
-        }
+        private const val KEY_ACCOUNT = "account"
+        private const val KEY_UID = "uid"
+        private const val KEY_TYPE = "type"
+        private const val KEY_CHOOSER_LAUNCHED = "chooserLaunched"
 
         fun newInstance(account: Account, cachedCollection: CachedCollection): ImportFragment {
             val enumType = when (cachedCollection.collectionType) {
-                ETEBASE_TYPE_CALENDAR -> CollectionInfo.Type.CALENDAR
-                ETEBASE_TYPE_TASKS -> CollectionInfo.Type.TASKS
-                ETEBASE_TYPE_ADDRESS_BOOK -> CollectionInfo.Type.ADDRESS_BOOK
+                ETEBASE_TYPE_CALENDAR -> CollectionType.CALENDAR
+                ETEBASE_TYPE_TASKS -> CollectionType.TASKS
+                ETEBASE_TYPE_ADDRESS_BOOK -> CollectionType.ADDRESS_BOOK
                 else -> throw Exception("Got unsupported collection type")
             }
             val ret = ImportFragment()
-            ret.account = account
-            ret.uid = cachedCollection.col.uid
-            ret.enumType = enumType
+            ret.arguments = Bundle().apply {
+                putParcelable(KEY_ACCOUNT, account)
+                putString(KEY_UID, cachedCollection.col.uid)
+                putString(KEY_TYPE, enumType.name)
+            }
             return ret
         }
     }

@@ -9,7 +9,6 @@ package com.etesync.syncadapter.resource
 
 import android.accounts.Account
 import android.accounts.AccountManager
-import android.annotation.TargetApi
 import android.content.*
 import android.os.Build
 import android.os.Bundle
@@ -23,8 +22,6 @@ import com.etebase.client.CollectionAccessLevel
 import com.etesync.syncadapter.App
 import com.etesync.syncadapter.CachedCollection
 import com.etesync.syncadapter.log.Logger
-import com.etesync.syncadapter.model.CollectionInfo
-import com.etesync.syncadapter.model.JournalEntity
 import java.io.FileNotFoundException
 import java.util.*
 import java.util.logging.Level
@@ -41,36 +38,6 @@ class LocalAddressBook(
         val USER_DATA_MAIN_ACCOUNT_NAME = "real_account_name"
         val USER_DATA_URL = "url"
         const val USER_DATA_READ_ONLY = "read_only"
-
-        fun create(context: Context, provider: ContentProviderClient, mainAccount: Account, journalEntity: JournalEntity): LocalAddressBook {
-            val info = journalEntity.info
-            val accountManager = AccountManager.get(context)
-
-            val account = Account(accountName(mainAccount, info), App.addressBookAccountType)
-            val userData = initialUserData(mainAccount, info.uid!!)
-            Logger.log.log(Level.INFO, "Creating local address book $account", userData)
-            if (!accountManager.addAccountExplicitly(account, null, userData))
-                throw IllegalStateException("Couldn't create address book account")
-
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-                // Android < 7 seems to lose the initial user data sometimes, so set it a second time
-                // https://forums.bitfire.at/post/11644
-                userData.keySet().forEach { key ->
-                    accountManager.setUserData(account, key, userData.getString(key))
-                }
-            }
-
-
-            val addressBook = LocalAddressBook(context, account, provider)
-            ContentResolver.setSyncAutomatically(account, ContactsContract.AUTHORITY, true)
-
-            val values = ContentValues(2)
-            values.put(ContactsContract.Settings.SHOULD_SYNC, 1)
-            values.put(ContactsContract.Settings.UNGROUPED_VISIBLE, 1)
-            addressBook.settings = values
-
-            return addressBook
-        }
 
         fun create(context: Context, provider: ContentProviderClient, mainAccount: Account, cachedCollection: CachedCollection): LocalAddressBook {
             val col = cachedCollection.col
@@ -124,17 +91,6 @@ class LocalAddressBook(
         }
 
         // HELPERS
-
-        fun accountName(mainAccount: Account, info: CollectionInfo): String {
-            val displayName = info.displayName ?: info.uid!!
-            val sb = StringBuilder(displayName)
-            sb.append(" (")
-                    .append(mainAccount.name)
-                    .append(" ")
-                    .append(info.uid!!.substring(0, 4))
-                    .append(")")
-            return sb.toString()
-        }
 
         fun accountName(mainAccount: Account, cachedCollection: CachedCollection): String {
             val col = cachedCollection.col
@@ -191,43 +147,11 @@ class LocalAddressBook(
         get() = AccountManager.get(context).getUserData(account, USER_DATA_READ_ONLY) != null
         set(readOnly) = AccountManager.get(context).setUserData(account, USER_DATA_READ_ONLY, if (readOnly) "1" else null)
 
-    fun update(journalEntity: JournalEntity) {
-        val info = journalEntity.info
-        val newAccountName = accountName(mainAccount, info)
-
-        @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-        if (account.name != newAccountName && Build.VERSION.SDK_INT >= 21) {
-            val accountManager = AccountManager.get(context)
-            val future = accountManager.renameAccount(account, newAccountName, {
-                try {
-                    // update raw contacts to new account name
-                    if (provider != null) {
-                        val values = ContentValues(1)
-                        values.put(RawContacts.ACCOUNT_NAME, newAccountName)
-                        (provider as ContentProviderClient).update(syncAdapterURI(RawContacts.CONTENT_URI), values, RawContacts.ACCOUNT_NAME + "=? AND " + RawContacts.ACCOUNT_TYPE + "=?",
-                                arrayOf(account.name, account.type))
-                    }
-                } catch (e: RemoteException) {
-                    Logger.log.log(Level.WARNING, "Couldn't re-assign contacts to new account name", e)
-                }
-            }, null)
-            account = future.result
-        }
-
-        Logger.log.info("Address book write permission? = ${!journalEntity.isReadOnly}")
-        readOnly = journalEntity.isReadOnly
-
-        // make sure it will still be synchronized when contacts are updated
-        ContentResolver.setSyncAutomatically(account, ContactsContract.AUTHORITY, true)
-    }
-
-
     fun update(cachedCollection: CachedCollection) {
         val col = cachedCollection.col
         val newAccountName = accountName(mainAccount, cachedCollection)
 
-        @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-        if (account.name != newAccountName && Build.VERSION.SDK_INT >= 21) {
+        if (account.name != newAccountName) {
             val accountManager = AccountManager.get(context)
             val future = accountManager.renameAccount(account, newAccountName, {
                 try {
@@ -253,14 +177,7 @@ class LocalAddressBook(
     }
 
     fun delete() {
-        val accountManager = AccountManager.get(context)
-
-        @Suppress("DEPRECATION")
-        @TargetApi(Build.VERSION_CODES.LOLLIPOP_MR1)
-        if (Build.VERSION.SDK_INT >= 22)
-            accountManager.removeAccountExplicitly(account)
-        else
-            accountManager.removeAccount(account, null, null)
+        AccountManager.get(context).removeAccountExplicitly(account)
     }
 
     override fun findAll(): List<LocalAddress> =

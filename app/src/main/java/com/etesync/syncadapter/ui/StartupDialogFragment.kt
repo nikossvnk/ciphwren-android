@@ -9,7 +9,6 @@
 package com.etesync.syncadapter.ui
 
 import android.annotation.SuppressLint
-import android.annotation.TargetApi
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
@@ -34,7 +33,6 @@ class StartupDialogFragment : DialogFragment() {
         VENDOR_SPECIFIC_BUGS
     }
 
-    @TargetApi(Build.VERSION_CODES.M)
     @SuppressLint("BatteryLife")
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         isCancelable = false
@@ -87,7 +85,7 @@ class StartupDialogFragment : DialogFragment() {
                 dialogs.add(StartupDialogFragment.instantiate(Mode.DEVELOPMENT_VERSION))
 
             // battery optimization whitelisting
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !HintManager.getHintSeen(context, HINT_BATTERY_OPTIMIZATIONS)) {
+            if (!HintManager.getHintSeen(context, HINT_BATTERY_OPTIMIZATIONS)) {
                 val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager?
                 if (powerManager != null && !powerManager.isIgnoringBatteryOptimizations(BuildConfig.APPLICATION_ID))
                     dialogs.add(StartupDialogFragment.instantiate(Mode.BATTERY_OPTIMIZATIONS))

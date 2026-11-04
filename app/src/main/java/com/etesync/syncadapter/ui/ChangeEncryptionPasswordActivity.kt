@@ -9,7 +9,13 @@
 package com.etesync.syncadapter.ui
 
 import android.accounts.Account
-import android.app.ProgressDialog
+import android.widget.ProgressBar
+import androidx.activity.viewModels
+import androidx.core.content.IntentCompat
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CancellationException
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -19,32 +25,56 @@ import com.etebase.client.Client
 import com.etesync.syncadapter.AccountSettings
 import com.etesync.syncadapter.HttpClient
 import com.etesync.syncadapter.R
-import com.etesync.journalmanager.Crypto
-import com.etesync.journalmanager.JournalManager
-import com.etesync.journalmanager.UserInfoManager
 import com.etesync.syncadapter.log.Logger
 import com.etesync.syncadapter.syncadapter.requestSync
 import com.google.android.material.textfield.TextInputLayout
-import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
-import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.*
 
 open class ChangeEncryptionPasswordActivity : BaseActivity() {
 
     protected lateinit var account: Account
-    lateinit var progress: ProgressDialog
+    private val model: PasswordChangeViewModel by viewModels()
+    private var progress: AlertDialog? = null
+    private var resultDialog: AlertDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        account = intent.extras!!.getParcelable(EXTRA_ACCOUNT)!!
+        account = IntentCompat.getParcelableExtra(intent, EXTRA_ACCOUNT, Account::class.java)!!
 
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
 
         setContentView(R.layout.change_encryption_password)
+        model.state.observe(this) { state ->
+            progress?.dismiss()
+            progress = null
+            resultDialog?.dismiss()
+            resultDialog = null
+            when (state) {
+                PasswordChangeViewModel.State.RUNNING -> {
+                    progress = AlertDialog.Builder(this)
+                        .setTitle(R.string.setting_up_encryption)
+                        .setMessage(R.string.setting_up_encryption_content)
+                        .setView(ProgressBar(this))
+                        .setCancelable(false)
+                        .create().also {
+                            it.setCanceledOnTouchOutside(false)
+                            it.show()
+                        }
+                }
+                PasswordChangeViewModel.State.SUCCESS -> {
+                    resultDialog = AlertDialog.Builder(this)
+                        .setTitle(R.string.change_encryption_password_success_title)
+                        .setMessage(R.string.change_encryption_password_success_body)
+                        .setPositiveButton(android.R.string.ok) { _, _ -> finish() }
+                        .show()
+                }
+                PasswordChangeViewModel.State.ERROR -> changePasswordError(model.error!!)
+                PasswordChangeViewModel.State.IDLE -> Unit
+            }
+        }
     }
 
     fun onCancelClicked(v: View) {
@@ -52,133 +82,19 @@ open class ChangeEncryptionPasswordActivity : BaseActivity() {
     }
 
     fun changePasswordError(e: Exception) {
-        progress.dismiss()
-        AlertDialog.Builder(this)
+        progress?.dismiss()
+        progress = null
+        resultDialog = AlertDialog.Builder(this)
                 .setTitle(R.string.wrong_encryption_password)
                 .setIcon(R.drawable.ic_error_dark)
                 .setMessage(e.localizedMessage)
                 .setPositiveButton(android.R.string.ok) { _, _ ->
-                    // dismiss
+                    model.state.value = PasswordChangeViewModel.State.IDLE
                 }.show()
     }
 
     fun changePasswordDo(old_password: String, new_password: String) {
-        val settings = AccountSettings(this, account)
-
-        if (settings.isLegacy) {
-            legacyChangePasswordDo(settings, old_password, new_password)
-            return
-        }
-
-        lifecycleScope.launch {
-            try {
-                withContext(Dispatchers.IO) {
-                    val httpClient = HttpClient.Builder(this@ChangeEncryptionPasswordActivity).setForeground(true).build().okHttpClient
-
-                    Logger.log.info("Loging in with old password")
-                    val client = Client.create(httpClient, settings.uri?.toString())
-                    val etebase = com.etebase.client.Account.login(client, account.name, old_password)
-                    Logger.log.info("Login successful")
-
-                    etebase.changePassword(new_password)
-
-                    settings.etebaseSession = etebase.save(null)
-                }
-
-                progress.dismiss()
-                AlertDialog.Builder(this@ChangeEncryptionPasswordActivity)
-                        .setTitle(R.string.change_encryption_password_success_title)
-                        .setMessage(R.string.change_encryption_password_success_body)
-                        .setPositiveButton(android.R.string.ok) { _, _ ->
-                            this@ChangeEncryptionPasswordActivity.finish()
-                        }.show()
-
-                requestSync(applicationContext, account)
-            } catch (e: Exception) {
-                changePasswordError(e)
-            }
-        }
-    }
-
-    fun legacyChangePasswordDo(settings: AccountSettings, old_password: String, new_password: String) {
-        lifecycleScope.launch {
-            try {
-                withContext(Dispatchers.IO) {
-                    val httpClient = HttpClient.Builder(this@ChangeEncryptionPasswordActivity, settings).setForeground(false).build().okHttpClient
-
-                    Logger.log.info("Started deriving old key")
-                    val old_key = Crypto.deriveKey(account.name, old_password)
-                    Logger.log.info("Finished deriving old key")
-
-                    var cryptoManager: Crypto.CryptoManager
-                    val principal = settings.uri?.toHttpUrlOrNull()!!
-
-                    val userInfoManager = UserInfoManager(httpClient, principal)
-                    val userInfo = userInfoManager.fetch(account.name)!!
-                    Logger.log.info("Fetched userInfo for " + account.name)
-                    cryptoManager = Crypto.CryptoManager(userInfo.version!!.toInt(), old_key, "userInfo")
-                    userInfo.verify(cryptoManager)
-
-                    Logger.log.info("Started deriving new key")
-                    val new_key = Crypto.deriveKey(account.name, new_password)
-                    Logger.log.info("Finished deriving new key")
-
-                    val userInfoContent = userInfo.getContent(cryptoManager)!!
-                    cryptoManager = Crypto.CryptoManager(userInfo.version!!.toInt(), new_key, "userInfo")
-                    userInfo.setContent(cryptoManager, userInfoContent)
-
-                    Logger.log.info("Fetching journal list")
-                    val membersToAdd = LinkedList<Pair<JournalManager.Journal, ByteArray?>>()
-                    val journalManager = JournalManager(httpClient, principal)
-                    val journals = journalManager.list()
-                    for (journal in journals) {
-                        if (journal.owner != account.name) {
-                            continue
-                        }
-
-                        if (journal.key != null) {
-                            // We don't need to handle those cases, as they are already encrypted using pubkey
-                            continue
-                        } else {
-                            cryptoManager = Crypto.CryptoManager(journal.version, old_key, journal.uid!!)
-                        }
-
-                        Logger.log.info("Converting journal ${journal.uid}")
-                        journal.verify(cryptoManager)
-
-                        membersToAdd.add(Pair(journal, cryptoManager.getEncryptedKey(settings.keyPair!!, userInfo.pubkey!!)))
-                    }
-
-                    Logger.log.info("Finished converting account. Uploading changes")
-                    userInfoManager.update(userInfo)
-
-                    for ((journal, encryptedKey) in membersToAdd) {
-                        if (journal.owner != account.name) {
-                            continue
-                        }
-
-                        Logger.log.info("Uploading journal ${journal.uid}")
-                        val member = JournalManager.Member(account.name, encryptedKey!!)
-                        journalManager.addMember(journal, member)
-                    }
-
-                    settings.password(new_key)
-                    Logger.log.info("Finished uploading changes. Encryption password changed successfully.")
-                }
-
-                progress.dismiss()
-                AlertDialog.Builder(this@ChangeEncryptionPasswordActivity)
-                        .setTitle(R.string.change_encryption_password_success_title)
-                        .setMessage(R.string.change_encryption_password_success_body)
-                        .setPositiveButton(android.R.string.ok) { _, _ ->
-                            this@ChangeEncryptionPasswordActivity.finish()
-                        }.show()
-
-                requestSync(applicationContext, account)
-            } catch (e: Exception) {
-                changePasswordError(e)
-            }
-        }
+        model.changePassword(applicationContext, account, old_password, new_password)
     }
 
     fun changePasswordClicked(v: View) {
@@ -210,16 +126,18 @@ open class ChangeEncryptionPasswordActivity : BaseActivity() {
                 .setMessage(R.string.change_encryption_password_are_you_sure)
                 .setPositiveButton(android.R.string.yes) { _, _ ->
                     changePasswordDo(old_password, new_password)
-                    progress = ProgressDialog(this)
-                    progress.setTitle(R.string.setting_up_encryption)
-                    progress.setMessage(getString(R.string.setting_up_encryption_content))
-                    progress.isIndeterminate = true
-                    progress.setCanceledOnTouchOutside(false)
-                    progress.setCancelable(false)
-                    progress.show()
+                    // Progress follows the retained operation state.
                 }
                 .setNegativeButton(android.R.string.no) { _, _ -> }
                 .create().show()
+    }
+
+    override fun onDestroy() {
+        progress?.dismiss()
+        resultDialog?.dismiss()
+        progress = null
+        resultDialog = null
+        super.onDestroy()
     }
 
     companion object {
@@ -227,8 +145,41 @@ open class ChangeEncryptionPasswordActivity : BaseActivity() {
 
         fun newIntent(context: Context, account: Account): Intent {
             val intent = Intent(context, ChangeEncryptionPasswordActivity::class.java)
-            intent.putExtra(CreateCollectionActivity.EXTRA_ACCOUNT, account)
+            intent.putExtra(EXTRA_ACCOUNT, account)
             return intent
+        }
+    }
+}
+
+class PasswordChangeViewModel : ViewModel() {
+    enum class State { IDLE, RUNNING, SUCCESS, ERROR }
+    val state = MutableLiveData(State.IDLE)
+    var error: Exception? = null
+        private set
+
+    fun changePassword(context: Context, account: Account, oldPassword: String, newPassword: String) {
+        if (state.value == State.RUNNING) return
+        state.value = State.RUNNING
+        viewModelScope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    val settings = AccountSettings(context, account)
+                    val httpClient = HttpClient.Builder(context).setForeground(true).build().okHttpClient
+                    Logger.log.info("Logging in with old password")
+                    val client = Client.create(httpClient, settings.uri?.toString())
+                    val etebase = com.etebase.client.Account.login(client, account.name, oldPassword)
+                    Logger.log.info("Login successful")
+                    etebase.changePassword(newPassword)
+                    settings.etebaseSession = etebase.save(null)
+                    requestSync(context, account)
+                }
+                state.value = State.SUCCESS
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                error = e
+                state.value = State.ERROR
+            }
         }
     }
 }

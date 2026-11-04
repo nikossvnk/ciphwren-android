@@ -95,9 +95,6 @@ class LocalGroup : AndroidGroup, LocalAddress {
             return os.toString()
         }
 
-    override val isLocalOnly: Boolean
-        get() = TextUtils.isEmpty(eTag)
-
     constructor(addressBook: AndroidAddressBook<out AndroidContact, LocalGroup>, values: ContentValues)
             : super(addressBook, values) {}
 
@@ -152,18 +149,6 @@ class LocalGroup : AndroidGroup, LocalAddress {
             )
 
         batch.commit()
-    }
-
-    override fun legacyPrepareForUpload(fileName_: String?) {
-        val uid = UUID.randomUUID().toString()
-
-        val values = ContentValues(2)
-        val fileName = fileName_ ?: uid
-        values.put(AndroidGroup.COLUMN_FILENAME, fileName)
-        values.put(AndroidGroup.COLUMN_UID, uid)
-        update(values)
-
-        this.fileName = fileName
     }
 
     override fun prepareForUpload(fileName: String, uid: String) {

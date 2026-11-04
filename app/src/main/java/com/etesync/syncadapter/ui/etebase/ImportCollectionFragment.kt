@@ -23,7 +23,6 @@ class ImportCollectionFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val ret = inflater.inflate(R.layout.import_actions_list, container, false)
-        setHasOptionsMenu(true)
 
         if (savedInstanceState == null) {
             collectionModel.observe(this) {
@@ -68,7 +67,7 @@ class ImportCollectionFragment : Fragment() {
                     addToBackStack(null)
                 }
             }
-            // FIXME: should be in the fragments once we kill legacy
+            // FIXME: should be done by the import fragments
             (activity as? BaseActivity?)?.supportActionBar?.setTitle(R.string.import_select_account)
         }
 

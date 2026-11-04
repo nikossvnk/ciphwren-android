@@ -9,7 +9,9 @@
 package com.etesync.syncadapter.ui.etebase
 
 import android.app.Dialog
-import android.app.ProgressDialog
+import android.widget.ProgressBar
+import androidx.appcompat.app.AlertDialog
+import androidx.core.os.BundleCompat
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -25,7 +27,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.observe
+import androidx.lifecycle.viewModelScope
 import com.etebase.client.Account
 import com.etebase.client.Client
 import com.etebase.client.User
@@ -35,15 +37,14 @@ import com.etesync.syncadapter.HttpClient
 import com.etesync.syncadapter.R
 import com.etesync.syncadapter.ui.WebViewActivity
 import com.etesync.syncadapter.ui.setup.*
+import com.etesync.syncadapter.utils.setExpanded
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
-import net.cachapa.expandablelayout.ExpandableLayout
-import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
-import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import java.net.URI
 
 class SignupFragment : Fragment() {
@@ -85,20 +86,15 @@ class SignupFragment : Fragment() {
         createAccount.setOnClickListener {
             val credentials = validateData()
             if (credentials != null) {
-                SignupDoFragment.newInstance(credentials).show(requireFragmentManager(), null)
+                SignupDoFragment.newInstance(credentials).show(parentFragmentManager, null)
             }
         }
 
-        val advancedLayout = v.findViewById<View>(R.id.advanced_layout) as ExpandableLayout
+        val advancedLayout = v.findViewById<View>(R.id.advanced_layout)
 
         showAdvanced.setOnClickListener {
-            if (showAdvanced.isChecked) {
-                showAdvanced.isChecked = false
-                advancedLayout.collapse()
-            } else {
-                showAdvanced.isChecked = true
-                advancedLayout.expand()
-            }
+            showAdvanced.isChecked = !showAdvanced.isChecked
+            advancedLayout.setExpanded(showAdvanced.isChecked)
         }
 
         return v
@@ -166,13 +162,15 @@ class SignupFragment : Fragment() {
 class SignupDoFragment: DialogFragment() {
     private val model: ConfigurationViewModel by viewModels()
 
-    private lateinit var signupCredentials: SignupCredentials
+    private val signupCredentials: SignupCredentials
+        get() = BundleCompat.getSerializable(requireArguments(), "credentials", SignupCredentials::class.java)!!
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val progress = ProgressDialog(activity)
-        progress.setTitle(R.string.setting_up_encryption)
-        progress.setMessage(getString(R.string.setting_up_encryption_content))
-        progress.isIndeterminate = true
+        val progress = AlertDialog.Builder(requireContext())
+            .setTitle(R.string.setting_up_encryption)
+            .setMessage(R.string.setting_up_encryption_content)
+            .setView(ProgressBar(requireContext()))
+            .create()
         progress.setCanceledOnTouchOutside(false)
         isCancelable = false
         return progress
@@ -181,29 +179,27 @@ class SignupDoFragment: DialogFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        if (savedInstanceState == null) {
-            model.signup(requireContext(), signupCredentials)
-            model.observe(this) {
+        model.signup(requireContext().applicationContext, signupCredentials)
+        model.observe(this) {
                 if (it.isFailed) {
                     // no service found: show error message
-                    requireFragmentManager().beginTransaction()
-                            .add(DetectConfigurationFragment.NothingDetectedFragment.newInstance(it.error!!.localizedMessage), null)
+                    parentFragmentManager.beginTransaction()
+                            .add(DetectConfigurationFragment.NothingDetectedFragment.newInstance(it.error!!.localizedMessage ?: it.error.toString()), null)
                             .commitAllowingStateLoss()
                 } else {
-                    requireFragmentManager().beginTransaction()
+                    parentFragmentManager.beginTransaction()
                             .replace(android.R.id.content, CreateAccountFragment.newInstance(it))
                             .addToBackStack(null)
                             .commitAllowingStateLoss()
                 }
                 dismissAllowingStateLoss()
             }
-        }
     }
 
     companion object {
         fun newInstance(signupCredentials: SignupCredentials): SignupDoFragment {
             val ret = SignupDoFragment()
-            ret.signupCredentials = signupCredentials
+            ret.arguments = Bundle().apply { putSerializable("credentials", signupCredentials) }
             return ret
         }
     }
@@ -214,6 +210,7 @@ class ConfigurationViewModel : ViewModel() {
     private var asyncTask: Job? = null
 
     fun signup(context: Context, credentials: SignupCredentials) {
+        if (asyncTask != null) return
         asyncTask = viewModelScope.launch {
             val result = withContext(Dispatchers.IO) {
                 val httpClient = HttpClient.Builder(context).build().okHttpClient
@@ -233,37 +230,6 @@ class ConfigurationViewModel : ViewModel() {
                         uri,
                         credentials.userName,
                         etebaseSession,
-                        null,
-                        null,
-                        exception
-                )
-            }
-            account.value = result
-        }
-    }
-
-    // We just need it for the migration - maybe merge it with login later on
-    fun login(context: Context, credentials: LoginCredentials) {
-        asyncTask = viewModelScope.launch {
-            val result = withContext(Dispatchers.IO) {
-                val httpClient = HttpClient.Builder(context).build().okHttpClient
-                val uri = credentials.uri ?: URI(Constants.etebaseServiceUrl)
-                var etebaseSession: String? = null
-                var exception: Throwable? = null
-                try {
-                    val client = Client.create(httpClient, uri.toString())
-                    val etebase = Account.login(client, credentials.userName, credentials.password)
-                    etebaseSession = etebase.save(null)
-                } catch (e: EtebaseException) {
-                    exception = e
-                }
-
-                BaseConfigurationFinder.Configuration(
-                        uri,
-                        credentials.userName,
-                        etebaseSession,
-                        null,
-                        null,
                         exception
                 )
             }
@@ -276,7 +242,7 @@ class ConfigurationViewModel : ViewModel() {
     }
 
     fun observe(owner: LifecycleOwner, observer: (BaseConfigurationFinder.Configuration) -> Unit) =
-            account.observe(owner, observer)
+            account.observe(owner) { observer(it) }
 }
 
-data class SignupCredentials(val uri: URI?, val userName: String, val email: String, val password: String)
+data class SignupCredentials(val uri: URI?, val userName: String, val email: String, val password: String) : java.io.Serializable

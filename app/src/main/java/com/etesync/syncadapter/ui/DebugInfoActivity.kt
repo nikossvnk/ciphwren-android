@@ -12,7 +12,7 @@ import android.Manifest
 import android.accounts.Account
 import android.accounts.AccountManager
 import android.annotation.SuppressLint
-import android.app.LoaderManager
+import android.app.Application
 import android.content.*
 import android.content.pm.PackageManager
 import android.os.Build
@@ -20,34 +20,34 @@ import android.os.Bundle
 import android.os.PowerManager
 import android.provider.CalendarContract
 import android.provider.ContactsContract
-import android.text.TextUtils
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.TextView
+import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
+import androidx.core.os.BundleCompat
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import at.bitfire.ical4android.TaskProvider.ProviderName
 import at.bitfire.vcard4android.ContactsStorageException
-import com.etesync.journalmanager.Exceptions.HttpException
 import com.etesync.syncadapter.*
 import com.etesync.syncadapter.Constants.KEY_ACCOUNT
 import com.etesync.syncadapter.log.Logger
-import com.etesync.syncadapter.model.EntryEntity
-import com.etesync.syncadapter.model.JournalEntity
 import com.etesync.syncadapter.model.ServiceDB
-import com.etesync.syncadapter.model.ServiceEntity
 import com.etesync.syncadapter.resource.LocalAddressBook
+import com.etesync.syncadapter.utils.installerPackageName
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.acra.ACRA
-import org.apache.commons.lang3.exception.ExceptionUtils
-import org.apache.commons.lang3.text.WordUtils
-import java.io.File
 import java.util.logging.Level
 
-class DebugInfoActivity : BaseActivity(), LoaderManager.LoaderCallbacks<String> {
+class DebugInfoActivity : BaseActivity() {
+    private val model: ReportModel by viewModels()
 
     internal lateinit var tvReport: TextView
-    internal lateinit var report: String
-
-    internal var reportFile: File? = null
+    internal var report: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,7 +55,11 @@ class DebugInfoActivity : BaseActivity(), LoaderManager.LoaderCallbacks<String> 
         setContentView(R.layout.activity_debug_info)
         tvReport = findViewById(R.id.text_report)
 
-        loaderManager.initLoader(0, intent.extras, this)
+        model.generate(intent.extras)
+        model.report.observe(this) { data ->
+            report = data
+            tvReport.text = data
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -65,37 +69,36 @@ class DebugInfoActivity : BaseActivity(), LoaderManager.LoaderCallbacks<String> 
 
 
     fun onShare(item: MenuItem) {
-        ACRA.getErrorReporter().putCustomData("debug_info", report)
-        val account: Account? = intent.extras?.getParcelable(KEY_ACCOUNT)
+        val extras = intent.extras
+        ACRA.errorReporter.putCustomData("debug_info", report ?: "")
+        val account = extras?.let { BundleCompat.getParcelable(it, KEY_ACCOUNT, Account::class.java) }
         if (account != null) {
-            ACRA.getErrorReporter().putCustomData("username", account.name)
+            ACRA.errorReporter.putCustomData("username", account.name)
         }
-        ACRA.getErrorReporter().handleException(intent.extras?.getSerializable(KEY_THROWABLE) as Throwable?)
-        ACRA.getErrorReporter().removeCustomData("debug_info")
+        ACRA.errorReporter.handleException(extras?.let { BundleCompat.getSerializable(it, KEY_THROWABLE, Throwable::class.java) })
+        ACRA.errorReporter.removeCustomData("debug_info")
     }
 
-    override fun onCreateLoader(id: Int, args: Bundle?): Loader<String> {
-        return ReportLoader(this, args)
-    }
 
-    override fun onLoadFinished(loader: Loader<String>, data: String?) {
-        if (data != null) {
-            report = data
-            tvReport.setText(report)
-        }
-    }
+    class ReportModel(application: Application) : AndroidViewModel(application) {
+        val report = MutableLiveData<String>()
+        private var generating = false
 
-    override fun onLoaderReset(loader: Loader<String>) {}
+        fun generate(extras: Bundle?) {
+            if (generating)
+                return
+            generating = true
 
-
-    internal class ReportLoader(context: Context, val extras: Bundle?) : AsyncTaskLoader<String>(context) {
-
-        override fun onStartLoading() {
-            forceLoad()
+            viewModelScope.launch {
+                report.value = withContext(Dispatchers.IO) {
+                    generateReport(extras)
+                }
+            }
         }
 
         @SuppressLint("MissingPermission")
-        override fun loadInBackground(): String {
+        private fun generateReport(extras: Bundle?): String {
+            val context: Context = getApplication()
             var throwable: Throwable? = null
             var caller: String? = null
             var logs: String? = null
@@ -104,10 +107,10 @@ class DebugInfoActivity : BaseActivity(), LoaderManager.LoaderCallbacks<String> 
             var phase: String? = null
 
             if (extras != null) {
-                throwable = extras.getSerializable(KEY_THROWABLE) as Throwable?
+                throwable = BundleCompat.getSerializable(extras, KEY_THROWABLE, Throwable::class.java)
                 caller = extras.getString(KEY_CALLER)
                 logs = extras.getString(KEY_LOGS)
-                account = extras.getParcelable(KEY_ACCOUNT)
+                account = BundleCompat.getParcelable(extras, KEY_ACCOUNT, Account::class.java)
                 authority = extras.getString(KEY_AUTHORITY)
                 phase = if (extras.containsKey(KEY_PHASE)) context.getString(extras.getInt(KEY_PHASE)) else null
             }
@@ -125,28 +128,15 @@ class DebugInfoActivity : BaseActivity(), LoaderManager.LoaderCallbacks<String> 
             if (caller != null)
                 report.append("Debug activity source: ").append(caller).append("\n")
 
-            if (throwable is HttpException) {
-                val http = throwable as HttpException?
-                if (http!!.request != null)
-                    report.append("\nHTTP REQUEST:\n").append(http.request).append("\n\n")
-                if (http.request != null)
-                    report.append("HTTP RESPONSE:\n").append(http.request).append("\n")
-            }
-
             if (throwable != null)
                 report.append("\nEXCEPTION:\n")
-                        .append(ExceptionUtils.getStackTrace(throwable))
+                        .append(throwable.stackTraceToString())
 
             if (logs != null)
                 report.append("\nLOGS:\n").append(logs).append("\n")
 
-            val context = context
-
             try {
-                val pm = context.packageManager
-                var installedFrom = pm.getInstallerPackageName(BuildConfig.APPLICATION_ID)
-                if (TextUtils.isEmpty(installedFrom))
-                    installedFrom = "APK (directly)"
+                val installedFrom = installerPackageName(context) ?: "APK (directly)"
                 report.append("\nSOFTWARE INFORMATION\n" + "EteSync version: ").append(BuildConfig.VERSION_NAME).append(" (").append(BuildConfig.VERSION_CODE).append(") ").append("\n")
                         .append("Installed from: ").append(installedFrom).append("\n")
             } catch (ex: Exception) {
@@ -156,12 +146,14 @@ class DebugInfoActivity : BaseActivity(), LoaderManager.LoaderCallbacks<String> 
             report.append("CONFIGURATION\n")
             // power saving
             val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager?
-            if (powerManager != null && Build.VERSION.SDK_INT >= 23)
+            if (powerManager != null)
                 report.append("Power saving disabled: ")
                         .append(if (powerManager.isIgnoringBatteryOptimizations(BuildConfig.APPLICATION_ID)) "yes" else "no")
                         .append("\n")
             // permissions
-            for (permission in arrayOf(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS, Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR) + ProviderName.OpenTasks.permissions + ProviderName.TasksOrg.permissions)
+            val permissions = arrayOf(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS, Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR) + ProviderName.OpenTasks.permissions + ProviderName.TasksOrg.permissions +
+                    (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) arrayOf(Manifest.permission.POST_NOTIFICATIONS) else emptyArray())
+            for (permission in permissions)
                 report.append(permission).append(" permission: ")
                         .append(if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) "granted" else "denied")
                         .append("\n")
@@ -177,6 +169,8 @@ class DebugInfoActivity : BaseActivity(), LoaderManager.LoaderCallbacks<String> 
                     report.append("Account: ").append(acct.name).append("\n" + "  Address book sync. interval: ").append(syncStatus(settings, App.addressBooksAuthority)).append("\n" + "  Calendar     sync. interval: ").append(syncStatus(settings, CalendarContract.AUTHORITY)).append("\n" + "  OpenTasks    sync. interval: ").append(syncStatus(settings, ProviderName.OpenTasks.authority)).append("\n" + "  Tasks.org    sync. interval: ").append(syncStatus(settings, ProviderName.TasksOrg.authority)).append("\n" + "  WiFi only: ").append(settings.syncWifiOnly)
                     if (settings.syncWifiOnlySSID != null)
                         report.append(", SSID: ").append(settings.syncWifiOnlySSID)
+                    if (settings.isEteSync1Account)
+                        report.append("\n  EteSync 1.0 account (not supported anymore)")
                     report.append("\n  [CardDAV] Contact group method: ").append(settings.groupMethod)
                             .append("\n           Manage calendar colors: ").append(settings.manageCalendarColors)
                             .append("\n")
@@ -201,25 +195,9 @@ class DebugInfoActivity : BaseActivity(), LoaderManager.LoaderCallbacks<String> 
             dbHelper.close()
             report.append("\n")
 
-            report.append("SERVICES DUMP\n")
-            val data = (getContext().applicationContext as App).data
-            for (serviceEntity in data.select(ServiceEntity::class.java).get()) {
-                report.append(serviceEntity.toString() + "\n")
-            }
-            report.append("\n")
-
-            report.append("JOURNALS DUMP\n")
-            val journals = data.select(JournalEntity::class.java).where(JournalEntity.DELETED.eq(false)).get().toList()
-            for (journal in journals) {
-                report.append(journal.toString() + "\n")
-                val entryCount = data.count(EntryEntity::class.java).where(EntryEntity.JOURNAL.eq(journal)).get().value()
-                report.append("\tEntries: " + entryCount.toString() + "\n\n")
-            }
-            report.append("\n")
-
             try {
                 report.append(
-                        "SYSTEM INFORMATION\n" + "Android version: ").append(Build.VERSION.RELEASE).append(" (").append(Build.DISPLAY).append(")\n" + "Device: ").append(WordUtils.capitalize(Build.MANUFACTURER)).append(" ").append(Build.MODEL).append(" (").append(Build.DEVICE).append(")\n\n"
+                        "SYSTEM INFORMATION\n" + "Android version: ").append(Build.VERSION.RELEASE).append(" (").append(Build.DISPLAY).append(")\n" + "Device: ").append(Build.MANUFACTURER.replaceFirstChar { it.titlecase() }).append(" ").append(Build.MODEL).append(" (").append(Build.DEVICE).append(")\n\n"
                 )
             } catch (ex: Exception) {
                 Logger.log.log(Level.SEVERE, "Couldn't get system details", ex)
@@ -229,7 +207,7 @@ class DebugInfoActivity : BaseActivity(), LoaderManager.LoaderCallbacks<String> 
             return report.toString()
         }
 
-        protected fun syncStatus(settings: AccountSettings, authority: String): String {
+        private fun syncStatus(settings: AccountSettings, authority: String): String {
             val interval = settings.getSyncInterval(authority)
             return if (interval != null)
                 if (interval == AccountSettings.SYNC_INTERVAL_MANUALLY) "manually" else (interval / 60).toString() + " min"

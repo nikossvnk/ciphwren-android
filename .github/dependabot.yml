@@ -1,0 +1,23 @@
+# Opens pull requests to update the dependencies. The Check workflow runs on them, so an update
+# that breaks the app is noticed before it is merged.
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      gradle:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  # The commits of ical4android, vcard4android and cert4android the app is built with
+  - package-ecosystem: gitsubmodule
+    directory: /
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

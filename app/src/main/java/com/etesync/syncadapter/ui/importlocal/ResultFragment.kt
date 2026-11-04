@@ -40,7 +40,7 @@ class ResultFragment : DialogFragment() {
                         // dismiss
                     }
                     .setPositiveButton(android.R.string.yes) { dialog, which ->
-                        ACRA.getErrorReporter().handleException(result!!.e)
+                        ACRA.errorReporter.handleException(result!!.e)
                     }
                     .create()
         } else {

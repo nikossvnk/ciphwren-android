@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.viewModels
+import androidx.core.content.IntentCompat
 import androidx.fragment.app.commit
 import com.etesync.syncadapter.R
 import com.etesync.syncadapter.ui.BaseActivity
@@ -16,7 +17,7 @@ class InvitationsActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        account = intent.extras!!.getParcelable(EXTRA_ACCOUNT)!!
+        account = IntentCompat.getParcelableExtra(intent, EXTRA_ACCOUNT, Account::class.java)!!
 
         setContentView(R.layout.etebase_fragment_activity)
 

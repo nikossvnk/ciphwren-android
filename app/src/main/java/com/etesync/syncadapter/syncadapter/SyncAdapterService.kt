@@ -14,82 +14,28 @@ import android.app.Service
 import android.content.*
 import android.database.sqlite.SQLiteException
 import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.wifi.WifiManager
 import android.os.Bundle
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
-import androidx.core.util.Pair
 import at.bitfire.ical4android.CalendarStorageException
 import at.bitfire.vcard4android.ContactsStorageException
 import com.etebase.client.FetchOptions
 import com.etebase.client.exceptions.ConnectionException
 import com.etebase.client.exceptions.TemporaryServerErrorException
 import com.etebase.client.exceptions.UnauthorizedException
-import com.etesync.journalmanager.Crypto
-import com.etesync.journalmanager.Exceptions
-import com.etesync.journalmanager.JournalManager
 import com.etesync.syncadapter.*
 import com.etesync.syncadapter.Constants.COLLECTION_TYPES
 import com.etesync.syncadapter.log.Logger
-import com.etesync.syncadapter.model.CollectionInfo
-import com.etesync.syncadapter.model.JournalEntity
-import com.etesync.syncadapter.model.JournalModel
+import com.etesync.syncadapter.model.CollectionType
+import com.etesync.syncadapter.ui.AccountActivity
 import com.etesync.syncadapter.ui.DebugInfoActivity
 import com.etesync.syncadapter.ui.PermissionsActivity
 import com.etesync.syncadapter.utils.NotificationUtils
-import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import java.lang.Math.abs
 import java.util.*
 import java.util.logging.Level
-
-//import com.android.vending.billing.IInAppBillingService;
-
-typealias JournalList = List<Pair<JournalManager.Journal, CollectionInfo>>
-
-class CachedJournalFetcher {
-    private val cache: HashMap<String, Pair<Long, JournalList>> = HashMap()
-
-    private fun fetchJournals(journalsManager: JournalManager, settings: AccountSettings, serviceType: CollectionInfo.Type): JournalList {
-        val journals = LinkedList<Pair<JournalManager.Journal, CollectionInfo>>()
-
-        for (journal in journalsManager.list()) {
-            val crypto: Crypto.CryptoManager
-            if (journal.key != null) {
-                crypto = Crypto.CryptoManager(journal.version, settings.keyPair!!, journal.key!!)
-            } else {
-                crypto = Crypto.CryptoManager(journal.version, settings.password(), journal.uid!!)
-            }
-
-            journal.verify(crypto)
-
-            val info = CollectionInfo.fromJson(journal.getContent(crypto))
-            info.updateFromJournal(journal)
-
-            journals.add(Pair(journal, info))
-        }
-
-        return journals;
-    }
-
-    fun list(journalsManager: JournalManager, settings: AccountSettings, serviceType: CollectionInfo.Type): JournalList {
-        val cacheAge = 5 * 1000 // 5 seconds - it's just a hack for burst fetching
-        val now = System.currentTimeMillis()
-
-        val journals: JournalList
-        synchronized (cache) {
-            val cached = cache.get(settings.account.name)
-            if ((cached != null) && (abs(now - cached.first!!) <= cacheAge)) {
-                journals = cached.second!!
-            } else {
-                journals = fetchJournals(journalsManager, settings, serviceType)
-                cache.set(settings.account.name, Pair(System.currentTimeMillis(), journals))
-            }
-        }
-
-        return journals.filter { it.second?.enumType == serviceType }
-    }
-}
 
 abstract class SyncAdapterService : Service() {
 
@@ -118,17 +64,12 @@ abstract class SyncAdapterService : Service() {
             } catch (e: SecurityException) {
                 // Shouldn't be needed - not sure why it doesn't fail
                 onSecurityException(account, extras, authority, syncResult)
-            } catch (e: Exceptions.ServiceUnavailableException) {
-                syncResult.stats.numIoExceptions++
-                syncResult.delayUntil = if (e.retryAfter > 0) e.retryAfter else Constants.DEFAULT_RETRY_DELAY
             } catch (e: TemporaryServerErrorException) {
                 syncResult.stats.numIoExceptions++
                 syncResult.delayUntil = Constants.DEFAULT_RETRY_DELAY
             } catch (e: ConnectionException) {
                 syncResult.stats.numIoExceptions++
                 syncResult.delayUntil = Constants.DEFAULT_RETRY_DELAY
-            } catch (e: Exceptions.IgnorableHttpException) {
-                // Ignore
             } catch (e: Exception) {
                 if (e is ContactsStorageException || e is CalendarStorageException || e is SQLiteException) {
                     Logger.log.log(Level.SEVERE, "Couldn't prepare local journals", e)
@@ -142,7 +83,7 @@ abstract class SyncAdapterService : Service() {
 
                 val detailsIntent = notificationManager.detailsIntent
                 detailsIntent.putExtra(Constants.KEY_ACCOUNT, account)
-                if (e !is Exceptions.UnauthorizedException && e !is UnauthorizedException) {
+                if (e !is UnauthorizedException) {
                     detailsIntent.putExtra(DebugInfoActivity.KEY_AUTHORITY, authority)
                     detailsIntent.putExtra(DebugInfoActivity.KEY_PHASE, syncPhase)
                 }
@@ -173,19 +114,46 @@ abstract class SyncAdapterService : Service() {
                     .setContentIntent(PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
                     .setCategory(NotificationCompat.CATEGORY_ERROR)
                     .build()
-            val nm = NotificationManagerCompat.from(context)
-            nm.notify(Constants.NOTIFICATION_PERMISSIONS, notify)
+            NotificationUtils.notifyIfPermitted(context, null, Constants.NOTIFICATION_PERMISSIONS, notify)
+        }
+
+        /**
+         * EteSync 1.0 accounts can't be synchronized anymore: notifies the user that the account
+         * has to be removed and added again with an Etebase server.
+         *
+         * @return whether the account can be synchronized
+         */
+        protected fun checkAccountSupported(account: Account, settings: AccountSettings): Boolean {
+            if (!settings.isEteSync1Account)
+                return true
+
+            Logger.log.warning("Not syncing ${account.name}: EteSync 1.0 accounts aren't supported anymore")
+            val intent = Intent(context, AccountActivity::class.java)
+            intent.putExtra(AccountActivity.EXTRA_ACCOUNT, account)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+            val text = context.getString(R.string.sync_error_etesync1_unsupported_text)
+            val notify = NotificationUtils.newBuilder(context, NotificationUtils.CHANNEL_SYNC_ERRORS)
+                    .setSmallIcon(R.drawable.ic_error_light)
+                    .setContentTitle(context.getString(R.string.sync_error_etesync1_unsupported, account.name))
+                    .setContentText(text)
+                    .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+                    .setContentIntent(PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
+                    .setCategory(NotificationCompat.CATEGORY_ERROR)
+                    .build()
+            NotificationUtils.notifyIfPermitted(context, account.name, Constants.NOTIFICATION_ETESYNC1_UNSUPPORTED, notify)
+            return false
         }
 
         protected fun checkSyncConditions(settings: AccountSettings): Boolean {
             if (settings.syncWifiOnly) {
                 val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-                val network = cm.activeNetworkInfo
-                if (network == null) {
+                val capabilities = cm.activeNetwork?.let { cm.getNetworkCapabilities(it) }
+                if (capabilities == null) {
                     Logger.log.info("No network available, stopping")
                     return false
                 }
-                if (network.type != ConnectivityManager.TYPE_WIFI || !network.isConnected) {
+                if (!capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
                     Logger.log.info("Not on connected WiFi, stopping")
                     return false
                 }
@@ -194,6 +162,7 @@ abstract class SyncAdapterService : Service() {
                 if (onlySSID != null) {
                     onlySSID = "\"" + onlySSID + "\""
                     val wifi = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+                    @Suppress("DEPRECATION")    // the replacement (NetworkCapabilities.transportInfo) requires API 29
                     val info = wifi.connectionInfo
                     if (info == null || onlySSID != info.ssid) {
                         Logger.log.info("Connected to wrong WiFi network (" + info!!.ssid + ", required: " + onlySSID + "), ignoring")
@@ -204,45 +173,19 @@ abstract class SyncAdapterService : Service() {
             return true
         }
 
-        inner class RefreshCollections internal constructor(private val account: Account, private val serviceType: CollectionInfo.Type) {
+        inner class RefreshCollections internal constructor(private val account: Account, private val serviceType: CollectionType) {
             private val context: Context
 
             init {
                 context = getContext()
             }
 
-            @Throws(Exceptions.HttpException::class, Exceptions.IntegrityException::class, InvalidAccountException::class, Exceptions.GenericCryptoException::class)
+            @Throws(InvalidAccountException::class)
             internal fun run() {
                 Logger.log.info("Refreshing " + serviceType + " collections of service #" + serviceType.toString())
 
                 val settings = AccountSettings(context, account)
-                val httpClient = HttpClient.Builder(context, settings).setForeground(false).build()
-
-                if (settings.isLegacy) {
-                    val journalsManager = JournalManager(httpClient.okHttpClient, settings.uri?.toHttpUrlOrNull()!!)
-
-                    var journals = journalFetcher.list(journalsManager, settings, serviceType)
-
-                    if (journals.isEmpty()) {
-                        journals = LinkedList()
-                        try {
-                            val info = CollectionInfo.defaultForServiceType(serviceType)
-                            val uid = JournalManager.Journal.genUid()
-                            info.uid = uid
-                            val crypto = Crypto.CryptoManager(info.version, settings.password(), uid)
-                            val journal = JournalManager.Journal(crypto, info.toJson(), uid)
-                            journalsManager.create(journal)
-                            journals.add(Pair(journal, info))
-                        } catch (e: Exceptions.AssociateNotAllowedException) {
-                            // Skip for now
-                        }
-                    }
-
-                    legacySaveCollections(journals)
-
-                    httpClient.close()
-                    return
-                }
+                val httpClient = HttpClient.Builder(context).setForeground(false).build()
 
                 val etebaseLocalCache = EtebaseLocalCache.getInstance(context, account.name)
                 synchronized(etebaseLocalCache) {
@@ -279,45 +222,10 @@ abstract class SyncAdapterService : Service() {
 
                 httpClient.close()
             }
-
-            private fun legacySaveCollections(journals: Iterable<Pair<JournalManager.Journal, CollectionInfo>>) {
-                val data = (context.applicationContext as App).data
-                val service = JournalModel.Service.fetchOrCreate(data, account.name, serviceType)
-
-                val existing = HashMap<String, JournalEntity>()
-                for (journalEntity in JournalEntity.getJournals(data, service)) {
-                    existing[journalEntity.uid] = journalEntity
-                }
-
-                for (pair in journals) {
-                    val journal = pair.first
-                    val collection = pair.second
-                    Logger.log.log(Level.FINE, "Saving collection", journal!!.uid)
-
-                    collection!!.serviceID = service.id
-                    val journalEntity = JournalEntity.fetchOrCreate(data, collection)
-                    journalEntity.owner = journal.owner
-                    journalEntity.encryptedKey = journal.key
-                    journalEntity.isReadOnly = journal.readOnly
-                    journalEntity.isDeleted = false
-                    journalEntity.remoteLastUid = journal.lastUid
-                    data.upsert(journalEntity)
-
-                    existing.remove(collection.uid)
-                }
-
-                for (journalEntity in existing.values) {
-                    Logger.log.log(Level.FINE, "Deleting collection", journalEntity.uid)
-
-                    journalEntity.isDeleted = true
-                    data.update(journalEntity)
-                }
-            }
         }
     }
 
     companion object {
-        val journalFetcher = CachedJournalFetcher()
         var collectionLastFetchMap = HashMap<String, Long>()
     }
 }

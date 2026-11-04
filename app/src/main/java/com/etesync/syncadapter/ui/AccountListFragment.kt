@@ -11,7 +11,6 @@ package com.etesync.syncadapter.ui
 import android.accounts.Account
 import android.accounts.AccountManager
 import android.accounts.OnAccountsUpdateListener
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -23,13 +22,11 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.TextView
 import androidx.fragment.app.ListFragment
-import androidx.loader.app.LoaderManager
-import androidx.loader.content.AsyncTaskLoader
-import androidx.loader.content.Loader
+import androidx.lifecycle.LiveData
 import com.etesync.syncadapter.App
 import com.etesync.syncadapter.R
 
-class AccountListFragment : ListFragment(), LoaderManager.LoaderCallbacks<Array<Account>>, AdapterView.OnItemClickListener {
+class AccountListFragment : ListFragment(), AdapterView.OnItemClickListener {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         listAdapter = AccountListAdapter(requireContext())
@@ -39,7 +36,11 @@ class AccountListFragment : ListFragment(), LoaderManager.LoaderCallbacks<Array<
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        loaderManager.initLoader(0, arguments, this)
+        AccountsLiveData(requireContext()).observe(viewLifecycleOwner) { accounts ->
+            val adapter = listAdapter as AccountListAdapter
+            adapter.clear()
+            adapter.addAll(accounts)
+        }
 
         val list = listView
         list.onItemClickListener = this
@@ -55,29 +56,14 @@ class AccountListFragment : ListFragment(), LoaderManager.LoaderCallbacks<Array<
     }
 
 
-    // loader
-
-    override fun onCreateLoader(id: Int, args: Bundle?): Loader<Array<Account>> {
-        return AccountLoader(requireContext())
-    }
-
-    override fun onLoadFinished(loader: Loader<Array<Account>>, accounts: Array<Account>) {
-        val adapter = listAdapter as AccountListAdapter
-        adapter.clear()
-        adapter.addAll(*accounts)
-    }
-
-    override fun onLoaderReset(loader: Loader<Array<Account>>) {
-        (listAdapter as AccountListAdapter).clear()
-    }
-
-    private class AccountLoader(context: Context) : AsyncTaskLoader<Array<Account>>(context), OnAccountsUpdateListener {
+    /** Main accounts, updated when accounts are added or removed */
+    private class AccountsLiveData(context: Context) : LiveData<List<Account>>(), OnAccountsUpdateListener {
         private val accountManager = AccountManager.get(context)
 
-        override fun onStartLoading() =
+        override fun onActive() =
                 accountManager.addOnAccountsUpdatedListener(this, null, true)
 
-        override fun onStopLoading() {
+        override fun onInactive() {
             try {
                 accountManager.removeOnAccountsUpdatedListener(this)
             } catch (e: IllegalArgumentException) {
@@ -86,12 +72,7 @@ class AccountListFragment : ListFragment(), LoaderManager.LoaderCallbacks<Array<
         }
 
         override fun onAccountsUpdated(accounts: Array<Account>) {
-            forceLoad()
-        }
-
-        @SuppressLint("MissingPermission")
-        override fun loadInBackground(): Array<Account>? {
-            return accountManager.getAccountsByType(App.accountType)
+            value = accounts.filter { it.type == App.accountType }
         }
     }
 

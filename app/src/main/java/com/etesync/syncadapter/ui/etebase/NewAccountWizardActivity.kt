@@ -11,6 +11,7 @@ import android.widget.Button
 import android.widget.ProgressBar
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.IntentCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.commit
@@ -24,6 +25,7 @@ import com.etesync.syncadapter.R
 import com.etesync.syncadapter.syncadapter.requestSync
 import com.etesync.syncadapter.ui.BaseActivity
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -35,7 +37,7 @@ class NewAccountWizardActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        account = intent.extras!!.getParcelable(EXTRA_ACCOUNT)!!
+        account = IntentCompat.getParcelableExtra(intent, EXTRA_ACCOUNT, Account::class.java)!!
 
         setContentView(R.layout.etebase_fragment_activity)
 
@@ -107,7 +109,7 @@ class WizardCheckFragment : Fragment() {
     private fun checkAccountInit() {
         val colMgr = model.value?.colMgr ?: return
         loadingModel.setLoading(true)
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val collections = withContext(Dispatchers.IO) {
                     colMgr.list(COLLECTION_TYPES, FetchOptions().limit(1))
@@ -119,6 +121,8 @@ class WizardCheckFragment : Fragment() {
                         replace(R.id.fragment_container, WizardFragment())
                     }
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 reportErrorHelper(requireContext(), e)
                 loadingModel.setLoading(false)
@@ -168,9 +172,10 @@ class WizardFragment : Fragment() {
     private fun createCollections() {
         val accountHolder = model.value ?: return
         val colMgr = accountHolder.colMgr
+        val applicationContext = requireContext().applicationContext
         loadingModel.setLoading(true)
 
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 withContext(Dispatchers.IO) {
                     val baseMeta = listOf(
@@ -187,7 +192,7 @@ class WizardFragment : Fragment() {
                         val col = colMgr.create(it.first, meta, "")
                         uploadCollection(accountHolder, col)
                     }
-                    requestSync(requireContext(), accountHolder.account)
+                    requestSync(applicationContext, accountHolder.account)
                 }
                 activity?.finish()
             } catch (e: EtebaseException) {

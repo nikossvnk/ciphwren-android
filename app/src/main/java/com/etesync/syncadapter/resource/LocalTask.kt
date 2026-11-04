@@ -41,9 +41,6 @@ class LocalTask : AndroidTask, LocalResource<Task> {
             return os.toString()
         }
 
-    override val isLocalOnly: Boolean
-        get() = TextUtils.isEmpty(eTag)
-
     override// Now the same
     val uuid: String?
         get() = task?.uid
@@ -92,28 +89,6 @@ class LocalTask : AndroidTask, LocalResource<Task> {
     }
 
     /* custom queries */
-
-    override fun legacyPrepareForUpload(fileName_: String?) {
-        var uid: String? = null
-        val c = taskList.provider.client.query(taskSyncURI(), arrayOf(COLUMN_UID), null, null, null)!!
-        if (c.moveToNext())
-            uid = c.getString(0)
-        if (uid == null)
-            uid = UUID.randomUUID().toString()
-
-        c.close()
-
-        val fileName = fileName_ ?: uid
-        val values = ContentValues(2)
-        values.put(TaskContract.Tasks._SYNC_ID, fileName)
-        values.put(COLUMN_UID, uid)
-        taskList.provider.client.update(taskSyncURI(), values, null, null)
-
-        this.fileName = fileName
-        val task = this.task
-        if (task != null)
-            task.uid = uid
-    }
 
     override fun prepareForUpload(fileName: String, uid: String) {
         val values = ContentValues(2)

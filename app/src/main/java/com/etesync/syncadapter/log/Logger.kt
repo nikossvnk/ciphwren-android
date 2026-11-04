@@ -14,9 +14,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Process
-import android.preference.PreferenceManager
 import android.util.Log
 import android.widget.Toast
+import androidx.preference.PreferenceManager
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.etesync.syncadapter.App
@@ -24,9 +24,11 @@ import com.etesync.syncadapter.Constants
 import com.etesync.syncadapter.R
 import com.etesync.syncadapter.ui.AppSettingsActivity
 import com.etesync.syncadapter.utils.NotificationUtils
-import org.apache.commons.lang3.time.DateFormatUtils
 import java.io.File
 import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.logging.FileHandler
 import java.util.logging.Level
 
@@ -81,7 +83,7 @@ object Logger : SharedPreferences.OnSharedPreferenceChangeListener {
 
             val logDir = debugDir(context) ?: return
             val logFile = File(logDir,
-                    "etesync-${Process.myPid()}-${DateFormatUtils.format(System.currentTimeMillis(), "yyyyMMdd-HHmmss")}.txt")
+                    "etesync-${Process.myPid()}-${SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())}.txt")
 
             try {
                 val fileHandler = FileHandler(logFile.toString(), true)
@@ -104,7 +106,7 @@ object Logger : SharedPreferences.OnSharedPreferenceChangeListener {
                 Toast.makeText(context, context.getString(R.string.logging_couldnt_create_file), Toast.LENGTH_LONG).show()
             }
 
-            nm.notify(Constants.NOTIFICATION_EXTERNAL_FILE_LOGGING, builder.build())
+            NotificationUtils.notifyIfPermitted(context, null, Constants.NOTIFICATION_EXTERNAL_FILE_LOGGING, builder.build())
         } else {
             nm.cancel(Constants.NOTIFICATION_EXTERNAL_FILE_LOGGING)
 

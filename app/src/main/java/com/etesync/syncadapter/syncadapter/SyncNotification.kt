@@ -9,17 +9,14 @@ import android.net.Uri
 import android.os.Bundle
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.os.BundleCompat
 import at.bitfire.ical4android.CalendarStorageException
 import at.bitfire.vcard4android.ContactsStorageException
 import com.etebase.client.exceptions.*
-import com.etesync.syncadapter.AccountSettings
-import com.etesync.syncadapter.Constants
 import com.etesync.syncadapter.R
-import com.etesync.journalmanager.Exceptions
 import com.etesync.syncadapter.log.Logger
 import com.etesync.syncadapter.ui.AccountSettingsActivity
 import com.etesync.syncadapter.ui.DebugInfoActivity
-import com.etesync.syncadapter.ui.WebViewActivity
 import com.etesync.syncadapter.utils.NotificationUtils
 import java.util.logging.Level
 
@@ -39,30 +36,21 @@ class SyncNotification(internal val context: Context, internal val notificationT
 
     fun setThrowable(e: Throwable) {
         throwable = e
-        if (e is Exceptions.UnauthorizedException || e is UnauthorizedException) {
+        if (e is UnauthorizedException) {
             Logger.log.log(Level.SEVERE, "Not authorized anymore", e)
             messageInt = R.string.sync_error_unauthorized
-        } else if (e is Exceptions.UserInactiveException) {
-            Logger.log.log(Level.SEVERE, "User inactive")
-            messageInt = R.string.sync_error_user_inactive
-        } else if (e is Exceptions.ServiceUnavailableException || e is TemporaryServerErrorException) {
+        } else if (e is TemporaryServerErrorException) {
             Logger.log.log(Level.SEVERE, "Service unavailable")
             messageInt = R.string.sync_error_unavailable
-        } else if (e is Exceptions.ReadOnlyException) {
-            Logger.log.log(Level.SEVERE, "Journal is read only", e)
-            messageInt = R.string.sync_error_journal_readonly
         } else if (e is PermissionDeniedException) {
             Logger.log.log(Level.SEVERE, "Permission denied", e)
             messageString = context.getString(R.string.sync_error_permission_denied, e.localizedMessage)
-        } else if (e is Exceptions.HttpException || e is ServerErrorException) {
+        } else if (e is ServerErrorException) {
             Logger.log.log(Level.SEVERE, "HTTP Exception during sync", e)
             messageInt = R.string.sync_error_http_dav
         } else if (e is CalendarStorageException || e is ContactsStorageException || e is SQLiteException) {
             Logger.log.log(Level.SEVERE, "Couldn't access local storage", e)
             messageInt = R.string.sync_error_local_storage
-        } else if (e is Exceptions.IntegrityException) {
-            Logger.log.log(Level.SEVERE, "Integrity error", e)
-            messageInt = R.string.sync_error_integrity
         } else {
             Logger.log.log(Level.SEVERE, "Unknown sync error", e)
             messageInt = R.string.sync_error
@@ -111,7 +99,7 @@ class SyncNotification(internal val context: Context, internal val notificationT
             builder.setStyle(NotificationCompat.BigTextStyle()
                     .bigText(bigText))
 
-        notificationManager.notify(notificationTag, notificationId, builder.build())
+        NotificationUtils.notifyIfPermitted(context, notificationTag, notificationId, builder.build())
     }
 
 
@@ -123,20 +111,11 @@ class SyncNotification(internal val context: Context, internal val notificationT
 
         public override fun onCreate(savedBundle: Bundle?) {
             super.onCreate(savedBundle)
-            val extras = intent.extras
-            val e = extras!!.get(DebugInfoActivity.KEY_THROWABLE) as Exception
+            val e = BundleCompat.getSerializable(intent.extras!!, DebugInfoActivity.KEY_THROWABLE, Throwable::class.java)
 
             val detailsIntent: Intent
-            if (e is Exceptions.UnauthorizedException) {
+            if (e is PermissionDeniedException || e is UnauthorizedException) {
                 detailsIntent = Intent(this, AccountSettingsActivity::class.java)
-            } else if (e is PermissionDeniedException || e is UnauthorizedException) {
-                detailsIntent = Intent(this, AccountSettingsActivity::class.java)
-            } else if (e is Exceptions.UserInactiveException) {
-                WebViewActivity.openUrl(this, Constants.dashboard)
-                return
-            } else if (e is AccountSettings.AccountMigrationException) {
-                WebViewActivity.openUrl(this, Constants.faqUri.buildUpon().encodedFragment("account-migration-error").build())
-                return
             } else {
                 detailsIntent = DebugInfoActivity.newIntent(this, this::class.toString())
             }

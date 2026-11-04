@@ -11,7 +11,6 @@ package com.etesync.syncadapter.ui
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
-import android.text.Html
 import android.text.Spanned
 import android.text.util.Linkify
 import android.view.LayoutInflater
@@ -19,20 +18,23 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.appcompat.widget.Toolbar
+import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentPagerAdapter
-import androidx.loader.app.LoaderManager
-import androidx.loader.content.AsyncTaskLoader
-import androidx.loader.content.Loader
-import androidx.viewpager.widget.ViewPager
+import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.lifecycleScope
+import androidx.viewpager2.adapter.FragmentStateAdapter
+import androidx.viewpager2.widget.ViewPager2
 import com.etesync.syncadapter.App
 import com.etesync.syncadapter.BuildConfig
 import com.etesync.syncadapter.Constants
 import com.etesync.syncadapter.R
 import com.etesync.syncadapter.log.Logger
 import com.google.android.material.tabs.TabLayout
+import com.google.android.material.tabs.TabLayoutMediator
 import ezvcard.Ezvcard
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.logging.Level
 
@@ -45,32 +47,30 @@ class AboutActivity : BaseActivity() {
         setSupportActionBar(findViewById<View>(R.id.toolbar) as Toolbar)
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
 
-        val viewPager = findViewById<View>(R.id.viewpager) as ViewPager
-        viewPager.adapter = TabsAdapter(supportFragmentManager)
+        val viewPager = findViewById<ViewPager2>(R.id.viewpager)
+        viewPager.adapter = TabsAdapter(this)
 
-        val tabLayout = findViewById<View>(R.id.tabs) as TabLayout
-        tabLayout.setupWithViewPager(viewPager)
+        val tabLayout = findViewById<TabLayout>(R.id.tabs)
+        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
+            tab.text = components[position].title
+        }.attach()
     }
 
     private class ComponentInfo internal constructor(internal val title: String, internal val version: String?, internal val website: String, internal val copyright: String, internal val licenseInfo: Int, internal val licenseTextFile: String)
 
 
-    private class TabsAdapter(fm: FragmentManager) : FragmentPagerAdapter(fm) {
+    private class TabsAdapter(activity: FragmentActivity) : FragmentStateAdapter(activity) {
 
-        override fun getCount(): Int {
+        override fun getItemCount(): Int {
             return components.size
         }
 
-        override fun getPageTitle(position: Int): CharSequence? {
-            return components[position].title
-        }
-
-        override fun getItem(position: Int): Fragment {
+        override fun createFragment(position: Int): Fragment {
             return ComponentFragment.instantiate(position)
         }
     }
 
-    class ComponentFragment : Fragment(), LoaderManager.LoaderCallbacks<Spanned> {
+    class ComponentFragment : Fragment() {
 
         @SuppressLint("SetTextI18n")
         override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -92,32 +92,34 @@ class AboutActivity : BaseActivity() {
             tv.setText(info.licenseInfo)
 
             // load and format license text
-            val args = Bundle(1)
-            args.putString(KEY_FILE_NAME, info.licenseTextFile)
-            loaderManager.initLoader(0, args, this)
-
-            return v
-        }
-
-        override fun onCreateLoader(id: Int, args: Bundle?): Loader<Spanned> {
-            return LicenseLoader(requireContext(), args!!.getString(KEY_FILE_NAME)!!)
-        }
-
-        override fun onLoadFinished(loader: Loader<Spanned>, license: Spanned) {
-            if (view != null) {
-                val tv = requireView().findViewById<View>(R.id.license_text) as TextView?
+            val context = requireContext().applicationContext
+            viewLifecycleOwner.lifecycleScope.launch {
+                val license = withContext(Dispatchers.IO) {
+                    loadLicense(context, info.licenseTextFile)
+                }
+                val tv = view?.findViewById<TextView>(R.id.license_text)
                 if (tv != null) {
                     tv.autoLinkMask = Linkify.EMAIL_ADDRESSES or Linkify.WEB_URLS
                     tv.text = license
                 }
             }
+
+            return v
         }
 
-        override fun onLoaderReset(loader: Loader<Spanned>) {}
+        private fun loadLicense(context: Context, fileName: String): Spanned? {
+            Logger.log.fine("Loading license file $fileName")
+            return try {
+                val raw = context.resources.assets.open(fileName).use { it.readBytes() }
+                HtmlCompat.fromHtml(String(raw), HtmlCompat.FROM_HTML_MODE_LEGACY)
+            } catch (e: IOException) {
+                Logger.log.log(Level.SEVERE, "Couldn't read license file", e)
+                null
+            }
+        }
 
         companion object {
-            private val KEY_POSITION = "position"
-            private val KEY_FILE_NAME = "fileName"
+            private const val KEY_POSITION = "position"
 
             fun instantiate(position: Int): ComponentFragment {
                 val frag = ComponentFragment()
@@ -126,32 +128,6 @@ class AboutActivity : BaseActivity() {
                 frag.arguments = args
                 return frag
             }
-        }
-    }
-
-    private class LicenseLoader internal constructor(context: Context, internal val fileName: String) : AsyncTaskLoader<Spanned>(context) {
-        internal var content: Spanned? = null
-
-        override fun onStartLoading() {
-            if (content == null)
-                forceLoad()
-            else
-                deliverResult(content)
-        }
-
-        override fun loadInBackground(): Spanned? {
-            Logger.log.fine("Loading license file $fileName")
-            try {
-                val inputStream = context.resources.assets.open(fileName)
-                val raw = inputStream.readBytes()
-                inputStream.close()
-                content = Html.fromHtml(String(raw))
-                return content
-            } catch (e: IOException) {
-                Logger.log.log(Level.SEVERE, "Couldn't read license file", e)
-                return null
-            }
-
         }
     }
 
@@ -166,26 +142,17 @@ class AboutActivity : BaseActivity() {
                 "Ricki Hirner, Bernhard Stockmann (bitfire web engineering)",
                 R.string.about_license_info_no_warranty, "gpl-3.0-standalone.html"
         ), ComponentInfo(
-                "AmbilWarna", null, "https://github.com/yukuku/ambilwarna",
-                "Yuku", R.string.about_license_info_no_warranty, "apache2.html"
-        ), ComponentInfo(
                 "Apache Commons", null, "http://commons.apache.org/",
                 "Apache Software Foundation", R.string.about_license_info_no_warranty, "apache2.html"
-        ), ComponentInfo(
-                "dnsjava", null, "http://dnsjava.org/",
-                "Brian Wellington", R.string.about_license_info_no_warranty, "bsd.html"
         ), ComponentInfo(
                 "ez-vcard", Ezvcard.VERSION, "https://github.com/mangstadt/ez-vcard",
                 "Michael Angstadt", R.string.about_license_info_no_warranty, "bsd.html"
         ), ComponentInfo(
-                "ical4j", "2.x", "https://ical4j.github.io/",
+                "ical4j", "4.x", "https://ical4j.github.io/",
                 "Ben Fortuna", R.string.about_license_info_no_warranty, "bsd-3clause.html"
         ), ComponentInfo(
                 "OkHttp", null, "https://square.github.io/okhttp/",
                 "Square, Inc.", R.string.about_license_info_no_warranty, "apache2.html"
-        ), ComponentInfo(
-                "Project Lombok", null, "https://projectlombok.org/",
-                "The Project Lombok Authors", R.string.about_license_info_no_warranty, "mit.html"
         ))
     }
 

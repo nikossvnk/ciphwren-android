@@ -1,7 +1,7 @@
 package com.etesync.syncadapter.ui.etebase
 
 import android.app.Dialog
-import android.app.ProgressDialog
+import android.widget.ProgressBar
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -24,7 +24,11 @@ import com.etesync.syncadapter.R
 import com.etesync.syncadapter.resource.LocalCalendar
 import com.etesync.syncadapter.syncadapter.requestSync
 import com.etesync.syncadapter.ui.BaseActivity
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -42,17 +46,17 @@ class CollectionMembersFragment : Fragment() {
             inflater.inflate(R.layout.etebase_view_collection_members_no_access, container, false)
         }
 
-        if (savedInstanceState == null) {
-            collectionModel.observe(this) {
-                (activity as? BaseActivity?)?.supportActionBar?.setTitle(R.string.collection_members_title)
-                if (container != null) {
-                    initUi(inflater, ret, it)
-                }
-            }
-        }
 
         return ret
     }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        collectionModel.observe(viewLifecycleOwner) {
+            (activity as? BaseActivity)?.supportActionBar?.setTitle(R.string.collection_members_title)
+            initUi(layoutInflater, view, it)
+        }
+    }
+
 
     private fun initUi(inflater: LayoutInflater, v: View, cachedCollection: CachedCollection) {
         val meta = cachedCollection.meta
@@ -83,14 +87,13 @@ class CollectionMembersFragment : Fragment() {
             }
         } else {
             v.findViewById<Button>(R.id.leave).setOnClickListener {
-                lifecycleScope.launch {
+                val accountHolder = model.value ?: return@setOnClickListener
+                val applicationContext = requireContext().applicationContext
+                viewLifecycleOwner.lifecycleScope.launch {
                     withContext(Dispatchers.IO) {
-                        val membersManager = model.value!!.colMgr.getMemberManager(cachedCollection.col)
+                        val membersManager = accountHolder.colMgr.getMemberManager(cachedCollection.col)
                         membersManager.leave()
-                        val applicationContext = activity?.applicationContext
-                        if (applicationContext != null) {
-                            requestSync(applicationContext, model.value!!.account)
-                        }
+                        requestSync(applicationContext, accountHolder.account)
                     }
                     activity?.finish()
                 }
@@ -109,7 +112,7 @@ class CollectionMembersFragment : Fragment() {
                     val username = view.findViewById<EditText>(R.id.username).text.toString()
                     val readOnly = view.findViewById<CheckBox>(R.id.read_only).isChecked
 
-                    val frag = AddMemberFragment.newInstance(model.value!!, collectionModel.value!!, username, if (readOnly) CollectionAccessLevel.ReadOnly else CollectionAccessLevel.ReadWrite)
+                    val frag = AddMemberFragment.newInstance(username, if (readOnly) CollectionAccessLevel.ReadOnly else CollectionAccessLevel.ReadWrite)
                     frag.show(childFragmentManager, null)
                 }
                 .setNegativeButton(android.R.string.no) { _, _ -> }
@@ -119,80 +122,144 @@ class CollectionMembersFragment : Fragment() {
 }
 
 class AddMemberFragment : DialogFragment() {
-    private lateinit var accountHolder: AccountHolder
-    private lateinit var cachedCollection: CachedCollection
-    private lateinit var username: String
-    private lateinit var accessLevel: CollectionAccessLevel
+    private val accountModel: AccountViewModel by activityViewModels()
+    private val collectionModel: CollectionViewModel by activityViewModels()
+    private val model: AddMemberViewModel by viewModels()
+    private var prompt: AlertDialog? = null
+    private val username: String
+        get() = requireArguments().getString("username")!!
+    private val accessLevel: CollectionAccessLevel
+        get() = CollectionAccessLevel.valueOf(requireArguments().getString("accessLevel")!!)
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val progress = ProgressDialog(context)
-        progress.setTitle(R.string.collection_members_adding)
-        progress.setMessage(getString(R.string.please_wait))
-        progress.isIndeterminate = true
-        progress.setCanceledOnTouchOutside(false)
         isCancelable = false
-
-        lifecycleScope.launch {
-            val invitationManager = accountHolder.etebase.invitationManager
-            try {
-                val profile = withContext(Dispatchers.IO) {
-                    invitationManager.fetchUserProfile(username)
-                }
-                val fingerprint = Utils.prettyFingerprint(profile.pubkey)
-                val view = LayoutInflater.from(context).inflate(R.layout.fingerprint_alertdialog, null)
-                (view.findViewById<View>(R.id.body) as TextView).text = getString(R.string.trust_fingerprint_body, username)
-                (view.findViewById<View>(R.id.fingerprint) as TextView).text = fingerprint
-                AlertDialog.Builder(requireContext())
-                        .setIcon(R.drawable.ic_fingerprint_dark)
-                        .setTitle(R.string.trust_fingerprint_title)
-                        .setView(view)
-                        .setPositiveButton(android.R.string.ok) { _, _ ->
-                            lifecycleScope.launch {
-                                try {
-                                    withContext(Dispatchers.IO) {
-                                        invitationManager.invite(cachedCollection.col, username, profile.pubkey, accessLevel)
-                                    }
-                                    AlertDialog.Builder(requireContext())
-                                        .setTitle(R.string.collection_members_add)
-                                        .setIcon(R.drawable.ic_account_add_dark)
-                                        .setMessage(R.string.collection_members_add_success)
-                                        .setPositiveButton(android.R.string.yes) { _, _ -> }
-                                        .show()
-                                    dismiss()
-                                } catch (e: EtebaseException) {
-                                    handleError(e.localizedMessage)
-                                }
-                            }
-                        }
-                        .setNegativeButton(android.R.string.cancel) { _, _ -> dismiss() }.show()
-            } catch (e: NotFoundException) {
-                handleError(getString(R.string.collection_members_error_user_not_found, username))
-            } catch (e: EtebaseException) {
-                handleError(e.localizedMessage)
-            }
-        }
-
-        return progress
+        return AlertDialog.Builder(requireContext())
+            .setTitle(R.string.collection_members_adding)
+            .setMessage(R.string.please_wait)
+            .setView(ProgressBar(requireContext()))
+            .create().apply { setCanceledOnTouchOutside(false) }
     }
 
-    private fun handleError(message: String) {
-        AlertDialog.Builder(requireContext())
-                .setIcon(R.drawable.ic_error_dark)
-                .setTitle(R.string.collection_members_add_error)
-                .setMessage(message)
-                .setPositiveButton(android.R.string.yes) { _, _ -> }.show()
-        dismiss()
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        accountModel.observe(this) { startLoading() }
+        collectionModel.observe(this) { startLoading() }
+        model.state.observe(this) { render(it) }
+    }
+
+    private fun startLoading() {
+        val holder = accountModel.value ?: return
+        val collection = collectionModel.value ?: return
+        model.load(holder, collection, username, accessLevel)
+    }
+
+    private fun render(state: AddMemberViewModel.State) {
+        prompt?.dismiss()
+        prompt = null
+        when (state) {
+            AddMemberViewModel.State.LOADING, AddMemberViewModel.State.INVITING -> Unit
+            AddMemberViewModel.State.CONFIRM -> {
+                val view = LayoutInflater.from(requireContext()).inflate(R.layout.fingerprint_alertdialog, null)
+                view.findViewById<TextView>(R.id.body).text = getString(R.string.trust_fingerprint_body, username)
+                view.findViewById<TextView>(R.id.fingerprint).text = Utils.prettyFingerprint(model.pubkey!!)
+                prompt = AlertDialog.Builder(requireContext())
+                    .setIcon(R.drawable.ic_fingerprint_dark)
+                    .setTitle(R.string.trust_fingerprint_title)
+                    .setView(view)
+                    .setPositiveButton(android.R.string.ok) { _, _ -> model.invite() }
+                    .setNegativeButton(android.R.string.cancel) { _, _ -> dismiss() }
+                    .setOnCancelListener { dismiss() }
+                    .show()
+            }
+            AddMemberViewModel.State.SUCCESS -> {
+                prompt = AlertDialog.Builder(requireContext())
+                    .setTitle(R.string.collection_members_add)
+                    .setIcon(R.drawable.ic_account_add_dark)
+                    .setMessage(R.string.collection_members_add_success)
+                    .setPositiveButton(android.R.string.yes) { _, _ -> dismiss() }
+                    .setOnCancelListener { dismiss() }
+                    .show()
+            }
+            AddMemberViewModel.State.ERROR -> {
+                val message = if (model.error is NotFoundException) {
+                    getString(R.string.collection_members_error_user_not_found, username)
+                } else {
+                    model.error?.localizedMessage
+                }
+                prompt = AlertDialog.Builder(requireContext())
+                    .setIcon(R.drawable.ic_error_dark)
+                    .setTitle(R.string.collection_members_add_error)
+                    .setMessage(message)
+                    .setPositiveButton(android.R.string.yes) { _, _ -> dismiss() }
+                    .setOnCancelListener { dismiss() }
+                    .show()
+            }
+        }
+    }
+
+    override fun onDestroyView() {
+        prompt?.dismiss()
+        prompt = null
+        super.onDestroyView()
     }
 
     companion object {
-        fun newInstance(accountHolder: AccountHolder, cachedCollection: CachedCollection,
-                        username: String, accessLevel: CollectionAccessLevel): AddMemberFragment {
-            val ret = AddMemberFragment()
-            ret.accountHolder = accountHolder
-            ret.cachedCollection = cachedCollection
-            ret.username = username
-            ret.accessLevel = accessLevel
-            return ret
+        fun newInstance(username: String, accessLevel: CollectionAccessLevel): AddMemberFragment =
+            AddMemberFragment().apply {
+                arguments = Bundle().apply {
+                    putString("username", username)
+                    putString("accessLevel", accessLevel.name)
+                }
+            }
+    }
+}
+
+class AddMemberViewModel : ViewModel() {
+    enum class State { LOADING, CONFIRM, INVITING, SUCCESS, ERROR }
+    val state = MutableLiveData(State.LOADING)
+    var pubkey: ByteArray? = null
+        private set
+    var error: EtebaseException? = null
+        private set
+    private var started = false
+    private lateinit var holder: AccountHolder
+    private lateinit var collection: CachedCollection
+    private lateinit var username: String
+    private lateinit var accessLevel: CollectionAccessLevel
+
+    fun load(holder: AccountHolder, collection: CachedCollection, username: String, accessLevel: CollectionAccessLevel) {
+        if (started) return
+        started = true
+        this.holder = holder
+        this.collection = collection
+        this.username = username
+        this.accessLevel = accessLevel
+        viewModelScope.launch {
+            try {
+                pubkey = withContext(Dispatchers.IO) {
+                    holder.etebase.invitationManager.fetchUserProfile(username).pubkey
+                }
+                state.value = State.CONFIRM
+            } catch (e: EtebaseException) {
+                error = e
+                state.value = State.ERROR
+            }
+        }
+    }
+
+    fun invite() {
+        if (state.value != State.CONFIRM) return
+        state.value = State.INVITING
+        viewModelScope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    holder.etebase.invitationManager.invite(collection.col, username, pubkey!!, accessLevel)
+                }
+                state.value = State.SUCCESS
+            } catch (e: EtebaseException) {
+                error = e
+                state.value = State.ERROR
+            }
         }
     }
 }

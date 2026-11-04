@@ -13,4 +13,8 @@
     <dimen name="fab_margin">16dp</dimen>
 
     <dimen name="nav_header_vertical_spacing">16dp</dimen>
+
+    <dimen name="hint_popup_margin">16dp</dimen>
+    <dimen name="hint_popup_max_width">320dp</dimen>
+    <dimen name="hint_popup_elevation">8dp</dimen>
 </resources>

@@ -9,9 +9,9 @@
 package com.etesync.syncadapter.ui
 
 import android.content.Intent
-import android.os.AsyncTask
 import android.os.Build
 import android.os.Bundle
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.*
 import at.bitfire.cert4android.CustomCertManager
 import com.etesync.syncadapter.App
@@ -21,8 +21,11 @@ import com.etesync.syncadapter.model.ServiceDB
 import com.etesync.syncadapter.model.Settings
 import com.etesync.syncadapter.utils.HintManager
 import com.etesync.syncadapter.utils.LanguageUtils
-import com.google.android.material.snackbar.Snackbar
 import com.etesync.syncadapter.utils.defaultSharedPreferences
+import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.net.URI
 import java.net.URISyntaxException
 
@@ -53,7 +56,7 @@ class AppSettingsActivity : BaseActivity() {
         internal lateinit var prefProxyPort: EditTextPreference
 
         override fun onCreate(savedInstanceState: Bundle?) {
-            dbHelper = ServiceDB.OpenHelper(context)
+            dbHelper = ServiceDB.OpenHelper(requireContext())
             settings = Settings(dbHelper.readableDatabase)
 
             super.onCreate(savedInstanceState)
@@ -67,7 +70,7 @@ class AppSettingsActivity : BaseActivity() {
         override fun onCreatePreferences(bundle: Bundle?, s: String?) {
             addPreferencesFromResource(R.xml.settings_app)
 
-            findPreference("notification_settings").apply {
+            findPreference<Preference>("notification_settings")!!.apply {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                     onPreferenceClickListener = Preference.OnPreferenceClickListener {
                         startActivity(Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
@@ -79,16 +82,16 @@ class AppSettingsActivity : BaseActivity() {
                     isVisible = false
             }
 
-            prefResetHints = findPreference("reset_hints")
+            prefResetHints = findPreference("reset_hints")!!
 
-            prefOverrideProxy = findPreference("override_proxy") as SwitchPreferenceCompat
+            prefOverrideProxy = findPreference("override_proxy")!!
             prefOverrideProxy.isChecked = settings.getBoolean(App.OVERRIDE_PROXY, false)
             prefOverrideProxy.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _, newValue ->
                 settings.putBoolean(App.OVERRIDE_PROXY, newValue as Boolean)
                 true
             }
 
-            prefPreferTasksOrg = findPreference("prefer_tasksorg") as SwitchPreferenceCompat
+            prefPreferTasksOrg = findPreference("prefer_tasksorg")!!
             prefPreferTasksOrg.isChecked = requireContext().defaultSharedPreferences.getBoolean(App.PREFER_TASKSORG, false)
             prefPreferTasksOrg.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _, newValue ->
                 requireContext().defaultSharedPreferences.edit().putBoolean(App.PREFER_TASKSORG, newValue as Boolean).apply()
@@ -96,7 +99,7 @@ class AppSettingsActivity : BaseActivity() {
                 true
             }
 
-            prefProxyHost = findPreference("proxy_host") as EditTextPreference
+            prefProxyHost = findPreference("proxy_host")!!
             val proxyHost = settings.getString(App.OVERRIDE_PROXY_HOST, App.OVERRIDE_PROXY_HOST_DEFAULT)
             prefProxyHost.text = proxyHost
             prefProxyHost.summary = proxyHost
@@ -105,7 +108,7 @@ class AppSettingsActivity : BaseActivity() {
                 try {
                     URI(null, host, null, null)
                 } catch (e: URISyntaxException) {
-                    Snackbar.make(requireView(), e.localizedMessage, Snackbar.LENGTH_LONG).show()
+                    Snackbar.make(requireView(), e.localizedMessage ?: e.toString(), Snackbar.LENGTH_LONG).show()
                     return@OnPreferenceChangeListener false
                 }
 
@@ -114,7 +117,7 @@ class AppSettingsActivity : BaseActivity() {
                 true
             }
 
-            prefProxyPort = findPreference("proxy_port") as EditTextPreference
+            prefProxyPort = findPreference("proxy_port")!!
             val proxyPort = settings.getString(App.OVERRIDE_PROXY_PORT, App.OVERRIDE_PROXY_PORT_DEFAULT.toString())
             prefProxyPort.text = proxyPort
             prefProxyPort.summary = proxyPort
@@ -132,10 +135,10 @@ class AppSettingsActivity : BaseActivity() {
                 true
             }
 
-            prefDistrustSystemCerts = findPreference("distrust_system_certs") as SwitchPreferenceCompat
+            prefDistrustSystemCerts = findPreference("distrust_system_certs")!!
             prefDistrustSystemCerts.isChecked = settings.getBoolean(App.DISTRUST_SYSTEM_CERTIFICATES, false)
 
-            findPreference("reset_certificates").apply {
+            findPreference<Preference>("reset_certificates")!!.apply {
                 isVisible = BuildConfig.customCerts
                 isEnabled = true
                 onPreferenceClickListener = Preference.OnPreferenceClickListener {
@@ -145,15 +148,29 @@ class AppSettingsActivity : BaseActivity() {
             }
 
 
-            val prefChangeNotification = findPreference("show_change_notification") as SwitchPreferenceCompat
+            val prefChangeNotification = findPreference<SwitchPreferenceCompat>("show_change_notification")!!
             prefChangeNotification.isChecked = requireContext().defaultSharedPreferences.getBoolean(App.CHANGE_NOTIFICATION, true)
 
             initSelectLanguageList()
         }
 
         private fun initSelectLanguageList() {
-            val listPreference = findPreference("select_language") as ListPreference
-            LanguageTask(listPreference).execute()
+            val listPreference = findPreference<ListPreference>("select_language")!!
+            val applicationContext = requireContext().applicationContext
+            lifecycleScope.launch {
+                val locales = withContext(Dispatchers.Default) {
+                    LanguageUtils.getAppLanguages(applicationContext)
+                }
+
+                listPreference.entries = locales.displayNames
+                listPreference.entryValues = locales.localeData
+                listPreference.value = LanguageUtils.getLanguage()
+                listPreference.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _, newValue ->
+                    // AppCompat recreates the activities to apply the language
+                    LanguageUtils.setLanguage(newValue.toString())
+                    true
+                }
+            }
         }
 
         override fun onPreferenceTreeClick(preference: Preference): Boolean {
@@ -178,37 +195,6 @@ class AppSettingsActivity : BaseActivity() {
         private fun resetCertificates() {
             if (CustomCertManager.resetCertificates(requireActivity()))
                 Snackbar.make(requireView(), getString(R.string.app_settings_reset_certificates_success), Snackbar.LENGTH_LONG).show()
-        }
-
-        private inner class LanguageTask internal constructor(private val mListPreference: ListPreference) : AsyncTask<Void, Void, LanguageUtils.LocaleList>() {
-
-            override fun doInBackground(vararg voids: Void): LanguageUtils.LocaleList {
-                return LanguageUtils.getAppLanguages(requireContext())
-
-            }
-
-            override fun onPostExecute(locales: LanguageUtils.LocaleList) {
-
-                mListPreference.entries = locales.displayNames
-                mListPreference.entryValues = locales.localeData
-
-                mListPreference.value = settings.getString(App.FORCE_LANGUAGE,
-                        App.DEFAULT_LANGUAGE)
-                mListPreference.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { preference, newValue ->
-                    val value = newValue.toString()
-                    if (value == (preference as ListPreference).value) return@OnPreferenceChangeListener true
-
-                    LanguageUtils.setLanguage(requireContext(), value)
-
-                    settings.putString(App.FORCE_LANGUAGE, newValue.toString())
-
-                    val intent = Intent(context, AccountsActivity::class.java)
-                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    startActivity(intent)
-                    false
-                }
-            }
         }
     }
 }

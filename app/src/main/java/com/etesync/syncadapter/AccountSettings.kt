@@ -10,23 +10,19 @@ package com.etesync.syncadapter
 import android.accounts.Account
 import android.accounts.AccountManager
 import android.annotation.SuppressLint
-import android.annotation.TargetApi
 import android.content.BroadcastReceiver
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import at.bitfire.vcard4android.ContactsStorageException
 import at.bitfire.vcard4android.GroupMethod
-import com.etesync.journalmanager.Crypto
 import com.etesync.syncadapter.log.Logger
-import com.etesync.syncadapter.utils.Base64
 import java.net.URI
 import java.net.URISyntaxException
 import java.util.logging.Level
 
-class AccountSettings @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+class AccountSettings
 @Throws(InvalidAccountException::class)
 constructor(internal val context: Context, internal val account: Account) {
     internal val accountManager: AccountManager
@@ -49,26 +45,9 @@ constructor(internal val context: Context, internal val account: Account) {
         }
         set(uri) = accountManager.setUserData(account, KEY_URI, uri.toString())
 
-    var authToken: String
-        get() = accountManager.getUserData(account, KEY_TOKEN)
-        set(token) = accountManager.setUserData(account, KEY_TOKEN, token)
-
-
-    var keyPair: Crypto.AsymmetricKeyPair?
-        get() {
-            if (accountManager.getUserData(account, KEY_ASYMMETRIC_PUBLIC_KEY) != null) {
-                val pubkey = Base64.decode(accountManager.getUserData(account, KEY_ASYMMETRIC_PUBLIC_KEY), Base64.NO_WRAP)
-                val privkey = Base64.decode(accountManager.getUserData(account, KEY_ASYMMETRIC_PRIVATE_KEY), Base64.NO_WRAP)
-
-                return Crypto.AsymmetricKeyPair(privkey, pubkey)
-            }
-
-            return null
-        }
-        set(keyPair) {
-            accountManager.setUserData(account, KEY_ASYMMETRIC_PUBLIC_KEY, Base64.encodeToString(keyPair?.publicKey, Base64.NO_WRAP))
-            accountManager.setUserData(account, KEY_ASYMMETRIC_PRIVATE_KEY, Base64.encodeToString(keyPair?.privateKey, Base64.NO_WRAP))
-        }
+    var etebaseSession: String?
+        get() = accountManager.getUserData(account, KEY_ETEBASE_SESSION)
+        set(value) = accountManager.setUserData(account, KEY_ETEBASE_SESSION, value)
 
     val syncWifiOnly: Boolean
         get() = accountManager.getUserData(account, KEY_WIFI_ONLY) != null
@@ -77,12 +56,12 @@ constructor(internal val context: Context, internal val account: Account) {
         get() = accountManager.getUserData(account, KEY_WIFI_ONLY_SSID)
         set(ssid) = accountManager.setUserData(account, KEY_WIFI_ONLY_SSID, ssid)
 
-    var etebaseSession: String?
-        get() = accountManager.getUserData(account, KEY_ETEBASE_SESSION)
-        set(value) = accountManager.setUserData(account, KEY_ETEBASE_SESSION, value)
-
-    val isLegacy: Boolean
-        get() = authToken != null
+    /**
+     * Whether this is an EteSync 1.0 account (authenticated with an auth token instead of an
+     * Etebase session). These accounts aren't supported anymore and can't be synchronized.
+     */
+    val isEteSync1Account: Boolean
+        get() = accountManager.getUserData(account, KEY_TOKEN) != null
 
     // CalDAV settings
 
@@ -136,15 +115,6 @@ constructor(internal val context: Context, internal val account: Account) {
         accountManager.setUserData(account, KEY_USERNAME, userName)
     }
 
-    fun password(): String {
-        return accountManager.getPassword(account)
-    }
-
-    fun password(password: String) {
-        accountManager.setPassword(account, password)
-    }
-
-
     // sync. settings
 
     fun getSyncInterval(authority: String): Long? {
@@ -181,7 +151,6 @@ constructor(internal val context: Context, internal val account: Account) {
         val toVersion = CURRENT_VERSION
         Logger.log.info("Updating account " + account.name + " from version " + fromVersion + " to " + toVersion)
         try {
-            updateInner(fromVersion)
             accountManager.setUserData(account, KEY_SETTINGS_VERSION, toVersion.toString())
         } catch (e: Exception) {
             Logger.log.log(Level.SEVERE, "Couldn't update account settings", e)
@@ -189,11 +158,6 @@ constructor(internal val context: Context, internal val account: Account) {
 
     }
 
-    @Throws(ContactsStorageException::class)
-    private fun updateInner(fromVersion: Int) {
-        if (fromVersion < 2) {
-        }
-    }
 
     class AppUpdatedReceiver : BroadcastReceiver() {
 
@@ -215,16 +179,12 @@ constructor(internal val context: Context, internal val account: Account) {
 
     }
 
-    class AccountMigrationException(msg: String) : Exception(msg)
-
     companion object {
         private val CURRENT_VERSION = 2
         private val KEY_SETTINGS_VERSION = "version"
         private val KEY_URI = "uri"
         private val KEY_USERNAME = "user_name"
-        private val KEY_TOKEN = "auth_token"
-        private val KEY_ASYMMETRIC_PRIVATE_KEY = "asymmetric_private_key"
-        private val KEY_ASYMMETRIC_PUBLIC_KEY = "asymmetric_public_key"
+        private val KEY_TOKEN = "auth_token"  // only set for EteSync 1.0 accounts
         private val KEY_WIFI_ONLY = "wifi_only"
         private val KEY_ETEBASE_SESSION = "etebase_session"
         // sync on WiFi only (default: false)

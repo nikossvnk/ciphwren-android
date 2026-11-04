@@ -10,10 +10,8 @@ package com.etesync.syncadapter.ui.setup
 
 import android.os.Parcel
 import android.os.Parcelable
-import com.etesync.syncadapter.Constants
-import com.etesync.syncadapter.log.Logger
+import androidx.core.os.ParcelCompat
 import java.net.URI
-import java.net.URISyntaxException
 
 class LoginCredentials(val uri: URI?, val userName: String, val password: String) : Parcelable {
 
@@ -29,10 +27,10 @@ class LoginCredentials(val uri: URI?, val userName: String, val password: String
 
     companion object {
         @JvmField
-        val CREATOR: Parcelable.Creator<*> = object : Parcelable.Creator<LoginCredentials> {
+        val CREATOR: Parcelable.Creator<LoginCredentials> = object : Parcelable.Creator<LoginCredentials> {
             override fun createFromParcel(source: Parcel): LoginCredentials {
                 return LoginCredentials(
-                        source.readSerializable() as URI,
+                        ParcelCompat.readSerializable(source, URI::class.java.classLoader, URI::class.java),
                         source.readString()!!, source.readString()!!
                 )
             }

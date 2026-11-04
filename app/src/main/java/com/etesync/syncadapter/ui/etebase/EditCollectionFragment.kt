@@ -6,6 +6,7 @@ import android.text.TextUtils
 import android.view.*
 import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.commit
@@ -19,14 +20,14 @@ import com.etesync.syncadapter.log.Logger
 import com.etesync.syncadapter.resource.LocalCalendar
 import com.etesync.syncadapter.syncadapter.requestSync
 import com.etesync.syncadapter.ui.BaseActivity
-import org.apache.commons.lang3.StringUtils
+import com.etesync.syncadapter.ui.ColorPickerDialog
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import yuku.ambilwarna.AmbilWarnaDialog
 
-class EditCollectionFragment : Fragment() {
+class EditCollectionFragment : Fragment(), MenuProvider {
     private val model: AccountViewModel by activityViewModels()
     private val collectionModel: CollectionViewModel by activityViewModels()
     private val itemsModel: ItemsViewModel by activityViewModels()
@@ -37,7 +38,6 @@ class EditCollectionFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val ret = inflater.inflate(R.layout.activity_create_collection, container, false)
-        setHasOptionsMenu(true)
 
         if (savedInstanceState == null) {
             updateTitle()
@@ -47,6 +47,11 @@ class EditCollectionFragment : Fragment() {
         }
 
         return ret
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        requireActivity().addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
     }
 
     fun updateTitle() {
@@ -88,13 +93,9 @@ class EditCollectionFragment : Fragment() {
                 val color = LocalCalendar.parseColor(meta.color)
                 colorSquare.setBackgroundColor(color)
                 colorSquare.setOnClickListener {
-                    AmbilWarnaDialog(context, (colorSquare.background as ColorDrawable).color, true, object : AmbilWarnaDialog.OnAmbilWarnaListener {
-                        override fun onCancel(dialog: AmbilWarnaDialog) {}
-
-                        override fun onOk(dialog: AmbilWarnaDialog, color: Int) {
-                            colorSquare.setBackgroundColor(color)
-                        }
-                    }).show()
+                    ColorPickerDialog.show(requireContext(), (colorSquare.background as ColorDrawable).color) { color ->
+                        colorSquare.setBackgroundColor(color)
+                    }
                 }
             }
             Constants.ETEBASE_TYPE_TASKS -> {
@@ -103,13 +104,9 @@ class EditCollectionFragment : Fragment() {
                 val color = LocalCalendar.parseColor(meta.color)
                 colorSquare.setBackgroundColor(color)
                 colorSquare.setOnClickListener {
-                    AmbilWarnaDialog(context, (colorSquare.background as ColorDrawable).color, true, object : AmbilWarnaDialog.OnAmbilWarnaListener {
-                        override fun onCancel(dialog: AmbilWarnaDialog) {}
-
-                        override fun onOk(dialog: AmbilWarnaDialog, color: Int) {
-                            colorSquare.setBackgroundColor(color)
-                        }
-                    }).show()
+                    ColorPickerDialog.show(requireContext(), (colorSquare.background as ColorDrawable).color) { color ->
+                        colorSquare.setBackgroundColor(color)
+                    }
                 }
             }
             Constants.ETEBASE_TYPE_ADDRESS_BOOK -> {
@@ -121,24 +118,24 @@ class EditCollectionFragment : Fragment() {
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        super.onCreateOptionsMenu(menu, inflater)
-        inflater.inflate(R.menu.fragment_edit_collection, menu)
+    override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+        menuInflater.inflate(R.menu.fragment_edit_collection, menu)
         if (isCreating) {
-            menu.findItem(R.id.on_delete).setVisible(false)
+            menu.findItem(R.id.on_delete).isVisible = false
         }
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
+    override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+        when (menuItem.itemId) {
             R.id.on_delete -> {
                 deleteColection()
             }
             R.id.on_save -> {
                 saveCollection()
             }
+            else -> return false
         }
-        return super.onOptionsItemSelected(item)
+        return true
     }
 
     private fun deleteColection() {
@@ -157,21 +154,21 @@ class EditCollectionFragment : Fragment() {
     }
 
     private fun doDeleteCollection() {
+        val accountHolder = model.value ?: return
+        val applicationContext = requireContext().applicationContext
         loadingModel.setLoading(true)
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 withContext(Dispatchers.IO) {
                     val col = cachedCollection.col
                     val meta = col.meta
                     meta.mtime = System.currentTimeMillis()
                     col.meta = meta
-                    col.delete()
-                    uploadCollection(col)
-                    val applicationContext = activity?.applicationContext
-                    if (applicationContext != null) {
-                        requestSync(applicationContext, model.value!!.account)
-                    }
+                    col.markDeleted()
+                    uploadCollection(col, accountHolder)
+                    requestSync(applicationContext, accountHolder.account)
                 }
+                collectionModel.loadCollection(accountHolder, cachedCollection.col.uid)
                 activity?.finish()
             } catch (e: EtebaseException) {
                 Logger.log.warning(e.localizedMessage)
@@ -202,7 +199,7 @@ class EditCollectionFragment : Fragment() {
         }
 
         edit = v.findViewById<EditText>(R.id.description)
-        meta.description = StringUtils.trimToNull(edit.text.toString())
+        meta.description = edit.text.toString().trim().ifEmpty { null }
 
         meta.mtime = System.currentTimeMillis()
 
@@ -217,18 +214,18 @@ class EditCollectionFragment : Fragment() {
                 }
             }
 
+            val accountHolder = model.value ?: return
+            val applicationContext = requireContext().applicationContext
             loadingModel.setLoading(true)
-            lifecycleScope.launch {
+            viewLifecycleOwner.lifecycleScope.launch {
                 try {
                     withContext(Dispatchers.IO) {
                         val col = cachedCollection.col
                         col.meta = meta
-                        uploadCollection(col)
-                        val applicationContext = activity?.applicationContext
-                        if (applicationContext != null) {
-                            requestSync(applicationContext, model.value!!.account)
-                        }
+                        uploadCollection(col, accountHolder)
+                        requestSync(applicationContext, accountHolder.account)
                     }
+                    collectionModel.loadCollection(accountHolder, cachedCollection.col.uid)
                     if (isCreating) {
                         // Load the items since we just created it
                         itemsModel.loadItems(model.value!!, cachedCollection)
@@ -254,15 +251,13 @@ class EditCollectionFragment : Fragment() {
         }
     }
 
-    private fun uploadCollection(col: Collection) {
-        val accountHolder = model.value!!
+    private fun uploadCollection(col: Collection, accountHolder: AccountHolder) {
         val etebaseLocalCache = accountHolder.etebaseLocalCache
         val colMgr = accountHolder.colMgr
         colMgr.upload(col)
         synchronized(etebaseLocalCache) {
             etebaseLocalCache.collectionSet(colMgr, col)
         }
-        collectionModel.loadCollection(model.value!!, col.uid)
     }
 
     companion object {

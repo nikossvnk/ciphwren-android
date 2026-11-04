@@ -15,7 +15,6 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.observe
 import com.etebase.client.CollectionAccessLevel
 import com.etebase.client.FetchOptions
 import com.etebase.client.SignedInvitation
@@ -175,5 +174,5 @@ class InvitationsViewModel : ViewModel() {
     }
 
     fun observe(owner: LifecycleOwner, observer: (List<SignedInvitation>) -> Unit) =
-            invitations.observe(owner, observer)
+            invitations.observe(owner) { observer(it) }
 }

@@ -12,7 +12,6 @@ import android.accounts.Account
 import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
-import android.os.Build
 import android.os.RemoteException
 import at.bitfire.ical4android.AndroidTaskList
 import at.bitfire.ical4android.AndroidTaskListFactory
@@ -20,7 +19,6 @@ import at.bitfire.ical4android.CalendarStorageException
 import at.bitfire.ical4android.TaskProvider
 import at.bitfire.ical4android.TaskProvider.ProviderName
 import com.etesync.syncadapter.CachedCollection
-import com.etesync.syncadapter.model.JournalEntity
 import org.dmfs.tasks.contract.TaskContract.TaskLists
 import org.dmfs.tasks.contract.TaskContract.Tasks
 
@@ -32,28 +30,8 @@ class LocalTaskList private constructor(
     companion object {
         val defaultColor = -0x743cb6     // light green 500
 
-        fun tasksProviderAvailable(context: Context, provider: ProviderName): Boolean {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-                return context.packageManager.resolveContentProvider(provider.authority, 0) != null
-            else {
-                try {
-                    TaskProvider.acquire(context, provider)?.use {
-                        return true
-                    }
-                } catch (e: Exception) {
-                    // couldn't acquire task provider
-                }
-                return false
-            }
-        }
-
-        fun create(account: Account, provider: TaskProvider, journalEntity: JournalEntity): Uri {
-            val values = valuesFromCollectionInfo(journalEntity, true)
-            values.put(TaskLists.OWNER, account.name)
-            values.put(TaskLists.SYNC_ENABLED, 1)
-            values.put(TaskLists.VISIBLE, 1)
-            return create(account, provider, values)
-        }
+        fun tasksProviderAvailable(context: Context, provider: ProviderName): Boolean =
+                context.packageManager.resolveContentProvider(provider.authority, 0) != null
 
         fun create(account: Account, provider: TaskProvider, cachedCollection: CachedCollection): Uri {
             val values = valuesFromCachedCollection(cachedCollection, true)
@@ -65,19 +43,6 @@ class LocalTaskList private constructor(
 
         fun findByName(account: Account, provider: TaskProvider, factory: Factory, name: String): LocalTaskList?
                 = AndroidTaskList.find(account, provider, factory, TaskLists._SYNC_ID + "==?", arrayOf(name)).firstOrNull()
-
-
-        private fun valuesFromCollectionInfo(journalEntity: JournalEntity, withColor: Boolean): ContentValues {
-            val info = journalEntity.info
-            val values = ContentValues(3)
-            values.put(TaskLists._SYNC_ID, info.uid)
-            values.put(TaskLists.LIST_NAME, if (info.displayName.isNullOrBlank()) info.uid else info.displayName)
-
-            if (withColor)
-                values.put(TaskLists.LIST_COLOR, info.color ?: defaultColor)
-
-            return values
-        }
 
         private fun valuesFromCachedCollection(cachedCollection: CachedCollection, withColor: Boolean): ContentValues {
             val col = cachedCollection.col
@@ -95,9 +60,6 @@ class LocalTaskList private constructor(
 
     override val url: String?
         get() = syncId
-
-    fun update(journalEntity: JournalEntity, updateColor: Boolean) =
-            update(valuesFromCollectionInfo(journalEntity, updateColor))
 
     fun update(cachedCollection: CachedCollection, updateColor: Boolean) =
             update(valuesFromCachedCollection(cachedCollection, updateColor))

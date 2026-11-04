@@ -16,24 +16,19 @@ import at.bitfire.ical4android.CalendarStorageException
 import at.bitfire.vcard4android.BatchOperation
 import at.bitfire.vcard4android.Contact
 import at.bitfire.vcard4android.ContactsStorageException
-import com.etesync.journalmanager.Exceptions
-import com.etesync.journalmanager.JournalEntryManager
-import com.etesync.journalmanager.model.SyncEntry
 import com.etebase.client.Item
 import com.etesync.syncadapter.AccountSettings
 import com.etesync.syncadapter.Constants
 import com.etesync.syncadapter.HttpClient
 import com.etesync.syncadapter.R
 import com.etesync.syncadapter.log.Logger
-import com.etesync.syncadapter.model.CollectionInfo
+import com.etesync.syncadapter.model.CollectionType
 import com.etesync.syncadapter.resource.LocalAddress
 import com.etesync.syncadapter.resource.LocalAddressBook
 import com.etesync.syncadapter.resource.LocalContact
 import com.etesync.syncadapter.resource.LocalGroup
-import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.Request
-import org.apache.commons.collections4.SetUtils
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.StringReader
@@ -43,8 +38,8 @@ import java.util.logging.Level
  *
  * Synchronization manager for CardDAV collections; handles contacts and groups.
  */
-class ContactsSyncManager @Throws(Exceptions.IntegrityException::class, Exceptions.GenericCryptoException::class, ContactsStorageException::class)
-constructor(context: Context, account: Account, settings: AccountSettings, extras: Bundle, authority: String, private val provider: ContentProviderClient, result: SyncResult, localAddressBook: LocalAddressBook, private val remote: HttpUrl) : SyncManager<LocalAddress>(context, account, settings, extras, authority, result, localAddressBook.url, CollectionInfo.Type.ADDRESS_BOOK, localAddressBook.mainAccount.name) {
+class ContactsSyncManager @Throws(ContactsStorageException::class)
+constructor(context: Context, account: Account, settings: AccountSettings, extras: Bundle, authority: String, private val provider: ContentProviderClient, result: SyncResult, localAddressBook: LocalAddressBook) : SyncManager<LocalAddress>(context, account, settings, extras, authority, result, localAddressBook.url, CollectionType.ADDRESS_BOOK, localAddressBook.mainAccount.name) {
     private val resourceDownloader: ResourceDownloader
 
     protected override val syncErrorTitle: String
@@ -78,10 +73,6 @@ constructor(context: Context, account: Account, settings: AccountSettings, extra
             }
         }
 
-        if (isLegacy) {
-            journal = JournalEntryManager(httpClient.okHttpClient, remote, localAddressBook.url)
-        }
-
         return true
     }
 
@@ -100,7 +91,7 @@ constructor(context: Context, account: Account, settings: AccountSettings, extra
                 Logger.log.fine("Looking for changed group memberships of contact " + contact.fileName)
                 val cachedGroups = contact.getCachedGroupMemberships()
                 val currentGroups = contact.getGroupMemberships()
-                for (groupID in SetUtils.disjunction(cachedGroups, currentGroups)) {
+                for (groupID in (cachedGroups - currentGroups) + (currentGroups - cachedGroups)) {
                     Logger.log.fine("Marking group as dirty: " + groupID!!)
                     batch.enqueue(BatchOperation.CpoBuilder.newUpdate(addressBook.syncAdapterURI(ContentUris.withAppendedId(ContactsContract.Groups.CONTENT_URI, groupID)))
                                     .withValue(ContactsContract.Groups.DIRTY, 1)
@@ -154,32 +145,6 @@ constructor(context: Context, account: Account, settings: AccountSettings, extra
         }
     }
 
-    @Throws(IOException::class, ContactsStorageException::class, CalendarStorageException::class)
-    override fun processSyncEntryImpl(cEntry: SyncEntry) {
-        val inputReader = StringReader(cEntry.content)
-
-        val contacts = Contact.fromReader(inputReader, resourceDownloader)
-        if (contacts.size == 0) {
-            Logger.log.warning("Received VCard without data, ignoring")
-            return
-        } else if (contacts.size > 1)
-            Logger.log.warning("Received multiple VCards, using first one")
-
-        val contact = contacts[0]
-        val local = localCollection!!.findByUid(contact.uid!!)
-
-        if (cEntry.isAction(SyncEntry.Actions.ADD) || cEntry.isAction(SyncEntry.Actions.CHANGE)) {
-            legacyProcessContact(contact, local)
-        } else {
-            if (local != null) {
-                Logger.log.info("Removing local record which has been deleted on the server")
-                local.delete()
-            } else {
-                Logger.log.warning("Tried deleting a non-existent record: " + contact.uid)
-            }
-        }
-    }
-
     private fun processContact(item: Item, newData: Contact, _local: LocalAddress?): LocalAddress {
         var local = _local
         val uuid = newData.uid
@@ -223,64 +188,6 @@ constructor(context: Context, account: Account, settings: AccountSettings, extra
             } else {
                 Logger.log.log(Level.INFO, "Creating local contact", item.uid)
                 val contact = LocalContact(localAddressBook(), newData, item.uid, item.etag)
-                contact.add()
-
-                local = contact
-            }
-            syncResult.stats.numInserts++
-        }
-
-        if (LocalContact.HASH_HACK && local is LocalContact)
-        // workaround for Android 7 which sets DIRTY flag when only meta-data is changed
-            local.updateHashCode(null)
-
-        return local
-    }
-
-    @Throws(IOException::class, ContactsStorageException::class)
-    private fun legacyProcessContact(newData: Contact, _local: LocalAddress?): LocalAddress {
-        var local = _local
-        val uuid = newData.uid
-        // update local contact, if it exists
-        if (local != null) {
-            Logger.log.log(Level.INFO, "Updating $uuid in local address book")
-
-            if (local is LocalGroup && newData.group) {
-                // update group
-                val group: LocalGroup = local
-                group.eTag = uuid
-                group.update(newData)
-                syncResult.stats.numUpdates++
-
-            } else if (local is LocalContact && !newData.group) {
-                // update contact
-                val contact: LocalContact = local
-                contact.eTag = uuid
-                contact.update(newData)
-                syncResult.stats.numUpdates++
-
-            } else {
-                // group has become an individual contact or vice versa
-                try {
-                    local.delete()
-                    local = null
-                } catch (e: CalendarStorageException) {
-                    // CalendarStorageException is not used by LocalGroup and LocalContact
-                }
-
-            }
-        }
-
-        if (local == null) {
-            if (newData.group) {
-                Logger.log.log(Level.INFO, "Creating local group", newData.uid)
-                val group = LocalGroup(localAddressBook(), newData, uuid, uuid)
-                group.add()
-
-                local = group
-            } else {
-                Logger.log.log(Level.INFO, "Creating local contact", newData.uid)
-                val contact = LocalContact(localAddressBook(), newData, uuid, uuid)
                 contact.add()
 
                 local = contact

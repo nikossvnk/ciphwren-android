@@ -12,15 +12,10 @@ interface LocalResource<in TData: Any> {
     val uuid: String?
     val fileName: String?
 
-    /** True if doesn't exist on server yet, false otherwise.  */
-    val isLocalOnly: Boolean
-
     /** Returns a string of how this should be represented for example: vCard.  */
     val content: String
 
     fun delete(): Int
-
-    fun legacyPrepareForUpload(fileName: String?)
 
     fun prepareForUpload(fileName: String, uid: String)
 

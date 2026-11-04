@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import at.bitfire.ical4android.Event
+import at.bitfire.ical4android.util.TimeApiExtensions.requireZoneId
+import at.bitfire.ical4android.util.TimeApiExtensions.toTimestamp
 import com.etesync.syncadapter.R
 import com.etesync.syncadapter.log.Logger
 import net.fortuna.ical4j.model.property.Attendee
@@ -24,7 +26,7 @@ class EventEmailInvitation constructor(val context: Context, val account: Accoun
         intent.putExtra(Intent.EXTRA_SUBJECT,
                 context.getString(R.string.sync_calendar_attendees_email_subject,
                         event.summary,
-                        dateFormatDate.format(event.dtStart?.date)))
+                        dateFormatDate.format(Date(requireNotNull(event.dtStart).date.toTimestamp()))))
         intent.putExtra(Intent.EXTRA_TEXT,
                 context.getString(R.string.sync_calendar_attendees_email_content,
                         event.summary,
@@ -66,19 +68,19 @@ class EventEmailInvitation constructor(val context: Context, val account: Accoun
 
     private fun formatEventDates(event: Event): String {
         val locale = Locale.getDefault()
-        val timezone = if (event.dtStart?.timeZone != null) event.dtStart?.timeZone else TimeZone.getTimeZone("UTC")
+        val timezone = TimeZone.getTimeZone(requireNotNull(event.dtStart).date.requireZoneId())
         val dateFormatString = if (event.isAllDay()) "EEEE, MMM dd" else "EEEE, MMM dd @ hh:mm a"
         val longDateFormat = SimpleDateFormat(dateFormatString, locale)
         longDateFormat.timeZone = timezone
         val shortDateFormat = SimpleDateFormat("hh:mm a", locale)
         shortDateFormat.timeZone = timezone
 
-        val startDate = event.dtStart?.date
-        val endDate = event.getEndDate(true)!!.date
-        val tzName = timezone?.getDisplayName(timezone.inDaylightTime(startDate), TimeZone.SHORT)
+        val startDate = Date(requireNotNull(event.dtStart).date.toTimestamp())
+        val endDate = Date(requireNotNull(event.getEndDate(true)).date.toTimestamp())
+        val tzName = timezone.getDisplayName(timezone.inDaylightTime(startDate), TimeZone.SHORT)
 
-        val cal1 = Calendar.getInstance()
-        val cal2 = Calendar.getInstance()
+        val cal1 = Calendar.getInstance(timezone)
+        val cal2 = Calendar.getInstance(timezone)
         cal1.time = startDate
         cal2.time = endDate
         val sameDay = cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) && cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)

@@ -1,6 +1,15 @@
 # Changelog
 *NOTE:* may be removed in the future in favor of the fastlane changelog.
 
+## Version 3.0.0
+* Require Android 6.0 or newer and target Android 16.
+* Remove EteSync 1.0 synchronization and migration. Export legacy data with the previous client before upgrading; existing legacy databases are not deleted automatically.
+* Build Etebase from maintained Rust/JNI sources with 16 KB native-library alignment and the repeated-chunk fix.
+* Upgrade Android build tools, AndroidX, OkHttp, ACRA, ical4j and ez-vcard; migrate calendar/contact date APIs.
+* Replace abandoned UI dependencies and asynchronous task helpers with platform UI, view binding and lifecycle-owned coroutines.
+* Support predictive back navigation in the embedded browser while retaining Android 6 URL dispatch.
+* Add weekly dependency checks, build/test/lint workflows, and signed GitHub tag releases.
+
 ## Version 2.7.0
 * Updated translations.
 

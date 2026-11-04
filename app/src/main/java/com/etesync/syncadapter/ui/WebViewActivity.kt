@@ -1,19 +1,18 @@
 package com.etesync.syncadapter.ui
 
 import android.annotation.SuppressLint
-import android.annotation.TargetApi
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.view.KeyEvent
 import android.view.View
 import android.webkit.*
 import android.widget.ProgressBar
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.ActionBar
+import androidx.core.content.IntentCompat
 import com.etesync.syncadapter.Constants
 import com.etesync.syncadapter.R
 
@@ -22,6 +21,17 @@ class WebViewActivity : BaseActivity() {
     private var mWebView: WebView? = null
     private var mProgressBar: ProgressBar? = null
     private var mToolbar: ActionBar? = null
+    private val webViewBackCallback = object : OnBackPressedCallback(false) {
+        override fun handleOnBackPressed() {
+            val webView = mWebView
+            if (webView?.canGoBack() == true) {
+                webView.goBack()
+            } else {
+                isEnabled = false
+                onBackPressedDispatcher.onBackPressed()
+            }
+        }
+    }
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,10 +41,11 @@ class WebViewActivity : BaseActivity() {
         mToolbar = supportActionBar
         mToolbar!!.setDisplayHomeAsUpEnabled(true)
 
-        var uri = intent.getParcelableExtra<Uri>(KEY_URL)!!
+        var uri = IntentCompat.getParcelableExtra(intent, KEY_URL, Uri::class.java)!!
         uri = addQueryParams(uri)
         mWebView = findViewById<View>(R.id.webView) as WebView
         mProgressBar = findViewById<View>(R.id.progressBar) as ProgressBar
+        onBackPressedDispatcher.addCallback(this, webViewBackCallback)
 
         mWebView!!.settings.javaScriptEnabled = true
         if (savedInstanceState == null) {
@@ -44,24 +55,25 @@ class WebViewActivity : BaseActivity() {
         mWebView!!.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView, url: String) {
                 title = view.title
+                webViewBackCallback.isEnabled = view.canGoBack()
             }
 
+            override fun doUpdateVisitedHistory(view: WebView, url: String, isReload: Boolean) {
+                webViewBackCallback.isEnabled = view.canGoBack()
+            }
+
+            @Deprecated("Required for Android 6 WebView navigation")
             override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean {
                 return shouldOverrideUrl(Uri.parse(url))
             }
 
-            @TargetApi(Build.VERSION_CODES.LOLLIPOP)
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                 return shouldOverrideUrl(request.url)
             }
 
-            override fun onReceivedError(view: WebView, errorCode: Int, description: String, failingUrl: String) {
-                loadErrorPage(failingUrl)
-            }
-
-            @TargetApi(Build.VERSION_CODES.LOLLIPOP)
             override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
-                loadErrorPage(request.url.toString())
+                if (request.isForMainFrame)
+                    loadErrorPage(request.url.toString())
             }
         }
 
@@ -146,17 +158,9 @@ class WebViewActivity : BaseActivity() {
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
         mWebView!!.restoreState(savedInstanceState)
+        webViewBackCallback.isEnabled = mWebView?.canGoBack() == true
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
-            if (mWebView!!.canGoBack()) {
-                mWebView!!.goBack()
-                return true
-            }
-        }
-        return super.onKeyDown(keyCode, event)
-    }
 
     companion object {
 

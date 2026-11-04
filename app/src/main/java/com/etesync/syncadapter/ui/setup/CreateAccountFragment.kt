@@ -12,26 +12,28 @@ import android.accounts.Account
 import android.accounts.AccountManager
 import android.app.Activity
 import android.app.Dialog
-import android.app.ProgressDialog
+import android.widget.ProgressBar
+import androidx.appcompat.app.AlertDialog
 import android.os.Bundle
 import android.provider.CalendarContract
+import androidx.core.os.BundleCompat
 import androidx.fragment.app.DialogFragment
 import at.bitfire.ical4android.TaskProvider.Companion.TASK_PROVIDERS
 import com.etesync.syncadapter.*
 import com.etesync.syncadapter.log.Logger
 import com.etesync.syncadapter.ui.etebase.NewAccountWizardActivity
 import com.etesync.syncadapter.ui.setup.BaseConfigurationFinder.Configuration
-import com.etesync.syncadapter.utils.AndroidCompat
 import com.etesync.syncadapter.utils.TaskProviderHandling
 import java.util.logging.Level
 
 class CreateAccountFragment : DialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val progress = ProgressDialog(activity)
-        progress.setTitle(R.string.setting_up_encryption)
-        progress.setMessage(getString(R.string.setting_up_encryption_content))
-        progress.isIndeterminate = true
+        val progress = AlertDialog.Builder(requireContext())
+            .setTitle(R.string.setting_up_encryption)
+            .setMessage(R.string.setting_up_encryption_content)
+            .setView(ProgressBar(requireContext()))
+            .create()
         progress.setCanceledOnTouchOutside(false)
         isCancelable = false
         return progress
@@ -40,7 +42,7 @@ class CreateAccountFragment : DialogFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val config = requireArguments().getSerializable(KEY_CONFIG) as Configuration
+        val config = BundleCompat.getSerializable(requireArguments(), KEY_CONFIG, Configuration::class.java)!!
 
         val activity = requireActivity()
         val account = createAccount(config.userName, config)
@@ -59,7 +61,7 @@ class CreateAccountFragment : DialogFragment() {
         Logger.log.log(Level.INFO, "Creating Android account with initial config", arrayOf(account, config.userName, config.url))
 
         val accountManager = AccountManager.get(context)
-        if (!accountManager.addAccountExplicitly(account, config.password, null))
+        if (!accountManager.addAccountExplicitly(account, null, null))
             return null
 
         AccountSettings.setUserData(accountManager, account, config.url, config.userName)
@@ -85,7 +87,7 @@ class CreateAccountFragment : DialogFragment() {
 
         } catch (e: InvalidAccountException) {
             Logger.log.log(Level.SEVERE, "Couldn't access account settings", e)
-            AndroidCompat.removeAccount(accountManager, account)
+            accountManager.removeAccountExplicitly(account)
             throw e
         }
 
@@ -93,7 +95,7 @@ class CreateAccountFragment : DialogFragment() {
     }
 
     companion object {
-        private val KEY_CONFIG = "config"
+        private const val KEY_CONFIG = "config"
 
         fun newInstance(config: Configuration): CreateAccountFragment {
             val frag = CreateAccountFragment()

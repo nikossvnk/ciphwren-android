@@ -1,10 +1,13 @@
 package com.etesync.syncadapter.utils
 
 import android.content.Context
-import android.content.res.Configuration
-import android.os.Build
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import com.etesync.syncadapter.App
 import com.etesync.syncadapter.R
+import com.etesync.syncadapter.log.Logger
+import com.etesync.syncadapter.model.ServiceDB
+import com.etesync.syncadapter.model.Settings
 import java.util.*
 
 /**
@@ -16,52 +19,62 @@ object LanguageUtils {
     fun getAppLanguages(context: Context): LocaleList {
         val locales = Locale.getAvailableLocales()
         Arrays.sort(locales) { aLocale, aT1 -> aLocale.displayName.compareTo(aT1.displayName) }
-        val localeData = arrayOfNulls<String>(locales.size + 1)
-        val displayNames = arrayOfNulls<String>(locales.size + 1)
-        localeData[0] = App.DEFAULT_LANGUAGE
-        displayNames[0] = context.getString(R.string.app_settings_force_language_default)
-        var index = 1
+        val localeData = ArrayList<String>(locales.size + 1)
+        val displayNames = ArrayList<String>(locales.size + 1)
+        localeData += App.DEFAULT_LANGUAGE
+        displayNames += context.getString(R.string.app_settings_force_language_default)
         for (locale in locales) {
-            localeData[index] = encodeLocale(locale)
-            displayNames[index] = locale.displayName
-            index++
+            localeData += locale.toLanguageTag()
+            displayNames += locale.displayName
         }
-        return LocaleList(localeData as Array<String>, displayNames as Array<String>)
+        return LocaleList(localeData.toTypedArray(), displayNames.toTypedArray())
     }
 
-    fun setLanguage(context: Context, locale: String) {
-        if (locale == App.DEFAULT_LANGUAGE)
-            setLanguage(context, App.sDefaultLocacle)
+    /**
+     * @return language tag of the language chosen for the app, or [App.DEFAULT_LANGUAGE] if
+     * the app follows the system language
+     */
+    fun getLanguage(): String =
+            AppCompatDelegate.getApplicationLocales()[0]?.toLanguageTag() ?: App.DEFAULT_LANGUAGE
+
+    /**
+     * Sets the per-app language. Activities are recreated by AppCompat to apply it.
+     *
+     * @param languageTag IETF BCP 47 language tag or [App.DEFAULT_LANGUAGE] to follow the system language
+     */
+    fun setLanguage(languageTag: String) {
+        val locales = if (languageTag == App.DEFAULT_LANGUAGE)
+            LocaleListCompat.getEmptyLocaleList()
         else
-            setLanguage(context, decodeLocale(locale))
+            LocaleListCompat.forLanguageTags(languageTag)
+        AppCompatDelegate.setApplicationLocales(locales)
     }
 
-    fun setLanguage(context: Context, locale: Locale) {
-        var context = context
-        context = context.applicationContext
-        Locale.setDefault(locale)
-        val config = Configuration()
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            config.setLocale(locale)
-            context.createConfigurationContext(config)
-        } else {
-            config.locale = locale
-            context.resources.updateConfiguration(
-                    config, context.resources.displayMetrics)
+    /**
+     * Older versions stored the forced language in the settings database and applied it by
+     * themselves. Moves such a setting to the per-app language of AppCompat/Android.
+     */
+    fun migrateForcedLanguage(context: Context) {
+        val serviceDB = ServiceDB.OpenHelper(context)
+        try {
+            val settings = Settings(serviceDB.writableDatabase)
+            val lang = settings.getString(App.FORCE_LANGUAGE, null) ?: return
+            if (lang != App.DEFAULT_LANGUAGE) {
+                val data = lang.split(";")
+                val locale = Locale.Builder()
+                        .setLanguage(data.getOrNull(0))
+                        .setRegion(data.getOrNull(1))
+                        .setVariant(data.getOrNull(2))
+                        .build()
+                Logger.log.info("Migrating forced language $lang to per-app language ${locale.toLanguageTag()}")
+                AppCompatDelegate.setApplicationLocales(LocaleListCompat.create(locale))
+            }
+            settings.remove(App.FORCE_LANGUAGE)
+        } catch (e: Exception) {
+            Logger.log.warning("Couldn't migrate forced language: $e")
+        } finally {
+            serviceDB.close()
         }
-        context.applicationContext.resources.updateConfiguration(config,
-                context.resources.displayMetrics)
-    }
-
-    private fun encodeLocale(locale: Locale): String {
-        return String.format("%s;%s;%s",
-                locale.language, locale.country, locale.variant)
-    }
-
-    private fun decodeLocale(encodedLocale: String): Locale {
-        val data = encodedLocale.split(";".toRegex()).toTypedArray()
-        return Locale(data[0], data[1], data[2])
     }
 
     class LocaleList internal constructor(val localeData: Array<String>, val displayNames: Array<String>)

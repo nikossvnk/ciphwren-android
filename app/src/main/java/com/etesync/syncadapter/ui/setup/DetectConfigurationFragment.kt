@@ -9,32 +9,32 @@
 package com.etesync.syncadapter.ui.setup
 
 import android.app.Dialog
-import android.app.ProgressDialog
 import android.content.Context
-import android.content.Intent
+import android.widget.ProgressBar
 import android.os.Bundle
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.os.BundleCompat
 import androidx.fragment.app.DialogFragment
-import androidx.loader.app.LoaderManager
-import androidx.loader.content.AsyncTaskLoader
-import androidx.loader.content.Loader
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.etesync.syncadapter.R
 import com.etesync.syncadapter.log.Logger
-import com.etesync.syncadapter.ui.DebugInfoActivity
 import com.etesync.syncadapter.ui.setup.BaseConfigurationFinder.Configuration
-import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class DetectConfigurationFragment : DialogFragment() {
+    private val model: DetectionViewModel by viewModels()
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val progress = ProgressDialog(activity)
-        progress.setTitle(R.string.setting_up_encryption)
-        progress.setMessage(getString(R.string.setting_up_encryption_content))
-        progress.isIndeterminate = true
+        val progress = AlertDialog.Builder(requireContext())
+            .setTitle(R.string.setting_up_encryption)
+            .setMessage(R.string.setting_up_encryption_content)
+            .setView(ProgressBar(requireContext()))
+            .create()
         progress.setCanceledOnTouchOutside(false)
         isCancelable = false
         return progress
@@ -45,44 +45,26 @@ class DetectConfigurationFragment : DialogFragment() {
 
         Logger.log.fine("DetectConfigurationFragment: loading")
 
-        if (savedInstanceState == null) {
-            findConfiguration(requireArguments().getParcelable(ARG_LOGIN_CREDENTIALS)!!)
-        }
+        model.findConfiguration(requireContext().applicationContext,
+            BundleCompat.getParcelable(requireArguments(), ARG_LOGIN_CREDENTIALS, LoginCredentials::class.java)!!)
+        model.result.observe(this) { onLoadFinished(it) }
     }
 
-    private fun findConfiguration(credentials: LoginCredentials) {
-        lifecycleScope.launch {
-            val data = withContext(Dispatchers.IO) {
-                BaseConfigurationFinder(requireContext(), credentials).findInitialConfiguration()
-            }
-            onLoadFinished(data)
-        }
-    }
 
-    private fun onLoadFinished(data: Configuration?) {
-        if (data != null) {
-            if (data.isFailed) {
-                Logger.log.warning("Failed login configuration ${data.error?.localizedMessage}")
-                // no service found: show error message
-                requireFragmentManager().beginTransaction()
-                        .add(NothingDetectedFragment.newInstance(data.error!!.localizedMessage), null)
-                        .commitAllowingStateLoss()
-            } else if (data.isLegacy) {
-                // legacy service found: continue
-                Logger.log.info("Found legacy account - asking for encryption details")
-                requireFragmentManager().beginTransaction()
-                        .replace(android.R.id.content, EncryptionDetailsFragment.newInstance(data))
-                        .addToBackStack(null)
-                        .commitAllowingStateLoss()
-            } else {
-                Logger.log.info("Found Etebase account account")
-                requireFragmentManager().beginTransaction()
-                        .replace(android.R.id.content, CreateAccountFragment.newInstance(data))
-                        .addToBackStack(null)
-                        .commitAllowingStateLoss()
-            }
-        } else
-            Logger.log.severe("Configuration detection failed")
+    private fun onLoadFinished(data: Configuration) {
+        if (data.isFailed) {
+            Logger.log.warning("Failed login configuration ${data.error?.localizedMessage}")
+            // no service found: show error message
+            parentFragmentManager.beginTransaction()
+                    .add(NothingDetectedFragment.newInstance(data.error!!.localizedMessage ?: data.error.toString()), null)
+                    .commitAllowingStateLoss()
+        } else {
+            Logger.log.info("Found Etebase account account")
+            parentFragmentManager.beginTransaction()
+                    .replace(android.R.id.content, CreateAccountFragment.newInstance(data))
+                    .addToBackStack(null)
+                    .commitAllowingStateLoss()
+        }
 
         dismissAllowingStateLoss()
     }
@@ -94,7 +76,7 @@ class DetectConfigurationFragment : DialogFragment() {
                     .setTitle(R.string.setting_up_encryption)
                     .setIcon(R.drawable.ic_error_dark)
                     .setMessage(requireArguments().getString(KEY_LOGS))
-                    .setPositiveButton(android.R.string.ok) { dialog, which ->
+                    .setPositiveButton(android.R.string.ok) { _, _ ->
                         // dismiss
                     }
                     .create()
@@ -114,7 +96,7 @@ class DetectConfigurationFragment : DialogFragment() {
     }
 
     companion object {
-        protected val ARG_LOGIN_CREDENTIALS = "credentials"
+        private const val ARG_LOGIN_CREDENTIALS = "credentials"
 
         fun newInstance(credentials: LoginCredentials): DetectConfigurationFragment {
             val frag = DetectConfigurationFragment()
@@ -122,6 +104,21 @@ class DetectConfigurationFragment : DialogFragment() {
             args.putParcelable(ARG_LOGIN_CREDENTIALS, credentials)
             frag.arguments = args
             return frag
+        }
+    }
+}
+
+class DetectionViewModel : ViewModel() {
+    val result = MutableLiveData<Configuration>()
+    private var started = false
+
+    fun findConfiguration(context: Context, credentials: LoginCredentials) {
+        if (started) return
+        started = true
+        viewModelScope.launch {
+            result.value = withContext(Dispatchers.IO) {
+                BaseConfigurationFinder(context, credentials).findInitialConfiguration()
+            }
         }
     }
 }

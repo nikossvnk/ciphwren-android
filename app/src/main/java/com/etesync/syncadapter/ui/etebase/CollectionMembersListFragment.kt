@@ -15,7 +15,6 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.observe
 import com.etebase.client.CollectionAccessLevel
 import com.etebase.client.CollectionMember
 import com.etebase.client.FetchOptions
@@ -163,5 +162,5 @@ class CollectionMembersViewModel : ViewModel() {
     }
 
     fun observe(owner: LifecycleOwner, observer: (List<CollectionMember>) -> Unit) =
-            members.observe(owner, observer)
+            members.observe(owner) { observer(it) }
 }

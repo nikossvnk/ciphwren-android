@@ -9,19 +9,13 @@ package com.etesync.syncadapter.syncadapter
 
 import android.accounts.Account
 import android.accounts.AccountManager
-import android.accounts.AuthenticatorException
-import android.accounts.OperationCanceledException
 import android.content.*
 import android.os.Bundle
 import android.provider.ContactsContract
-import at.bitfire.vcard4android.ContactsStorageException
 import com.etesync.syncadapter.*
 import com.etesync.syncadapter.log.Logger
-import com.etesync.syncadapter.model.CollectionInfo
-import com.etesync.syncadapter.model.JournalEntity
-import com.etesync.syncadapter.model.JournalModel
+import com.etesync.syncadapter.model.CollectionType
 import com.etesync.syncadapter.resource.LocalAddressBook
-import java.io.IOException
 import java.util.*
 import java.util.logging.Level
 
@@ -42,16 +36,18 @@ class AddressBooksSyncAdapterService : SyncAdapterService() {
             }
 
             val settings = AccountSettings(context, account)
-            if (!extras.containsKey(ContentResolver.SYNC_EXTRAS_MANUAL) && !checkSyncConditions(settings))
+            if (!checkAccountSupported(account, settings)) {
+                contactsProvider.release()
                 return
-
-            RefreshCollections(account, CollectionInfo.Type.ADDRESS_BOOK).run()
-
-            if (settings.isLegacy) {
-                legacyUpdateLocalAddressBooks(contactsProvider, account)
-            } else {
-                updateLocalAddressBooks(contactsProvider, account, settings)
             }
+            if (!extras.containsKey(ContentResolver.SYNC_EXTRAS_MANUAL) && !checkSyncConditions(settings)) {
+                contactsProvider.release()
+                return
+            }
+
+            RefreshCollections(account, CollectionType.ADDRESS_BOOK).run()
+
+            updateLocalAddressBooks(contactsProvider, account, settings)
 
             contactsProvider.release()
 
@@ -73,7 +69,7 @@ class AddressBooksSyncAdapterService : SyncAdapterService() {
             val etebaseLocalCache = EtebaseLocalCache.getInstance(context, account.name)
             val collections: List<CachedCollection>
             synchronized(etebaseLocalCache) {
-                val httpClient = HttpClient.Builder(context, settings).setForeground(false).build()
+                val httpClient = HttpClient.Builder(context).setForeground(false).build()
                 val etebase = EtebaseLocalCache.getEtebase(context, httpClient.okHttpClient, settings)
                 val colMgr = etebase.collectionManager
 
@@ -107,44 +103,6 @@ class AddressBooksSyncAdapterService : SyncAdapterService() {
                 val cachedCollection = remote[url]!!
                 Logger.log.info("Adding local calendar list $cachedCollection")
                 LocalAddressBook.create(context, provider, account, cachedCollection)
-            }
-        }
-
-        @Throws(ContactsStorageException::class, AuthenticatorException::class, OperationCanceledException::class, IOException::class)
-        private fun legacyUpdateLocalAddressBooks(provider: ContentProviderClient, account: Account) {
-            val context = context
-            val data = (getContext().applicationContext as App).data
-            val service = JournalModel.Service.fetchOrCreate(data, account.name, CollectionInfo.Type.ADDRESS_BOOK)
-
-            val remote = HashMap<String, JournalEntity>()
-            val remoteJournals = JournalEntity.getJournals(data, service)
-            for (journalEntity in remoteJournals) {
-                remote[journalEntity.uid] = journalEntity
-            }
-
-            val local = LocalAddressBook.find(context, provider, account)
-
-            // delete obsolete local address books
-            for (addressBook in local) {
-                val url = addressBook.url
-                val journalEntity = remote[url]
-                if (journalEntity == null) {
-                    Logger.log.fine("Deleting obsolete local address book $url")
-                    addressBook.delete()
-                } else {
-                    // remote CollectionInfo found for this local collection, update data
-                    Logger.log.fine("Updating local address book $url with $journalEntity")
-                    addressBook.update(journalEntity)
-                    // we already have a local collection for this remote collection, don't take into consideration anymore
-                    remote.remove(url)
-                }
-            }
-
-            // create new local address books
-            for (url in remote.keys) {
-                val journalEntity = remote[url]!!
-                Logger.log.info("Adding local address book $journalEntity")
-                LocalAddressBook.create(context, provider, account, journalEntity)
             }
         }
     }

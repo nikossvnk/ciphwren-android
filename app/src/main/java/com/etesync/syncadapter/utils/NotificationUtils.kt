@@ -8,15 +8,21 @@
 
 package com.etesync.syncadapter.utils
 
+import android.Manifest
 import android.annotation.TargetApi
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationChannelGroup
 import android.app.NotificationManager
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import com.etesync.syncadapter.App
 import com.etesync.syncadapter.R
+import com.etesync.syncadapter.log.Logger
 
 object NotificationUtils {
 
@@ -73,6 +79,19 @@ object NotificationUtils {
             builder.setLargeIcon(App.getLauncherBitmap(context))
 
         return builder
+    }
+
+    /**
+     * Shows a notification, unless the user hasn't granted the permission to post notifications
+     * (Android 13+).
+     */
+    fun notifyIfPermitted(context: Context, tag: String?, id: Int, notification: Notification) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            Logger.log.warning("Not allowed to post notifications, dropping notification $tag/$id")
+            return
+        }
+        NotificationManagerCompat.from(context).notify(tag, id, notification)
     }
 
 }

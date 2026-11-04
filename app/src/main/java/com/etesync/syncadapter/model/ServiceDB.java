@@ -13,9 +13,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.os.Build;
-
-import androidx.annotation.RequiresApi;
 
 public class ServiceDB {
 
@@ -26,31 +23,6 @@ public class ServiceDB {
                 VALUE = "value";
     }
 
-    @Deprecated
-    public static class Services {
-        public static final String
-                _TABLE = "services",
-                ID = "_id",
-                ACCOUNT_NAME = "accountName",
-                SERVICE = "service";
-    }
-
-    @Deprecated
-    public static class Collections {
-        public static final String
-                _TABLE = "collections",
-                ID = "_id",
-                SERVICE_ID = "serviceID",
-                URL = "url",
-                READ_ONLY = "readOnly",
-                DISPLAY_NAME = "displayName",
-                DESCRIPTION = "description",
-                COLOR = "color",
-                TIME_ZONE = "timezone",
-                SYNC = "sync";
-    }
-
-
     public static class OpenHelper extends SQLiteOpenHelper {
         private static final String DATABASE_NAME = "services.db";
         private static final int DATABASE_VERSION = 1;
@@ -60,13 +32,6 @@ public class ServiceDB {
         }
 
         @Override
-        public void onOpen(SQLiteDatabase db) {
-            if (Build.VERSION.SDK_INT < 16)
-                db.execSQL("PRAGMA foreign_keys=ON;");
-        }
-
-        @Override
-        @RequiresApi(16)
         public void onConfigure(SQLiteDatabase db) {
             setWriteAheadLoggingEnabled(true);
             db.setForeignKeyConstraintsEnabled(true);

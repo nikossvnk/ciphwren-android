@@ -8,9 +8,9 @@
 
 package com.etesync.syncadapter.log
 
-import org.apache.commons.lang3.StringUtils
-import org.apache.commons.lang3.exception.ExceptionUtils
-import org.apache.commons.lang3.time.DateFormatUtils
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.logging.Formatter
 import java.util.logging.LogRecord
 
@@ -23,24 +23,26 @@ class PlainTextFormatter private constructor(
         val DEFAULT = PlainTextFormatter(false)
 
         const val MAX_MESSAGE_LENGTH = 20000
+
+        private val dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault())
     }
 
     override fun format(r: LogRecord): String {
         val builder = StringBuilder()
 
         if (!logcat)
-            builder .append(DateFormatUtils.format(r.millis, "yyyy-MM-dd HH:mm:ss"))
+            builder .append(dateFormat.format(Instant.ofEpochMilli(r.millis)))
                     .append(" ").append(r.threadID).append(" ")
 
         val className = shortClassName(r.sourceClassName)
         if (className != r.loggerName)
             builder.append("[").append(className).append("] ")
 
-        builder.append(StringUtils.abbreviate(r.message, MAX_MESSAGE_LENGTH))
+        builder.append(abbreviate(r.message, MAX_MESSAGE_LENGTH))
 
         r.thrown?.let {
             builder .append("\nEXCEPTION ")
-                    .append(ExceptionUtils.getStackTrace(it))
+                    .append(it.stackTraceToString())
         }
 
         r.parameters?.let {
@@ -54,8 +56,14 @@ class PlainTextFormatter private constructor(
         return builder.toString()
     }
 
-    private fun shortClassName(className: String) = className
-            .replace(Regex("^at\\.bitfire\\.(dav|cert4an|dav4an|ical4an|vcard4an)droid\\."), "")
-            .replace(Regex("\\$.*$"), "")
+    private fun abbreviate(message: String?, maxLength: Int): String? =
+            if (message != null && message.length > maxLength)
+                message.take(maxLength - 3) + "..."
+            else
+                message
+
+    private fun shortClassName(className: String?) = className
+            ?.replace(Regex("^at\\.bitfire\\.(dav|cert4an|dav4an|ical4an|vcard4an)droid\\."), "")
+            ?.replace(Regex("\\$.*$"), "")
 
 }

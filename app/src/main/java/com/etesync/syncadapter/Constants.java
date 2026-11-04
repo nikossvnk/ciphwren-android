@@ -22,7 +22,8 @@ public class Constants {
             NOTIFICATION_CALENDAR_SYNC = 11,
             NOTIFICATION_TASK_SYNC = 12,
             NOTIFICATION_ACCOUNT_UPDATE = 13,
-            NOTIFICATION_PERMISSIONS = 20;
+            NOTIFICATION_PERMISSIONS = 20,
+            NOTIFICATION_ETESYNC1_UNSUPPORTED = 21;
 
     public static final Uri webUri = Uri.parse((DEBUG_REMOTE_URL == null) ? "https://www.etesync.com/" : DEBUG_REMOTE_URL);
     public static final Uri etebaseDashboardPrefix = Uri.parse("https://dashboard.etebase.com/user/partner/");
@@ -37,7 +38,6 @@ public class Constants {
     public static final Uri forgotPassword = faqUri.buildUpon().fragment("forgot-password").build();
     public static final String crashReportingUrl = "https://www.etesync.com/crash/android-syncadapter/report/";
 
-    public static final Uri serviceUrl = Uri.parse((DEBUG_REMOTE_URL == null) ? "https://api.etesync.com/" : DEBUG_REMOTE_URL);
     public static final String etebaseServiceUrl = (DEBUG_REMOTE_URL == null) ? "https://api.etebase.com/partner/etesync/" : DEBUG_REMOTE_URL;
 
     public static final String PRODID_BASE = "-//EteSync//" + BuildConfig.APPLICATION_ID + "/" + BuildConfig.VERSION_NAME;
@@ -45,8 +45,7 @@ public class Constants {
     public static final int DEFAULT_SYNC_INTERVAL = 4 * 3600;  // 4 hours
     public static final long DEFAULT_RETRY_DELAY = 30 * 60; // 30 minutes
 
-    public final static String KEY_ACCOUNT = "account",
-            KEY_COLLECTION_INFO = "collectionInfo";
+    public final static String KEY_ACCOUNT = "account";
 
     public final static String ETEBASE_TYPE_ADDRESS_BOOK = "etebase.vcard";
     public final static String ETEBASE_TYPE_CALENDAR = "etebase.vevent";

@@ -19,7 +19,7 @@ import at.bitfire.ical4android.Ical4Android.ical4jVersion
 import com.etesync.syncadapter.Constants
 import com.etesync.syncadapter.log.Logger
 import net.fortuna.ical4j.model.component.VAlarm
-import net.fortuna.ical4j.model.property.Action
+import net.fortuna.ical4j.model.property.immutable.ImmutableAction
 import net.fortuna.ical4j.model.property.ProdId
 import java.io.ByteArrayOutputStream
 import java.util.*
@@ -52,9 +52,6 @@ class LocalEvent : AndroidEvent, LocalResource<Event> {
 
             return os.toString()
         }
-
-    override val isLocalOnly: Boolean
-        get() = TextUtils.isEmpty(eTag)
 
     override// Now the same
     val uuid: String?
@@ -103,14 +100,15 @@ class LocalEvent : AndroidEvent, LocalResource<Event> {
 
     override fun insertReminder(batch: BatchOperation, idxEvent: Int?, alarm: VAlarm) {
         // We only support DISPLAY and AUDIO alarms so modify when inserting
-        val action = alarm.action
+        val action = alarm.action.orElse(null)
         val modifiedAlarm = when (action?.value) {
-            Action.DISPLAY.value,
-            Action.AUDIO.value -> alarm
-            Action.EMAIL.value -> {
-                val tmp = VAlarm(alarm.trigger?.duration)
-                tmp.properties += Action.DISPLAY
-                tmp.properties += alarm.description
+            ImmutableAction.DISPLAY.value,
+            ImmutableAction.AUDIO.value -> alarm
+            ImmutableAction.EMAIL.value -> {
+                val tmp = VAlarm()
+                alarm.trigger.orElse(null)?.let { tmp += it }
+                tmp += ImmutableAction.DISPLAY
+                alarm.description?.let { tmp += it }
                 tmp
             }
             else -> alarm
@@ -130,29 +128,6 @@ class LocalEvent : AndroidEvent, LocalResource<Event> {
     }
 
     /* custom queries */
-
-    override fun legacyPrepareForUpload(fileName_: String?) {
-        var uid: String? = null
-        val c = calendar.provider.query(eventSyncURI(), arrayOf(COLUMN_UID), null, null, null)!!
-        if (c.moveToNext())
-            uid = c.getString(0)
-        if (uid == null)
-            uid = UUID.randomUUID().toString()
-
-        c.close()
-
-        val fileName = fileName_ ?: uid
-        val values = ContentValues(2)
-        values.put(Events._SYNC_ID, fileName)
-        values.put(COLUMN_UID, uid)
-        calendar.provider.update(eventSyncURI(), values, null, null)
-
-        this.fileName = fileName
-
-        val event = this.event
-        if (event != null)
-            event.uid = uid
-    }
 
     override fun prepareForUpload(fileName: String, uid: String) {
         val values = ContentValues(2)

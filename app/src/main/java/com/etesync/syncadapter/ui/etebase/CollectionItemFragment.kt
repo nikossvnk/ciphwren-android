@@ -9,15 +9,17 @@ import android.text.format.DateUtils
 import android.view.*
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentPagerAdapter
 import androidx.fragment.app.activityViewModels
-import androidx.viewpager.widget.ViewPager
+import androidx.lifecycle.Lifecycle
+import androidx.viewpager2.adapter.FragmentStateAdapter
+import androidx.viewpager2.widget.ViewPager2
 import at.bitfire.ical4android.Event
 import at.bitfire.ical4android.InvalidCalendarException
 import at.bitfire.ical4android.Task
 import at.bitfire.ical4android.TaskProvider
+import at.bitfire.ical4android.util.TimeApiExtensions.toTimestamp
 import at.bitfire.vcard4android.Contact
 import com.etesync.syncadapter.CachedCollection
 import com.etesync.syncadapter.CachedItem
@@ -28,6 +30,7 @@ import com.etesync.syncadapter.ui.BaseActivity
 import com.etesync.syncadapter.utils.EventEmailInvitation
 import com.etesync.syncadapter.utils.TaskProviderHandling
 import com.google.android.material.tabs.TabLayout
+import com.google.android.material.tabs.TabLayoutMediator
 import ezvcard.util.PartialDate
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
@@ -37,9 +40,11 @@ import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.io.StringReader
 import java.text.SimpleDateFormat
+import java.time.ZoneId
+import java.time.temporal.Temporal
 import java.util.*
 
-class CollectionItemFragment : Fragment() {
+class CollectionItemFragment : Fragment(), MenuProvider {
     private val model: AccountViewModel by activityViewModels()
     private val collectionModel: CollectionViewModel by activityViewModels()
 
@@ -50,7 +55,6 @@ class CollectionItemFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val ret = inflater.inflate(R.layout.journal_item_activity, container, false)
-        setHasOptionsMenu(true)
 
         if (savedInstanceState == null) {
             collectionModel.observe(this) {
@@ -64,12 +68,23 @@ class CollectionItemFragment : Fragment() {
         return ret
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        requireActivity().addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
+    }
+
     private fun initUi(inflater: LayoutInflater, v: View, cachedCollection: CachedCollection) {
-        val viewPager = v.findViewById<ViewPager>(R.id.viewpager)
-        viewPager.adapter = TabsAdapter(childFragmentManager, this, requireContext(), cachedCollection, cachedItem)
+        val viewPager = v.findViewById<ViewPager2>(R.id.viewpager)
+        viewPager.adapter = TabsAdapter(this, cachedCollection, cachedItem)
 
         val tabLayout = v.findViewById<TabLayout>(R.id.tabs)
-        tabLayout.setupWithViewPager(viewPager)
+        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
+            tab.text = getString(when (position) {
+                0 -> R.string.journal_item_tab_main
+                1 -> R.string.journal_item_tab_raw
+                else -> R.string.journal_item_tab_revisions
+            })
+        }.attach()
 
         v.findViewById<View>(R.id.journal_list_item).visibility = View.GONE
     }
@@ -77,27 +92,31 @@ class CollectionItemFragment : Fragment() {
     fun allowSendEmail(event: Event?, icsContent: String) {
         emailInvitationEvent = event
         emailInvitationEventString = icsContent
-        activity?.invalidateOptionsMenu()
+        activity?.invalidateMenu()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.collection_item_fragment, menu)
+    override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+        menuInflater.inflate(R.menu.collection_item_fragment, menu)
+    }
+
+    override fun onPrepareMenu(menu: Menu) {
         menu.setGroupVisible(R.id.journal_item_menu_event_invite, emailInvitationEvent != null)
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
         val accountHolder = model.value!!
-        when (item.itemId) {
+        when (menuItem.itemId) {
             R.id.on_send_event_invite -> {
                 val account = accountHolder.account
                 val intent = EventEmailInvitation(requireContext(), account).createIntent(emailInvitationEvent!!, emailInvitationEventString!!)
-                startActivity(intent)
+                intent?.let { startActivity(it) }
             }
             R.id.on_restore_item -> {
                 restoreItem(accountHolder)
             }
+            else -> return false
         }
-        return super.onOptionsItemSelected(item)
+        return true
     }
 
     fun restoreItem(accountHolder: AccountHolder) {
@@ -170,24 +189,14 @@ class CollectionItemFragment : Fragment() {
     }
 }
 
-private class TabsAdapter(fm: FragmentManager, private val mainFragment: CollectionItemFragment, private val context: Context, private val cachedCollection: CachedCollection, private val cachedItem: CachedItem) : FragmentPagerAdapter(fm) {
+private class TabsAdapter(private val mainFragment: CollectionItemFragment, private val cachedCollection: CachedCollection, private val cachedItem: CachedItem) : FragmentStateAdapter(mainFragment) {
 
-    override fun getCount(): Int {
+    override fun getItemCount(): Int {
         // FIXME: Make it depend on info enumType (only have non-raw for known types)
         return 3
     }
 
-    override fun getPageTitle(position: Int): CharSequence? {
-        return if (position == 0) {
-            context.getString(R.string.journal_item_tab_main)
-        } else if (position == 1) {
-            context.getString(R.string.journal_item_tab_raw)
-        } else {
-            context.getString(R.string.journal_item_tab_revisions)
-        }
-    }
-
-    override fun getItem(position: Int): Fragment {
+    override fun createFragment(position: Int): Fragment {
         return if (position == 0) {
             PrettyFragment.newInstance(mainFragment, cachedCollection, cachedItem.content)
         } else if (position == 1) {
@@ -277,8 +286,8 @@ class PrettyFragment : Fragment() {
 
                     setTextViewText(view, R.id.title, event.summary)
 
-                    val dtStart = event.dtStart?.date?.time
-                    val dtEnd = event.dtEnd?.date?.time
+                    val dtStart = event.dtStart?.date?.toTimestamp()
+                    val dtEnd = event.dtEnd?.date?.toTimestamp()
                     if ((dtStart == null) || (dtEnd == null)) {
                         setTextViewText(view, R.id.when_datetime, getString(R.string.loading_error_title))
                     } else {
@@ -320,7 +329,7 @@ class PrettyFragment : Fragment() {
                         } else {
                             sb.append(", ")
                         }
-                        sb.append(alarm.trigger.value)
+                        sb.append(alarm.trigger.orElse(null)?.value.orEmpty())
                     }
                     setTextViewText(view, R.id.reminders, sb.toString())
 
@@ -492,15 +501,19 @@ class PrettyFragment : Fragment() {
         // if (contact.photo != null)
     }
 
-    private fun getDisplayedDate(date: Date?, partialDate: PartialDate?): String? {
-        if (date != null) {
-            val epochDate = date.time
+    private fun getDisplayedDate(date: Temporal?, partialDate: PartialDate?): String? {
+        val localDate = date?.let { Contact.toLocalDate(it) }
+        if (localDate != null) {
+            val epochDate = localDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
             return getDisplayedDatetime(epochDate, epochDate, true, context)
-        } else if (partialDate != null){
+        } else if (partialDate != null) {
+            val month = partialDate.month
+            val day = partialDate.date
+            if (month == null || day == null)
+                return partialDate.toISO8601(false)
             val formatter = SimpleDateFormat("d MMMM", Locale.getDefault())
-            val calendar = GregorianCalendar()
-            calendar.set(Calendar.DAY_OF_MONTH, partialDate.date!!)
-            calendar.set(Calendar.MONTH, partialDate.month!! - 1)
+            // Use a leap year, not today's year, to preserve yearless February 29.
+            val calendar = GregorianCalendar(2000, month - 1, day)
             return formatter.format(calendar.time)
         }
 

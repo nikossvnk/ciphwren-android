@@ -25,44 +25,35 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
+import androidx.core.content.IntentCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.observe
 import at.bitfire.ical4android.TaskProvider.Companion.TASK_PROVIDERS
 import at.bitfire.vcard4android.ContactsStorageException
 import com.etebase.client.CollectionAccessLevel
 import com.etebase.client.CollectionManager
 import com.etebase.client.Utils
 import com.etebase.client.exceptions.EtebaseException
-import com.etesync.journalmanager.Crypto
-import com.etesync.journalmanager.Exceptions
-import com.etesync.journalmanager.JournalAuthenticator
 import com.etesync.syncadapter.*
 import com.etesync.syncadapter.Constants.*
 import com.etesync.syncadapter.log.Logger
-import com.etesync.syncadapter.model.CollectionInfo
-import com.etesync.syncadapter.model.JournalEntity
-import com.etesync.syncadapter.model.MyEntityDataStore
-import com.etesync.syncadapter.model.ServiceEntity
+import com.etesync.syncadapter.model.CollectionType
 import com.etesync.syncadapter.resource.LocalAddressBook
 import com.etesync.syncadapter.resource.LocalCalendar
 import com.etesync.syncadapter.syncadapter.requestSync
 import com.etesync.syncadapter.ui.etebase.CollectionActivity
 import com.etesync.syncadapter.ui.etebase.InvitationsActivity
-import com.etesync.syncadapter.ui.setup.SetupUserInfoFragment
 import com.etesync.syncadapter.utils.HintManager
-import com.etesync.syncadapter.utils.ShowcaseBuilder
+import com.etesync.syncadapter.utils.HintPopup
 import com.etesync.syncadapter.utils.packageInstalled
 import com.google.android.material.snackbar.Snackbar
-import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import org.acra.ACRA
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import tourguide.tourguide.ToolTip
 import java.util.logging.Level
 
 class AccountActivity : BaseActivity(), Toolbar.OnMenuItemClickListener, PopupMenu.OnMenuItemClickListener, Refreshable {
@@ -84,24 +75,15 @@ class AccountActivity : BaseActivity(), Toolbar.OnMenuItemClickListener, PopupMe
         val adapter = list.adapter as ArrayAdapter<*>
         val info = adapter.getItem(position) as CollectionListItemInfo
 
-        if (settings.isLegacy) {
-            startActivity(ViewCollectionActivity.newIntent(this@AccountActivity, account, info.legacyInfo!!))
-        } else {
-            startActivity(CollectionActivity.newIntent(this@AccountActivity, account, info.uid))
-        }
+        startActivity(CollectionActivity.newIntent(this@AccountActivity, account, info.uid))
     }
 
     private val formattedFingerprint: String?
         get() {
             try {
-                if (settings.isLegacy) {
-                    val settings = AccountSettings(this, account)
-                    return Crypto.AsymmetricCryptoManager.getPrettyKeyFingerprint(settings.keyPair!!.publicKey)
-                } else {
-                    val etebase = EtebaseLocalCache.getEtebase(this, HttpClient.sharedClient, settings)
-                    val invitationManager = etebase.invitationManager
-                    return Utils.prettyFingerprint(invitationManager.pubkey)
-                }
+                val etebase = EtebaseLocalCache.getEtebase(this, HttpClient.sharedClient, settings)
+                val invitationManager = etebase.invitationManager
+                return Utils.prettyFingerprint(invitationManager.pubkey)
             } catch (e: Exception) {
                 e.printStackTrace()
                 return e.localizedMessage
@@ -111,12 +93,12 @@ class AccountActivity : BaseActivity(), Toolbar.OnMenuItemClickListener, PopupMe
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        account = intent.getParcelableExtra(EXTRA_ACCOUNT)!!
+        account = IntentCompat.getParcelableExtra(intent, EXTRA_ACCOUNT, Account::class.java)!!
         title = account.name
         settings = AccountSettings(this, account)
 
         // Set it for ACRA in case we crash in any of the user views
-        ACRA.getErrorReporter().putCustomData("username", account.name)
+        ACRA.errorReporter.putCustomData("username", account.name)
 
         setContentView(R.layout.activity_account)
 
@@ -152,34 +134,38 @@ class AccountActivity : BaseActivity(), Toolbar.OnMenuItemClickListener, PopupMe
         }
 
         // load CardDAV/CalDAV journals
-        if (savedInstanceState == null) {
-            model.initialize(this, account)
-            model.loadAccount()
-            model.observe(this) {
-                updateUi(it)
-            }
+        model.initialize(applicationContext, account)
+        model.observe(this) {
+            updateUi(it)
         }
+        model.loadAccount()
 
-        if (!HintManager.getHintSeen(this, HINT_VIEW_COLLECTION)) {
-            ShowcaseBuilder.getBuilder(this)
-                    .setToolTip(ToolTip().setTitle(getString(R.string.tourguide_title)).setDescription(getString(R.string.account_showcase_view_collection)))
-                    .playOn(tbCardDAV)
+        if (settings.isEteSync1Account) {
+            tbCardDAV.menu.findItem(R.id.create_addressbook).isVisible = false
+            tbCalDAV.menu.findItem(R.id.create_calendar).isVisible = false
+            tbTaskDAV.menu.findItem(R.id.create_tasklist).isVisible = false
+            showEteSync1Unsupported()
+        } else if (!HintManager.getHintSeen(this, HINT_VIEW_COLLECTION)) {
+            HintPopup.show(tbCardDAV, R.string.account_showcase_view_collection)
             HintManager.setHintSeen(this, HINT_VIEW_COLLECTION, true)
         }
+    }
 
-        if (settings.isLegacy) {
-            if (!SetupUserInfoFragment.hasUserInfo(this, account)) {
-                SetupUserInfoFragment.newInstance(account).show(supportFragmentManager, null)
-            }
-        }
+    private fun showEteSync1Unsupported() {
+        AlertDialog.Builder(this)
+                .setIcon(R.drawable.ic_error_dark)
+                .setTitle(R.string.account_etesync1_unsupported_title)
+                .setMessage(R.string.sync_error_etesync1_unsupported_text)
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton(R.string.account_delete) { _, _ -> deleteAccount() }
+                .show()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.activity_account, menu)
-        if (settings.isLegacy) {
-            val invitations = menu.findItem(R.id.invitations)
-            invitations.setVisible(false)
-            menu.findItem(R.id.migration_v2).setVisible(true)
+        if (settings.isEteSync1Account) {
+            menu.findItem(R.id.invitations).isVisible = false
+            menu.findItem(R.id.show_fingerprint).isVisible = false
         }
         return true
     }
@@ -214,10 +200,6 @@ class AccountActivity : BaseActivity(), Toolbar.OnMenuItemClickListener, PopupMe
                 val intent = InvitationsActivity.newIntent(this, account)
                 startActivity(intent)
             }
-            R.id.migration_v2 -> {
-                val intent = MigrateV2Activity.newIntent(this, account)
-                startActivity(intent)
-            }
             else -> return super.onOptionsItemSelected(item)
         }
         return true
@@ -243,34 +225,20 @@ class AccountActivity : BaseActivity(), Toolbar.OnMenuItemClickListener, PopupMe
     }
 
     override fun onMenuItemClick(item: MenuItem): Boolean {
-        val info: CollectionInfo
+        if (settings.isEteSync1Account) {
+            when (item.itemId) {
+                R.id.create_calendar, R.id.create_tasklist, R.id.create_addressbook -> return true
+            }
+        }
         when (item.itemId) {
             R.id.create_calendar -> {
-                if (settings.isLegacy) {
-                    info = CollectionInfo()
-                    info.enumType = CollectionInfo.Type.CALENDAR
-                    startActivity(CreateCollectionActivity.newIntent(this@AccountActivity, account, info))
-                } else {
-                    startActivity(CollectionActivity.newCreateCollectionIntent(this@AccountActivity, account, ETEBASE_TYPE_CALENDAR))
-                }
+                startActivity(CollectionActivity.newCreateCollectionIntent(this@AccountActivity, account, ETEBASE_TYPE_CALENDAR))
             }
             R.id.create_tasklist -> {
-                if (settings.isLegacy) {
-                    info = CollectionInfo()
-                    info.enumType = CollectionInfo.Type.TASKS
-                    startActivity(CreateCollectionActivity.newIntent(this@AccountActivity, account, info))
-                } else {
-                    startActivity(CollectionActivity.newCreateCollectionIntent(this@AccountActivity, account, ETEBASE_TYPE_TASKS))
-                }
+                startActivity(CollectionActivity.newCreateCollectionIntent(this@AccountActivity, account, ETEBASE_TYPE_TASKS))
             }
             R.id.create_addressbook -> {
-                if (settings.isLegacy) {
-                    info = CollectionInfo()
-                    info.enumType = CollectionInfo.Type.ADDRESS_BOOK
-                    startActivity(CreateCollectionActivity.newIntent(this@AccountActivity, account, info))
-                } else {
-                    startActivity(CollectionActivity.newCreateCollectionIntent(this@AccountActivity, account, ETEBASE_TYPE_ADDRESS_BOOK))
-                }
+                startActivity(CollectionActivity.newCreateCollectionIntent(this@AccountActivity, account, ETEBASE_TYPE_ADDRESS_BOOK))
             }
             R.id.install_tasksorg ->  {
                 installPackage(tasksOrgPackage)
@@ -360,7 +328,9 @@ class AccountActivity : BaseActivity(), Toolbar.OnMenuItemClickListener, PopupMe
         private var syncStatusListener: Any? = null
 
         fun initialize(context: Context, account: Account) {
-            this.context = context
+            if (::account.isInitialized)
+                return
+            this.context = context.applicationContext
             this.account = account
 
             syncStatusListener = ContentResolver.addStatusChangeListener(SYNC_OBSERVER_TYPE_ACTIVE, this)
@@ -406,20 +376,11 @@ class AccountActivity : BaseActivity(), Toolbar.OnMenuItemClickListener, PopupMe
             loadAccount()
         }
 
-        private fun getLegacyJournals(data: MyEntityDataStore, serviceEntity: ServiceEntity): List<CollectionListItemInfo> {
-            return JournalEntity.getJournals(data, serviceEntity).map {
-                val info = it.info
-                val isAdmin = it.isOwner(account.name)
-                CollectionListItemInfo(it.uid, info.enumType!!, info.displayName!!, info.description
-                        ?: "", info.color, it.isReadOnly, isAdmin, info)
-            }
-        }
-
-        private fun getCollections(etebaseLocalCache: EtebaseLocalCache, colMgr: CollectionManager, type: CollectionInfo.Type): List<CollectionListItemInfo> {
+        private fun getCollections(etebaseLocalCache: EtebaseLocalCache, colMgr: CollectionManager, type: CollectionType): List<CollectionListItemInfo> {
             val strType = when (type) {
-                CollectionInfo.Type.ADDRESS_BOOK -> ETEBASE_TYPE_ADDRESS_BOOK
-                CollectionInfo.Type.CALENDAR -> ETEBASE_TYPE_CALENDAR
-                CollectionInfo.Type.TASKS -> ETEBASE_TYPE_TASKS
+                CollectionType.ADDRESS_BOOK -> ETEBASE_TYPE_ADDRESS_BOOK
+                CollectionType.CALENDAR -> ETEBASE_TYPE_CALENDAR
+                CollectionType.TASKS -> ETEBASE_TYPE_TASKS
             }
 
             synchronized(etebaseLocalCache) {
@@ -438,7 +399,7 @@ class AccountActivity : BaseActivity(), Toolbar.OnMenuItemClickListener, PopupMe
                     val metaColor = meta.color
                     val color = if (!metaColor.isNullOrBlank()) LocalCalendar.parseColor(metaColor) else null
                     CollectionListItemInfo(it.col.uid, type, meta.name!!, meta.description
-                            ?: "", color, isReadOnly, isAdmin, null)
+                            ?: "", color, isReadOnly, isAdmin)
                 }.filterNotNull()
             }
         }
@@ -451,43 +412,8 @@ class AccountActivity : BaseActivity(), Toolbar.OnMenuItemClickListener, PopupMe
             } catch (e: InvalidAccountException) {
                 return info
             }
-            if (settings.isLegacy) {
-                val data = (context.applicationContext as App).data
-
-                for (serviceEntity in data.select(ServiceEntity::class.java).where(ServiceEntity.ACCOUNT.eq(account.name)).get()) {
-                    val id = serviceEntity.id.toLong()
-                    val service = serviceEntity.type!!
-                    when (service) {
-                        CollectionInfo.Type.ADDRESS_BOOK -> {
-                            info.carddav = AccountInfo.ServiceInfo()
-                            info.carddav!!.refreshing = ContentResolver.isSyncActive(account, App.addressBooksAuthority)
-                            info.carddav!!.infos = getLegacyJournals(data, serviceEntity)
-
-                            val accountManager = AccountManager.get(context)
-                            for (addrBookAccount in accountManager.getAccountsByType(App.addressBookAccountType)) {
-                                val addressBook = LocalAddressBook(context, addrBookAccount, null)
-                                try {
-                                    if (account == addressBook.mainAccount)
-                                        info.carddav!!.refreshing = info.carddav!!.refreshing or ContentResolver.isSyncActive(addrBookAccount, ContactsContract.AUTHORITY)
-                                } catch (e: ContactsStorageException) {
-                                }
-
-                            }
-                        }
-                        CollectionInfo.Type.CALENDAR -> {
-                            info.caldav = AccountInfo.ServiceInfo()
-                            info.caldav!!.refreshing = ContentResolver.isSyncActive(account, CalendarContract.AUTHORITY)
-                            info.caldav!!.infos = getLegacyJournals(data, serviceEntity)
-                        }
-                        CollectionInfo.Type.TASKS -> {
-                            info.taskdav = AccountInfo.ServiceInfo()
-                            info.taskdav!!.refreshing = TASK_PROVIDERS.any {
-                                ContentResolver.isSyncActive(account, it.authority)
-                            }
-                            info.taskdav!!.infos = getLegacyJournals(data, serviceEntity)
-                        }
-                    }
-                }
+            if (settings.isEteSync1Account) {
+                // EteSync 1.0 accounts can't be accessed anymore
                 return info
             }
 
@@ -498,7 +424,7 @@ class AccountActivity : BaseActivity(), Toolbar.OnMenuItemClickListener, PopupMe
 
             info.carddav = AccountInfo.ServiceInfo()
             info.carddav!!.refreshing = ContentResolver.isSyncActive(account, App.addressBooksAuthority)
-            info.carddav!!.infos = getCollections(etebaseLocalCache, colMgr, CollectionInfo.Type.ADDRESS_BOOK)
+            info.carddav!!.infos = getCollections(etebaseLocalCache, colMgr, CollectionType.ADDRESS_BOOK)
 
             val accountManager = AccountManager.get(context)
             for (addrBookAccount in accountManager.getAccountsByType(App.addressBookAccountType)) {
@@ -513,19 +439,19 @@ class AccountActivity : BaseActivity(), Toolbar.OnMenuItemClickListener, PopupMe
 
             info.caldav = AccountInfo.ServiceInfo()
             info.caldav!!.refreshing = ContentResolver.isSyncActive(account, CalendarContract.AUTHORITY)
-            info.caldav!!.infos = getCollections(etebaseLocalCache, colMgr, CollectionInfo.Type.CALENDAR)
+            info.caldav!!.infos = getCollections(etebaseLocalCache, colMgr, CollectionType.CALENDAR)
 
             info.taskdav = AccountInfo.ServiceInfo()
             info.taskdav!!.refreshing = TASK_PROVIDERS.any {
                 ContentResolver.isSyncActive(account, it.authority)
             }
-            info.taskdav!!.infos = getCollections(etebaseLocalCache, colMgr, CollectionInfo.Type.TASKS)
+            info.taskdav!!.infos = getCollections(etebaseLocalCache, colMgr, CollectionType.TASKS)
 
             return info
         }
 
         fun observe(owner: LifecycleOwner, observer: (AccountActivity.AccountInfo) -> Unit) =
-                holder.observe(owner, observer)
+                holder.observe(owner) { observer(it) }
 
         val value: AccountActivity.AccountInfo?
             get() = holder.value
@@ -534,7 +460,7 @@ class AccountActivity : BaseActivity(), Toolbar.OnMenuItemClickListener, PopupMe
 
     /* LIST ADAPTERS */
 
-    data class CollectionListItemInfo(val uid: String, val enumType: CollectionInfo.Type, val displayName: String, val description: String, val color: Int?, val isReadOnly: Boolean, val isAdmin: Boolean, val legacyInfo: CollectionInfo?)
+    data class CollectionListItemInfo(val uid: String, val enumType: CollectionType, val displayName: String, val description: String, val color: Int?, val isReadOnly: Boolean, val isAdmin: Boolean)
 
     class CollectionListAdapter(context: Context, private val account: Account) : ArrayAdapter<CollectionListItemInfo>(context, R.layout.account_collection_item) {
 
@@ -557,7 +483,7 @@ class AccountActivity : BaseActivity(), Toolbar.OnMenuItemClickListener, PopupMe
             }
 
             val vColor = v.findViewById<View>(R.id.color)
-            if (info.enumType == CollectionInfo.Type.ADDRESS_BOOK) {
+            if (info.enumType == CollectionType.ADDRESS_BOOK) {
                 vColor.visibility = View.GONE
             } else {
                 vColor.setBackgroundColor(info.color ?: LocalCalendar.defaultColor)
@@ -577,56 +503,35 @@ class AccountActivity : BaseActivity(), Toolbar.OnMenuItemClickListener, PopupMe
     /* USER ACTIONS */
 
     private fun deleteAccount() {
-        val accountManager = AccountManager.get(this)
-        val settings = AccountSettings(this@AccountActivity, account)
+        val context = applicationContext
+        val accountManager = AccountManager.get(context)
+        val settings = AccountSettings(context, account)
 
         lifecycleScope.launch {
-            withContext(Dispatchers.IO) {
-                if (settings.isLegacy) {
-                    val authToken = settings.authToken
-                    val principal = settings.uri?.toHttpUrlOrNull()
+            if (!settings.isEteSync1Account) {
+                withContext(Dispatchers.IO) {
+                    EtebaseLocalCache.clearUserCache(context, account.name)
 
                     try {
-                        val httpClient = HttpClient.Builder(this@AccountActivity, null, authToken).build().okHttpClient
-                        val journalAuthenticator = JournalAuthenticator(httpClient, principal!!)
-                        journalAuthenticator.invalidateAuthToken(authToken)
-                    } catch (e: Exceptions.HttpException) {
-                        // Ignore failures for now
-                        Logger.log.warning(e.toString())
-                    }
-                } else {
-                    EtebaseLocalCache.clearUserCache(this@AccountActivity, account.name)
-
-                    try {
-                        val httpClient = HttpClient.Builder(this@AccountActivity).build()
-                        val etebase = EtebaseLocalCache.getEtebase(this@AccountActivity, httpClient.okHttpClient, settings)
+                        val httpClient = HttpClient.Builder(context).build()
+                        val etebase = EtebaseLocalCache.getEtebase(context, httpClient.okHttpClient, settings)
                         etebase.logout()
-                    } catch(e: EtebaseException) {
-                        // Ignore failures for now
+                    } catch (e: EtebaseException) {
+                        // A failed remote logout must not prevent local account removal.
                         Logger.log.warning(e.toString())
                     }
                 }
             }
-        }
 
-        if (Build.VERSION.SDK_INT >= 22)
-            accountManager.removeAccount(account, this, { future ->
+            accountManager.removeAccount(account, this@AccountActivity, { future ->
                 try {
                     if (future.result.getBoolean(AccountManager.KEY_BOOLEAN_RESULT))
-                        finish()
-                } catch(e: Exception) {
-                    Logger.log.log(Level.SEVERE, "Couldn't remove account", e)
-                }
-            }, null)
-        else
-            accountManager.removeAccount(account, { future ->
-                try {
-                    if (future.result)
                         finish()
                 } catch (e: Exception) {
                     Logger.log.log(Level.SEVERE, "Couldn't remove account", e)
                 }
             }, null)
+        }
     }
 
 

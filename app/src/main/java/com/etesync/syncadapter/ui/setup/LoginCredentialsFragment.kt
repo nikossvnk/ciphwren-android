@@ -23,9 +23,9 @@ import com.etesync.syncadapter.Constants
 import com.etesync.syncadapter.R
 import com.etesync.syncadapter.ui.WebViewActivity
 import com.etesync.syncadapter.ui.etebase.SignupFragment
+import com.etesync.syncadapter.utils.setExpanded
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
-import net.cachapa.expandablelayout.ExpandableLayout
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import java.net.URI
 
@@ -64,22 +64,17 @@ class LoginCredentialsFragment : Fragment() {
         login.setOnClickListener {
             val credentials = validateLoginData()
             if (credentials != null)
-                DetectConfigurationFragment.newInstance(credentials).show(requireFragmentManager(), null)
+                DetectConfigurationFragment.newInstance(credentials).show(parentFragmentManager, null)
         }
 
         val forgotPassword = v.findViewById<View>(R.id.forgot_password) as TextView
         forgotPassword.setOnClickListener { WebViewActivity.openUrl(requireContext(), Constants.forgotPassword) }
 
-        val advancedLayout = v.findViewById<View>(R.id.advanced_layout) as ExpandableLayout
+        val advancedLayout = v.findViewById<View>(R.id.advanced_layout)
 
         showAdvanced.setOnClickListener {
-            if (showAdvanced.isChecked) {
-                showAdvanced.isChecked = false
-                advancedLayout.collapse()
-            } else {
-                showAdvanced.isChecked = true
-                advancedLayout.expand()
-            }
+            showAdvanced.isChecked = !showAdvanced.isChecked
+            advancedLayout.setExpanded(showAdvanced.isChecked)
         }
 
         return v

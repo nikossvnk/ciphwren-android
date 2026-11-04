@@ -1,0 +1,59 @@
+name: Check
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  schedule:
+    # Also every Monday morning, to notice dependencies that broke without a change here
+    - cron: "41 5 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build, lint and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # Calendar/contact/certificate libraries and the Rust-backed Etebase client.
+          submodules: recursive
+
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+
+      - name: Install Android and native build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y build-essential pkg-config
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.0" "build-tools;37.0.0" "ndk;30.0.16248370"
+          (cd etebase-java && rustup show active-toolchain)
+
+      # Unit tests and lint of the app and libraries, and both APKs (the release one
+      # unsigned: the release key is only used by the Release workflow).
+      - name: Build
+        run: ./gradlew build compileDebugAndroidTestKotlin :etebase-client:compileDebugAndroidTestJavaWithJavac
+
+      - name: Keep the reports
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reports
+          path: "*/build/reports/"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: etesync-debug-apk
+          path: app/build/outputs/apk/debug/*.apk

@@ -12,33 +12,44 @@ import android.content.ContentResolver
 import android.content.ContentResolver.SYNC_OBSERVER_TYPE_SETTINGS
 import android.content.Intent
 import android.content.SyncStatusObserver
-import android.content.pm.PackageManager
 import android.os.Bundle
-import android.view.Gravity
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
+import androidx.activity.addCallback
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import com.etesync.syncadapter.BuildConfig.DEBUG
 import com.etesync.syncadapter.Constants
-import com.etesync.syncadapter.Constants.serviceUrl
 import com.etesync.syncadapter.R
 import com.etesync.syncadapter.ui.setup.LoginActivity
 import com.etesync.syncadapter.utils.HintManager
-import com.etesync.syncadapter.utils.ShowcaseBuilder
+import com.etesync.syncadapter.utils.HintPopup
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
-import tourguide.tourguide.ToolTip
 
 class AccountsActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedListener, SyncStatusObserver {
 
     private var syncStatusSnackbar: Snackbar? = null
     private var syncStatusObserver: Any? = null
 
+    private val requestPermissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
+        val denied = results
+                .filterValues { granted -> !granted }
+                .keys
+                .map { permission -> permission.substringAfterLast('_') }
+                .filter { key -> key != "TASKS" }    // We don't want to show it for tasks
+                .toSortedSet()
+
+        if (denied.isNotEmpty()) {
+            val deniedString = denied.joinToString(", ")
+            Snackbar.make(findViewById(R.id.coordinator), getString(R.string.accounts_missing_permissions, deniedString), Snackbar.LENGTH_INDEFINITE).show()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,7 +64,7 @@ class AccountsActivity : BaseActivity(), NavigationView.OnNavigationItemSelected
         val drawer = findViewById<View>(R.id.drawer_layout) as DrawerLayout
         val toggle = ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
-        drawer.setDrawerListener(toggle)
+        drawer.addDrawerListener(toggle)
         toggle.syncState()
 
         val navigationView = findViewById<View>(R.id.nav_view) as NavigationView
@@ -67,16 +78,26 @@ class AccountsActivity : BaseActivity(), NavigationView.OnNavigationItemSelected
             ft.commit()
 
             if (DEBUG) {
-                Toast.makeText(this, "Server: " + serviceUrl.toString(), Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Server: " + Constants.etebaseServiceUrl, Toast.LENGTH_SHORT).show()
             }
         }
 
-        PermissionsActivity.requestAllPermissions(this)
+        if (savedInstanceState == null) {
+            requestPermissions.launch(PermissionsActivity.allPermissions)
+        }
+
+        onBackPressedDispatcher.addCallback(this) {
+            if (drawer.isDrawerOpen(GravityCompat.START))
+                drawer.closeDrawer(GravityCompat.START)
+            else {
+                isEnabled = false
+                onBackPressedDispatcher.onBackPressed()
+                isEnabled = true
+            }
+        }
 
         if (!HintManager.getHintSeen(this, HINT_ACCOUNT_ADD)) {
-            ShowcaseBuilder.getBuilder(this)
-                    .setToolTip(ToolTip().setTitle(getString(R.string.tourguide_title)).setDescription(getString(R.string.accounts_showcase_add)).setGravity(Gravity.TOP or Gravity.LEFT))
-                    .playOn(fab)
+            HintPopup.show(fab, R.string.accounts_showcase_add)
             HintManager.setHintSeen(this, HINT_ACCOUNT_ADD, true)
         }
     }
@@ -95,7 +116,7 @@ class AccountsActivity : BaseActivity(), NavigationView.OnNavigationItemSelected
         }
     }
 
-    override fun onStatusChanged(which: Int) {
+    override fun onStatusChanged(which: Int) = runOnUiThread {
         if (syncStatusSnackbar != null) {
             syncStatusSnackbar!!.dismiss()
             syncStatusSnackbar = null
@@ -106,15 +127,6 @@ class AccountsActivity : BaseActivity(), NavigationView.OnNavigationItemSelected
                     .setAction(R.string.accounts_global_sync_enable) { ContentResolver.setMasterSyncAutomatically(true) }
             syncStatusSnackbar!!.show()
         }
-    }
-
-
-    override fun onBackPressed() {
-        val drawer = findViewById<View>(R.id.drawer_layout) as DrawerLayout
-        if (drawer.isDrawerOpen(GravityCompat.START))
-            drawer.closeDrawer(GravityCompat.START)
-        else
-            super.onBackPressed()
     }
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
@@ -131,26 +143,6 @@ class AccountsActivity : BaseActivity(), NavigationView.OnNavigationItemSelected
         val drawer = findViewById<View>(R.id.drawer_layout) as DrawerLayout
         drawer.closeDrawer(GravityCompat.START)
         return true
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        val denied = HashMap<String, Boolean>()
-        for (permission in permissions.withIndex()) {
-            val status = grantResults[permission.index]
-            if (status != PackageManager.PERMISSION_GRANTED) {
-                val key = permission.value.substringAfterLast('_')
-                if (key != "TASKS") {
-                    // We don't want to show it for tasks
-                    denied[key] = true
-                }
-            }
-        }
-
-        if (denied.size > 0) {
-            val deniedString = denied.keys.joinToString(", ")
-            Snackbar.make(findViewById(R.id.coordinator), getString(R.string.accounts_missing_permissions, deniedString), Snackbar.LENGTH_INDEFINITE).show()
-        }
     }
 
     companion object {

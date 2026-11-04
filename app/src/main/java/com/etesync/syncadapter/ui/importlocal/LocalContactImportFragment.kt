@@ -8,7 +8,6 @@ import android.database.Cursor
 import android.graphics.Canvas
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
-import android.os.AsyncTask
 import android.os.Bundle
 import android.provider.ContactsContract
 import android.util.Log
@@ -19,15 +18,18 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import at.bitfire.vcard4android.ContactsStorageException
 import com.etesync.syncadapter.R
 import com.etesync.syncadapter.log.Logger
-import com.etesync.syncadapter.model.CollectionInfo
 import com.etesync.syncadapter.resource.LocalAddressBook
 import com.etesync.syncadapter.resource.LocalContact
 import com.etesync.syncadapter.resource.LocalGroup
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.*
 
 
@@ -92,39 +94,32 @@ class LocalContactImportFragment : Fragment() {
 
         recyclerView!!.adapter = ImportContactAdapter(requireContext(), localAddressBooks, object : OnAccountSelected {
             override fun accountSelected(index: Int) {
-                ImportContacts().execute(localAddressBooks[index])
+                importContacts(localAddressBooks[index])
             }
         })
     }
 
-    protected inner class ImportContacts : AsyncTask<LocalAddressBook, Int, ResultFragment.ImportResult>() {
-        private lateinit var progressDialog: ProgressDialog
+    private fun importContacts(localAddressBook: LocalAddressBook) {
+        val progressDialog = ProgressDialog(activity)
+        progressDialog.setTitle(R.string.import_dialog_title)
+        progressDialog.setMessage(getString(R.string.import_dialog_adding_entries))
+        progressDialog.setCanceledOnTouchOutside(false)
+        progressDialog.setCancelable(false)
+        progressDialog.isIndeterminate = false
+        progressDialog.setIcon(R.drawable.ic_import_export_black)
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
+        progressDialog.show()
 
-        override fun onPreExecute() {
-            progressDialog = ProgressDialog(activity)
-            progressDialog.setTitle(R.string.import_dialog_title)
-            progressDialog.setMessage(getString(R.string.import_dialog_adding_entries))
-            progressDialog.setCanceledOnTouchOutside(false)
-            progressDialog.setCancelable(false)
-            progressDialog.isIndeterminate = false
-            progressDialog.setIcon(R.drawable.ic_import_export_black)
-            progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
-            progressDialog.show()
-        }
+        val context = requireContext().applicationContext
+        lifecycleScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                importContacts(context, localAddressBook, progressDialog)
+            }
 
-        override fun doInBackground(vararg addressBooks: LocalAddressBook): ResultFragment.ImportResult {
-            return importContacts(addressBooks[0])
-        }
-
-        override fun onProgressUpdate(vararg values: Int?) {
-            progressDialog.progress = values[0]!!
-        }
-
-        override fun onPostExecute(result: ResultFragment.ImportResult) {
             val activity = activity
             if (activity == null) {
                 Logger.log.warning("Activity is null on import.")
-                return
+                return@launch
             }
 
             if (progressDialog.isShowing && !activity.isDestroyed && !activity.isFinishing) {
@@ -132,83 +127,91 @@ class LocalContactImportFragment : Fragment() {
             }
             onImportResult(result)
         }
+    }
 
-        private fun importContacts(localAddressBook: LocalAddressBook): ResultFragment.ImportResult {
-            val result = ResultFragment.ImportResult()
-            try {
-                val addressBook = LocalAddressBook.findByUid(requireContext(),
-                        requireContext().contentResolver.acquireContentProviderClient(ContactsContract.RawContacts.CONTENT_URI)!!,
-                        account, uid)
-                        ?: throw Exception("Could not find address book")
-                val localContacts = localAddressBook.findAllContacts()
-                val localGroups = localAddressBook.findAllGroups()
-                val oldIdToNewId = HashMap<Long, Long>()
-                val total = localContacts.size + localGroups.size
+    private suspend fun importContacts(context: Context, localAddressBook: LocalAddressBook, progressDialog: ProgressDialog): ResultFragment.ImportResult {
+        val result = ResultFragment.ImportResult()
+        try {
+            val addressBook = LocalAddressBook.findByUid(context,
+                    context.contentResolver.acquireContentProviderClient(ContactsContract.RawContacts.CONTENT_URI)!!,
+                    account, uid)
+                    ?: throw Exception("Could not find address book")
+            val localContacts = localAddressBook.findAllContacts()
+            val localGroups = localAddressBook.findAllGroups()
+            val oldIdToNewId = HashMap<Long, Long>()
+            val total = localContacts.size + localGroups.size
+            withContext(Dispatchers.Main) {
                 progressDialog.max = total
-                result.total = total.toLong()
-                var progress = 0
-                for (currentLocalContact in localContacts) {
-                    val contact = currentLocalContact.contact
-
-                    try {
-                        contact!!
-                        var localContact: LocalContact? = if (contact.uid == null)
-                            null
-                        else
-                            addressBook.findByUid(contact.uid!!) as LocalContact?
-
-                        if (localContact != null) {
-                            localContact.updateAsDirty(contact)
-                            result.updated++
-                        } else {
-                            localContact = LocalContact(addressBook, contact, contact.uid, null)
-                            localContact.createAsDirty()
-                            result.added++
-                        }
-
-                        oldIdToNewId[currentLocalContact.id!!] = localContact.id!!
-                    } catch (e: ContactsStorageException) {
-                        e.printStackTrace()
-                        result.e = e
-                    }
-
-                    publishProgress(++progress)
-                }
-                for (currentLocalGroup in localGroups) {
-                    val group = currentLocalGroup.contact
-
-                    try {
-                        val members = currentLocalGroup.getMembers().map {
-                            oldIdToNewId[it]!!
-                        }
-                        group!!
-
-                        var localGroup: LocalGroup? = if (group.uid == null)
-                            null
-                        else
-                            addressBook.findByUid(group.uid!!) as LocalGroup?
-
-                        if (localGroup != null) {
-                            localGroup.updateAsDirty(group, members)
-                            result.updated++
-                        } else {
-                            localGroup = LocalGroup(addressBook, group, group.uid, null)
-                            localGroup.createAsDirty(members)
-                            result.added++
-                        }
-                    } catch (e: ContactsStorageException) {
-                        e.printStackTrace()
-                        result.e = e
-                    }
-
-                    publishProgress(++progress)
-                }
-            } catch (e: Exception) {
-                result.e = e
             }
+            result.total = total.toLong()
+            var progress = 0
+            for (currentLocalContact in localContacts) {
+                val contact = currentLocalContact.contact
 
-            return result
+                try {
+                    contact!!
+                    var localContact: LocalContact? = if (contact.uid == null)
+                        null
+                    else
+                        addressBook.findByUid(contact.uid!!) as LocalContact?
+
+                    if (localContact != null) {
+                        localContact.updateAsDirty(contact)
+                        result.updated++
+                    } else {
+                        localContact = LocalContact(addressBook, contact, contact.uid, null)
+                        localContact.createAsDirty()
+                        result.added++
+                    }
+
+                    oldIdToNewId[currentLocalContact.id!!] = localContact.id!!
+                } catch (e: ContactsStorageException) {
+                    e.printStackTrace()
+                    result.e = e
+                }
+
+                val currentProgress = ++progress
+                withContext(Dispatchers.Main) {
+                    progressDialog.progress = currentProgress
+                }
+            }
+            for (currentLocalGroup in localGroups) {
+                val group = currentLocalGroup.contact
+
+                try {
+                    val members = currentLocalGroup.getMembers().map {
+                        oldIdToNewId[it]!!
+                    }
+                    group!!
+
+                    var localGroup: LocalGroup? = if (group.uid == null)
+                        null
+                    else
+                        addressBook.findByUid(group.uid!!) as LocalGroup?
+
+                    if (localGroup != null) {
+                        localGroup.updateAsDirty(group, members)
+                        result.updated++
+                    } else {
+                        localGroup = LocalGroup(addressBook, group, group.uid, null)
+                        localGroup.createAsDirty(members)
+                        result.added++
+                    }
+                } catch (e: ContactsStorageException) {
+                    e.printStackTrace()
+                    result.e = e
+                }
+
+                val currentProgress = ++progress
+                withContext(Dispatchers.Main) {
+                    progressDialog.progress = currentProgress
+                }
+            }
+        } catch (e: Exception) {
+            result.e = e
         }
+
+        return result
     }
 
     fun onImportResult(importResult: ResultFragment.ImportResult) {
@@ -237,7 +240,7 @@ class LocalContactImportFragment : Fragment() {
 
             init {
                 // Define click listener for the ViewHolder's View.
-                v.setOnClickListener { onAccountSelected.accountSelected(adapterPosition) }
+                v.setOnClickListener { onAccountSelected.accountSelected(bindingAdapterPosition) }
                 titleTextView = v.findViewById<View>(R.id.title) as TextView
                 descTextView = v.findViewById<View>(R.id.description) as TextView
                 iconImageView = v.findViewById<View>(R.id.icon) as ImageView
