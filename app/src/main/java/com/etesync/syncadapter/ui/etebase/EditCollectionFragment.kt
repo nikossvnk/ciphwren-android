@@ -189,7 +189,8 @@ class EditCollectionFragment : Fragment(), MenuProvider {
         val v = requireView()
 
         var edit = v.findViewById<EditText>(R.id.display_name)
-        val name = edit.text.toString()
+        // Names are single-line titles: drop surrounding blanks and line breaks.
+        val name = edit.text.toString().trim()
         if (TextUtils.isEmpty(name)) {
             edit.error = getString(R.string.create_collection_display_name_required)
             ok = false

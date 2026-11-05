@@ -25,7 +25,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:hint="@string/create_calendar_display_name_hint"/>
+            android:hint="@string/create_calendar_display_name_hint"
+            android:inputType="textCapSentences"/>
 
         <TextView
             android:layout_width="wrap_content"

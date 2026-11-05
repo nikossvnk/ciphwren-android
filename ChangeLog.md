@@ -8,6 +8,7 @@
 * Upgrade Android build tools, AndroidX, OkHttp, ACRA, ical4j and ez-vcard; migrate calendar/contact date APIs.
 * Replace abandoned UI dependencies and asynchronous task helpers with platform UI, view binding and lifecycle-owned coroutines.
 * Support predictive back navigation in the embedded browser while retaining Android 6 URL dispatch.
+* Keep collection names on one line and trim surrounding whitespace and line breaks when saving.
 * Add weekly dependency checks, build/test/lint workflows, and signed GitHub tag releases.
 
 ## Version 2.7.0
