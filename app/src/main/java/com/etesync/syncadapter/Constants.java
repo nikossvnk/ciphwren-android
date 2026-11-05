@@ -29,18 +29,9 @@ public class Constants {
             NOTIFICATION_PERMISSIONS = 20,
             NOTIFICATION_ETESYNC1_UNSUPPORTED = 21;
 
-    public static final Uri webUri = Uri.parse((DEBUG_REMOTE_URL == null) ? "https://www.etesync.com/" : DEBUG_REMOTE_URL);
+    public static final Uri sourceCodeUri = Uri.parse("https://github.com/nikossvnk/etesync-android");
+    public static final Uri reportIssueUri = sourceCodeUri.buildUpon().appendEncodedPath("issues").build();
     public static final Uri etebaseDashboardPrefix = Uri.parse("https://dashboard.etebase.com/user/partner/");
-    public static final Uri contactUri = webUri.buildUpon().appendEncodedPath("about/#contact").build();
-    public static final Uri registrationUrl = webUri.buildUpon().appendEncodedPath("accounts/signup/").build();
-    public static final Uri reportIssueUri = Uri.parse("https://github.com/etesync/android/issues");
-    public static final Uri feedbackUri = reportIssueUri;
-    public static final Uri pricing = webUri.buildUpon().appendEncodedPath("pricing/").build();
-    public static final Uri dashboard = webUri.buildUpon().appendEncodedPath("dashboard/").build();
-    public static final Uri faqUri = webUri.buildUpon().appendEncodedPath("faq/").build();
-    public static final Uri helpUri = webUri.buildUpon().appendEncodedPath("user-guide/android/").build();
-    public static final Uri forgotPassword = faqUri.buildUpon().fragment("forgot-password").build();
-    public static final String crashReportingUrl = "https://www.etesync.com/crash/android-syncadapter/report/";
 
     public static final String etebaseServiceUrl = (DEBUG_REMOTE_URL == null) ? "https://api.etebase.com/partner/etesync/" : DEBUG_REMOTE_URL;
 

@@ -22,7 +22,6 @@
     <string name="navigation_drawer_settings">Ayarlar</string>
     <string name="navigation_drawer_external_links">Harici bağlantılar</string>
     <string name="navigation_drawer_website">Web sitesi</string>
-    <string name="navigation_drawer_faq">SSS</string>
     <!--AccountUpdateService-->
     <!--AppSettingsActivity-->
     <string name="app_settings">Ayarlar</string>
@@ -130,7 +129,7 @@
     <string name="loading">Yükleniyor...</string>
     <string name="trust_certificate_unknown_certificate_found">EteSync bilinmeyen bir sertifikayla karşılaştı. Güvenmek ister misiniz?</string>
     <string name="certificate_notification_connection_security">EteSync: Bağlantı güvenliği</string>
-    <string name="sync_calendar_attendees_email_content">Aşağıdaki etkinliğe davet edildiniz:\n\n%s\nNe zaman: %s\nNerede: %s\nKatılanlar: %s\n\n--\nEteSync ile gönderildi - güvenli, uçtan uca şifreli ve özel veri eşzamanlama.\nhttps://www.EteSync.com adresinden edinin</string>
+    <string name="sync_calendar_attendees_email_content">Aşağıdaki etkinliğe davet edildiniz:\n\n%s\nNe zaman: %s\nNerede: %s\nKatılanlar: %s\n\n--\nEteSync ile gönderildi - güvenli, uçtan uca şifreli ve özel veri eşzamanlama.\nhttps://github.com/nikossvnk/etesync-android adresinden edinin</string>
     <string name="sync_calendar_attendees_email_subject">Davet: %s @ %s</string>
     <string name="calendar_attendees_send_email_action">Davet gönder</string>
     <string name="sync_calendar_attendees_notification_content">Misafirlere davet gönderilsin mi?</string>
@@ -207,7 +206,6 @@
     <string name="account_creation_failed">Hesap oluşturma başarısız oldu</string>
     <string name="setting_up_encryption_content">Lütfen bekleyin, şifreleme ayarlanıyor…</string>
     <string name="setting_up_encryption">Şifrelemeyi ayarlama</string>
-    <string name="login_forgot_password">Parolanızı mı unuttunuz?</string>
     <string name="login_service_details_description">Bu sizin oturum açma parolanızdır, şifreleme parolanız *değil*!</string>
     <string name="login_encryption_account_label">Hesap:</string>
     <string name="login_enter_encryption_details">Gizli Şifreleme Parolası</string>
@@ -314,9 +312,6 @@
     <string name="navigation_drawer_guide">Kullanıcı Rehberi</string>
     <string name="navigation_drawer_subtitle">Secure Sync Adapter</string>
     <string name="logging_davdroid_file_logging">EteSync dosya günlük kaydı AÇIK</string>
-    <string name="startup_vendor_specific_bugs_open_faq">SSS\'yi aç</string>
-    <string name="startup_vendor_specific_bugs_message">EteSync, sağlayıcıya özel hatalar içerebilecek bir Android sürümü kullandığınızı tespit etti.\nDaha fazla bilgi için lütfen SSS bölümüne bakın.</string>
-    <string name="startup_vendor_specific_bugs">Muhtemel Sağlayıcı Hataları</string>
     <string name="startup_development_version_give_feedback">Geri bildirimde bulun</string>
     <string name="startup_development_version_message">Bu, EteSync\'in bir geliştirme sürümüdür. İşlerin beklendiği gibi çalışmayabileceğini unutmayın. EteSync\'i iyileştirmek için lütfen bize yapıcı geri bildirimde bulunun.</string>
     <string name="startup_development_version">EteSync Ön İzleme Sürümü</string>
@@ -324,9 +319,6 @@
     <string name="startup_battery_optimization_message">Android, birkaç gün sonra EteSync eşzamanlamasını devre dışı bırakabilir/azaltabilir. Bunu önlemek için pil iyileştirmesini kapatın.</string>
     <string name="startup_battery_optimization">Pil İyileştirmesi</string>
     <string name="tourguide_title">Biliyor musunuz?</string>
-    <string name="crash_email_body">Mümkünse, lütfen bu hatayı tetiklemek için yaptıklarınız gibi diğer ilişkili bilgileri ekleyin.</string>
-    <string name="crash_message">Lütfen yığın izlemesini geliştiricilere gönderin.</string>
-    <string name="crash_title">EteSync çöktü!</string>
     <string name="notification_channel_sync_status_desc">Eşzamanlama değişiklik özeti gibi bilgilendirici durum mesajları</string>
     <string name="notification_channel_sync_status">Durum mesajları</string>
     <string name="notification_channel_sync_warnings_desc">Salt-okunur koleksiyonların reddedilen değişiklikleri gibi önemli olmayan eşzamanlama sorunları</string>

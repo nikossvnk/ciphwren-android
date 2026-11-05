@@ -21,7 +21,6 @@
     <string name="navigation_drawer_settings">Impostazioni</string>
     <string name="navigation_drawer_external_links">Link esterni</string>
     <string name="navigation_drawer_website">Sito web</string>
-    <string name="navigation_drawer_faq">Domande Frequenti</string>
     <!--AccountUpdateService-->
     <!--AppSettingsActivity-->
     <string name="app_settings">Impostazioni</string>

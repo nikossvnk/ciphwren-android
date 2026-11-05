@@ -22,7 +22,6 @@
     <string name="navigation_drawer_settings">Indstillinger</string>
     <string name="navigation_drawer_external_links">Eksterne links</string>
     <string name="navigation_drawer_website">Hjemmeside</string>
-    <string name="navigation_drawer_faq">FAQ</string>
     <!--AccountUpdateService-->
   <!--AppSettingsActivity-->
   <string name="app_settings">Indstillinger</string>

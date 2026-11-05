@@ -23,7 +23,6 @@
     <string name="navigation_drawer_settings">设置</string>
     <string name="navigation_drawer_external_links">外部链接</string>
     <string name="navigation_drawer_website">应用网站</string>
-    <string name="navigation_drawer_faq">常见问题</string>
     <!--AccountUpdateService-->
     <!--AppSettingsActivity-->
     <string name="app_settings">设置</string>

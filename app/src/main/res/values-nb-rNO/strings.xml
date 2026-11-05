@@ -25,9 +25,6 @@
     <string name="notification_channel_sync_status">Statusmeldinger</string>
     <string name="notification_channel_sync_status_desc">Informative statusmeldinger, som sammendrag av synkroniseringsendringer</string>
     <!-- Crash -->
-    <string name="crash_title">EteSync har krasjet!</string>
-    <string name="crash_message">Send feilmeldingen til utvikleren.</string>
-    <string name="crash_email_body">Hvis mulig, ta med annen relevant info, som f.eks. hva du gjorde for å utløse feilen.</string>
     <!-- tourguide -->
     <string name="tourguide_title">Visste du at?</string>
     <!-- startup dialogs -->
@@ -38,9 +35,6 @@
     <string name="startup_development_version">EteSync-testversjon</string>
     <string name="startup_development_version_message">Dette er en utviklerversjon av EteSync. Det kan hende at ting ikke virker som de skal. Send gjerne konstruktive tilbakemeldinger for å forbedre EteSync.</string>
     <string name="startup_development_version_give_feedback">Gi tilbakemelding</string>
-    <string name="startup_vendor_specific_bugs">Potensielle leverandørfeil</string>
-    <string name="startup_vendor_specific_bugs_message">EteSync har oppdaget at du bruker en Android-versjon som kan inneholde leverandørspesifikke feil.\nSe ofte stilte spørsmål (O-S-S) for mer info.</string>
-    <string name="startup_vendor_specific_bugs_open_faq">Åpne O-S-S</string>
     <!-- AboutActivity -->
     <string name="about_license_terms">Lisensbetingelser</string>
     <string name="about_license_info_no_warranty">Dette programmet kommer UTEN NOEN GARANTIER. Det et fri programvare, og du må gjerne distribuere det videre under visse betingelser.</string>
@@ -58,7 +52,6 @@
     <string name="navigation_drawer_settings">Innstillinger</string>
     <string name="navigation_drawer_external_links">Nyttige lenker</string>
     <string name="navigation_drawer_website">Nettside</string>
-    <string name="navigation_drawer_faq">Ofte stilte spørsmål</string>
     <string name="navigation_drawer_guide">Brukerveiledning</string>
     <string name="navigation_drawer_report_issue">Rapporter feil</string>
     <string name="navigation_drawer_contact">Kontakt</string>
@@ -187,7 +180,6 @@
     <string name="login_enter_encryption_details">Hemmelig krypteringspassord</string>
     <string name="login_encryption_account_label">Konto:</string>
     <string name="login_service_details_description">Dette er innloggingspassordet ditt, *ikke* krypteringspassordet!</string>
-    <string name="login_forgot_password">Glemt passord?</string>
     <string name="login_wrong_username_or_password">Kunne ikke logge inn (sannsynligvis feil brukernavn eller passord).\nHar du registrert deg?</string>
     <string name="login_view_logs">Vis logger</string>
     <string name="setting_up_encryption">Setter opp kryptering</string>
@@ -316,7 +308,7 @@
     <string name="sync_calendar_attendees_notification_content">Send invitasjoner til gjester?</string>
     <string name="calendar_attendees_send_email_action">Send invitasjoner</string>
     <string name="sync_calendar_attendees_email_subject">Invitasjon: %s @ %s</string>
-    <string name="sync_calendar_attendees_email_content">Du har blitt invitert til følgende hendelse:\n\n%s\nNår: %s\nHvor: %s\nDeltakere: %s\n\n--\nSendt med EteSync - sikker, ende-til-ende-kryptert og privat synkronisering.\nFå det på https://www.EteSync.com</string>
+    <string name="sync_calendar_attendees_email_content">Du har blitt invitert til følgende hendelse:\n\n%s\nNår: %s\nHvor: %s\nDeltakere: %s\n\n--\nSendt med EteSync - sikker, ende-til-ende-kryptert og privat synkronisering.\nFå det på https://github.com/nikossvnk/etesync-android</string>
     <!-- cert4android -->
     <string name="certificate_notification_connection_security">EteSync: Tilkoblingssikkerhet</string>
     <string name="trust_certificate_unknown_certificate_found">EteSync har mottatt et ukjent sertifikat. Ønsker du å klarere det?</string>

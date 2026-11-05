@@ -85,7 +85,7 @@
     <string name="sync_calendar_attendees_notification_content">Enviar convites aos convidados?</string>
     <string name="calendar_attendees_send_email_action">Enviar convites</string>
     <string name="sync_calendar_attendees_email_subject">Convite: %s @ %s</string>
-    <string name="sync_calendar_attendees_email_content">Foi convidado para o seguinte evento:\n\n%s\nQuando: %s\nOnde: %s\nParticipantes: %s\n\n--\nEnviado por EteSync - sincronização de dados segura, cifrada e privada.\nObtenha-o em https://www.EteSync.com</string>
+    <string name="sync_calendar_attendees_email_content">Foi convidado para o seguinte evento:\n\n%s\nQuando: %s\nOnde: %s\nParticipantes: %s\n\n--\nEnviado por EteSync - sincronização de dados segura, cifrada e privada.\nObtenha-o em https://github.com/nikossvnk/etesync-android</string>
     <string name="certificate_notification_connection_security">EteSync: Segurança de conexão</string>
     <string name="trust_certificate_unknown_certificate_found">EteSync encontrou um certificado desconhecido. Pretende confiar no certificado?</string>
     <string name="loading">A carregar...</string>
@@ -123,11 +123,8 @@
     <string name="navigation_drawer_close">Fechar menu de navegação</string>
     <string name="navigation_drawer_open">Abrir menu de navegação</string>
     <string name="logging_couldnt_create_file">Não foi possível criar um ficheiro de registo externo: %s</string>
-    <string name="startup_vendor_specific_bugs_message">EteSync detectou que está a utilizar uma versão do Android que pode conter bugs específicos de fornecedor. \nPor favor, leia o nosso FAQ para obter mais informações.</string>
-    <string name="startup_vendor_specific_bugs">Potenciais bugs de fornecedor</string>
     <string name="startup_development_version_message">Esta é uma versão de desenvolvimento do EteSync. Esteja ciente que as coisas poderão não funcionar conforme esperado. Dê-nos um feedback construtivo para melhorar o EteSync.</string>
     <string name="startup_battery_optimization_disable">Desligar para EteSync</string>
-    <string name="crash_message">Por favor, envie o stack trace para a equipa de desenvolvimento.</string>
     <string name="accounts_global_sync_enable">Permitir</string>
     <string name="navigation_drawer_website">Website</string>
     <string name="logging_no_external_storage">Armazenamento externo não encontrado</string>
@@ -138,7 +135,6 @@
     <string name="startup_battery_optimization_message">O Android poderá inabilitar a sincronização do EteSync após alguns dias. Como prevenção, desativar a otimização de bateria.</string>
     <string name="startup_battery_optimization">Otimização de bateria</string>
     <string name="tourguide_title">Sabia que?</string>
-    <string name="crash_email_body">Se possível, por favor incluir quaisquer outras informações relavantes, como o que fez para desencadear este erro.</string>
     <string name="notification_channel_sync_status_desc">Mensagens de estado informativas, como o resumo de alterações de sincronização</string>
     <string name="notification_channel_sync_status">Mensagens de estado</string>
     <string name="notification_channel_sync_warnings">Avisos de sincronização</string>
@@ -199,10 +195,8 @@
     <string name="navigation_drawer_contact">Contacto</string>
     <string name="navigation_drawer_report_issue">Reportar problema</string>
     <string name="navigation_drawer_guide">Guia do utilizador</string>
-    <string name="navigation_drawer_faq">FAQ</string>
     <string name="navigation_drawer_settings">Definições</string>
     <string name="navigation_drawer_about">Sobre / Licença</string>
-    <string name="startup_vendor_specific_bugs_open_faq">FAQ</string>
     <string name="startup_development_version_give_feedback">Dar feedback</string>
     <string name="startup_dont_show_again">Não mostrar novamente</string>
     <string name="app_name">EteSync</string>
@@ -230,7 +224,6 @@
     <string name="account_creation_failed">Falha na criação de conta</string>
     <string name="login_view_logs">Ver registos de log</string>
     <string name="login_wrong_username_or_password">Não foi possível autenticar (provavelmente nome de utilizador ou senha errados).\nJá se registou?</string>
-    <string name="login_forgot_password">Esqueceu a sua senha?</string>
     <string name="login_service_details_description">Esta é a sua senha de autenticação, *não* a senha de encriptação!</string>
     <string name="login_encryption_account_label">Conta:</string>
     <string name="login_enter_encryption_details">Senha secreta de encriptação</string>
@@ -298,5 +291,4 @@
     <string name="account_delete_collection_last_title">Não é possível eliminar a última coleção</string>
     <string name="app_settings_change_notification">Mostrar notificações de alteração</string>
     <string name="app_settings_distrust_system_certs">Rejeitar certificados do sistema</string>
-    <string name="crash_title">EteSync falhou!</string>
 </resources>

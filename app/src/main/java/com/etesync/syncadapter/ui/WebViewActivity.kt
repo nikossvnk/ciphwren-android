@@ -181,36 +181,8 @@ class WebViewActivity : BaseActivity() {
             }
         }
 
-        private fun uriEqual(uri1: Uri, uri2: Uri): Boolean {
-            return uri1.host == uri2.host && uri1.path == uri2.path
-        }
-
-        private fun allowedUris(allowedUris: Array<Uri>, uri2: Uri): Boolean {
-            for (uri in allowedUris) {
-                if (uriEqual(uri, uri2)) {
-                    return true
-                }
-            }
-            return false
-        }
-
         private fun isAllowedUrl(uri: Uri): Boolean {
-            val allowedUris = arrayOf(
-                    Constants.faqUri,
-                    Constants.helpUri,
-                    Constants.registrationUrl,
-                    Constants.dashboard,
-                    Constants.webUri.buildUpon().appendEncodedPath("tos/").build(),
-                    Constants.webUri.buildUpon().appendEncodedPath("about/").build(),
-                    Constants.pricing,
-            )
-            val accountsUri = Constants.webUri.buildUpon().appendEncodedPath("accounts/").build()
-
-            return allowedUris(allowedUris, uri) || (
-                    uri.host == accountsUri.host && uri.path!!.startsWith(accountsUri.path!!)
-                    ) || (
-                    uri.host == Constants.etebaseDashboardPrefix.host && uri.path!!.startsWith(Constants.etebaseDashboardPrefix.path!!)
-                    )
+            return uri.host == Constants.etebaseDashboardPrefix.host && uri.path!!.startsWith(Constants.etebaseDashboardPrefix.path!!)
         }
     }
 }

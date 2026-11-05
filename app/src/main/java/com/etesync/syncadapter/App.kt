@@ -30,10 +30,8 @@ import com.etesync.syncadapter.resource.LocalCalendar
 import com.etesync.syncadapter.ui.AccountsActivity
 import com.etesync.syncadapter.utils.HintManager
 import com.etesync.syncadapter.utils.LanguageUtils
-import com.etesync.syncadapter.utils.installerPackageName
 import com.etesync.syncadapter.utils.NotificationUtils
 import com.etesync.syncadapter.utils.TaskProviderHandling
-import org.acra.ACRA
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -71,16 +69,6 @@ class App : Application() {
                 // check whether a tasks app is currently installed
                 TaskProviderHandling.updateTaskSync(this@App, it)
             }
-        }
-    }
-
-    override fun attachBaseContext(base: Context) {
-        super.attachBaseContext(base)
-
-        if (!BuildConfig.DEBUG) {
-            // The following line triggers the initialization of ACRA
-            ACRA.init(this, AcraConfiguration.getConfig(this))
-            ACRA.errorReporter.putCustomData("installedFrom", installerPackageName(base) ?: "")
         }
     }
 

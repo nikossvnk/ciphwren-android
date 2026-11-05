@@ -169,9 +169,6 @@ dependencies {
 
     implementation(project(":etebase-client"))
 
-    implementation(libs.acra.http)
-    implementation(libs.acra.dialog)
-
     implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.cardview)

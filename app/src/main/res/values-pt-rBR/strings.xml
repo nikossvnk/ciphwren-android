@@ -23,7 +23,6 @@
     <string name="navigation_drawer_settings">Configurações</string>
     <string name="navigation_drawer_external_links">Links utéis</string>
     <string name="navigation_drawer_website">Site</string>
-    <string name="navigation_drawer_faq">Perguntas comuns</string>
     <!--AccountUpdateService-->
   <!--AppSettingsActivity-->
   <string name="app_settings">Configurações</string>
@@ -129,7 +128,6 @@
     <string name="journal_item_restore_dialog_body">Entrada restaurada com sucesso ao estado anterior.</string>
     <string name="app_settings_log_verbose_summary">Registros verbosos podem conter informações privadas</string>
     <string name="sync_error_permissions_text">Permissões adicionais são necessárias</string>
-    <string name="startup_vendor_specific_bugs_message">O EteSync detectou que está usando uma versão do Android que tem bugs específicos das fabricantes.\nDê uma olhada nas perguntas comuns para mais informações.</string>
     <string name="journal_item_tab_raw">Bruto</string>
     <string name="sync_phase_post_processing">pós processamento</string>
     <string name="journal_entries_loading">Carregando entradas do registro de alterações...</string>
@@ -159,14 +157,12 @@
     <string name="settings_encryption">Criptografia</string>
     <string name="view_collection_members">Gerenciar membros</string>
     <string name="sync_phase_push_entries">enviando entradas</string>
-    <string name="login_forgot_password">Esqueceu a senha?</string>
     <string name="journal_item_member_count">Número de membros</string>
     <string name="migrate_v2_wizard_migrate_progress_done">A sua conta foi migrada.\nVerifique que tudo foi copiado corretamente, e remova sua conta antiga ao terminar.</string>
     <string name="journal_item_restore_action">Restaurar estado</string>
     <string name="login_encryption_password">Senha de criptografia</string>
     <string name="collection_members_leave">Sair</string>
     <string name="journal_item_organization">Organização</string>
-    <string name="crash_message">Por favor, envie o stack trace aos desenvolvedores.</string>
     <string name="accounts_missing_permissions">Permissões faltando: %s</string>
     <string name="wrong_encryption_password_content">Houve um erro de integridade ao acessar sua conta, o que normalmente significa que digitou a senha de criptografia errada.\nObserve que o nome de usuário é sensível aos maiúsculos, então também tente diferentes, por exemplo, tente deixar o primeiro caractere em maiúsculo.\n\nErro: %s</string>
     <string name="account_owner">Proprietário: %s</string>
@@ -183,7 +179,7 @@
     <string name="show_fingperprint_title">Minha impressão digital</string>
     <string name="logging_davdroid_file_logging">A coleta de registros está ATIVADA</string>
     <string name="notification_channel_crash_reports">Relatórios de travamentos</string>
-    <string name="sync_calendar_attendees_email_content">Você foi convidado ao seguinte evento:\n\n%s\nQuando: %s\nOnde: %s\nParticipantes: %s\n\n--\nEnviado pelo EteSync - sincronização de dados privada, segura, criptografada de ponta a ponta.\nhttps://etesync.com</string>
+    <string name="sync_calendar_attendees_email_content">Você foi convidado ao seguinte evento:\n\n%s\nQuando: %s\nOnde: %s\nParticipantes: %s\n\n--\nEnviado pelo EteSync - sincronização de dados privada, segura, criptografada de ponta a ponta.\nhttps://github.com/nikossvnk/etesync-android</string>
     <string name="choose_file">Escolher arquivo</string>
     <string name="event_info_organizer">Organizador:</string>
     <string name="notification_channel_general">Outras mensagens importantes</string>
@@ -191,7 +187,6 @@
     <string name="migrate_v2_wizard_migrate_progress_done_malformed">%d entradas malformadas foram ignoradas (provavelmente OK de ignorar).</string>
     <string name="sync_error_permissions">Permissões do EteSync</string>
     <string name="migrate_v2_wizard_migrate_progress_entries">Migrando entradas %d/%d</string>
-    <string name="startup_vendor_specific_bugs_open_faq">Abrir perguntas comuns</string>
     <string name="login_username_error">O nome do usuário deve ter pelo menos 6 caracteres, com apenas letras, dígitos, e ./-/_.</string>
     <string name="startup_battery_optimization_message">O Android pode desativar/reduzir a sincronização do EteSync depois de alguns dias. Para impedir isso, desative a otimização de bateria.</string>
     <string name="trust_certificate_unknown_certificate_found">O EteSync se deparou com um certificado desconhecido. Quer confiá-lo?</string>
@@ -232,7 +227,6 @@
     <string name="retry">Repetir</string>
     <string name="sync_phase_journals">sincronizando diários</string>
     <string name="accounts_global_sync_enable">Ativar</string>
-    <string name="startup_vendor_specific_bugs">Bugs específicos de fabricantes</string>
     <string name="create_calendar_display_name_hint">Meu calendário</string>
     <string name="account_delete_collection_last_title">Não é possível apagar a última coleção</string>
     <string name="collection_members_add_success">Convite enviado. O usuário será adicionado quando o convite for aceito.</string>
@@ -339,7 +333,6 @@
     <string name="account_creation_failed">A criação da conta falhou</string>
     <string name="journal_item_impp">Mensageiros</string>
     <string name="notification_channel_sync_status">Mensagens de estado</string>
-    <string name="crash_email_body">Se possível, inclua quaisquer outras informações relevantes como o que fez para causar este erro.</string>
     <string name="sync_error_unavailable">Não foi possível conectar ao servidor ao %s</string>
     <string name="import_dialog_loading_file">Carregando arquivo (pode demorar um pouco)...</string>
     <string name="notification_channel_description">Notificações do EteSync</string>
@@ -359,7 +352,6 @@
     <string name="settings_encryption_password">Senha de criptografia</string>
     <string name="change_encryption_password_success_body">A senha de criptografia foi alterada com sucesso!</string>
     <string name="sync_phase_apply_remote_entries">aplicando entradas remotas</string>
-    <string name="crash_title">O EteSync travou!</string>
     <string name="invitations_title">Convites</string>
     <string name="login_encryption_check_password">* Certifique-se que lembra da sua senha, pois não pode ser recuperada!</string>
     <string name="startup_development_version">Lançamento de prévia do EteSync</string>

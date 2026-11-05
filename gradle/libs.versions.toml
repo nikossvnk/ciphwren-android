@@ -2,15 +2,12 @@
 agp = "9.5.0"
 kotlin = "2.4.21"
 coroutines = "1.11.0"
-acra = "5.14.2"
 okhttp = "5.5.1"
 lifecycle = "2.11.0"
 
 [libraries]
 desugar-jdk-libs = "com.android.tools:desugar_jdk_libs:2.1.5"
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
-acra-http = { module = "ch.acra:acra-http", version.ref = "acra" }
-acra-dialog = { module = "ch.acra:acra-dialog", version.ref = "acra" }
 androidx-activity-ktx = "androidx.activity:activity-ktx:1.13.0"
 androidx-appcompat = "androidx.appcompat:appcompat:1.8.0"
 androidx-cardview = "androidx.cardview:cardview:1.0.0"

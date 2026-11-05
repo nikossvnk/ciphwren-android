@@ -1,6 +1,6 @@
 Secure, end-to-end encrypted, and privacy respecting sync for your contacts, calendars, and tasks (using Tasks.org and OpenTasks). For notes, please use the EteSync Notes application.
 
-In order to use this application you need to have an account with EteSync (paid hosting), or run your own instance (free and open source). Check out https://www.etesync.com/ for more information.
+In order to use this application you need an Etebase account, either with a hosting provider or on your own instance (free and open source).
 
 Easy to Use
 ===========

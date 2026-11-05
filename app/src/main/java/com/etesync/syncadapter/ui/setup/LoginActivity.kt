@@ -41,6 +41,6 @@ class LoginActivity : BaseActivity() {
     }
 
     fun showHelp(item: MenuItem) {
-        WebViewActivity.openUrl(this, Constants.helpUri)
+        WebViewActivity.openUrl(this, Constants.sourceCodeUri)
     }
 }

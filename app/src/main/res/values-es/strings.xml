@@ -23,7 +23,6 @@
     <string name="navigation_drawer_settings">Ajustes</string>
     <string name="navigation_drawer_external_links">Enlaces externos</string>
     <string name="navigation_drawer_website">Sitio web</string>
-    <string name="navigation_drawer_faq">Preguntas frequentes</string>
     <!--AccountUpdateService-->
   <!--AppSettingsActivity-->
   <string name="app_settings">Ajustes</string>

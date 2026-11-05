@@ -23,7 +23,6 @@
     <string name="navigation_drawer_settings">Nastavení</string>
     <string name="navigation_drawer_external_links">Externí odkazy</string>
     <string name="navigation_drawer_website">Webová stránka</string>
-    <string name="navigation_drawer_faq">FAQ</string>
     <!--AccountUpdateService-->
   <!--AppSettingsActivity-->
   <string name="app_settings">Nastavení</string>

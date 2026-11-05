@@ -23,7 +23,6 @@
     <string name="navigation_drawer_settings">Instellingen</string>
     <string name="navigation_drawer_external_links">Externe links</string>
     <string name="navigation_drawer_website">Website</string>
-    <string name="navigation_drawer_faq">FAQ</string>
     <!--AccountUpdateService-->
     <!--AppSettingsActivity-->
     <string name="app_settings">Instellingen</string>
@@ -188,18 +187,12 @@
     <string name="navigation_drawer_guide">Gebruikershandleiding</string>
     <string name="navigation_drawer_subtitle">Beveiligde Sync Adapter</string>
     <string name="logging_davdroid_file_logging">EteSync file logging staat AAN</string>
-    <string name="startup_vendor_specific_bugs_open_faq">Open Veelgestelde Vragen (FAQ)</string>
-    <string name="startup_vendor_specific_bugs_message">EteSync heeft gedecteerd dat u een Android versie gebruikt dat mogelijk verkoper-specifieke bugs bevat.\nKijk a.u.b. naar de veelgestelde vragen voor meer informatie.</string>
-    <string name="startup_vendor_specific_bugs">Potentiele Verkoper Bugs</string>
     <string name="startup_development_version_give_feedback">Geef feedback</string>
     <string name="startup_development_version_message">Dit is een development versie van EteSync. Wees u ervan bewust dat sommige zaken niet zullen werken zoals verwacht. Geef ons a.u.b. constructieve feedback om EteSync te verbeteren.</string>
     <string name="startup_development_version">EteSync Voorbeeld Release</string>
     <string name="startup_battery_optimization_disable">Schakel uit voor EteSync</string>
     <string name="startup_battery_optimization_message">Android kan mogelijk de EteSync synchronisatie uitschakelen/verminderen na een aantal dagen. Om dit te voorkomen, schakel batterij-optimalisatie uit.</string>
     <string name="tourguide_title">Wist je dat?</string>
-    <string name="crash_email_body">Indien mogelijk, vermeld a.u.b. elke mogelijks relevante informatie zoals wat u deed dat de error veroorzaakte.</string>
-    <string name="crash_message">Zend a.u.b. de stack trace naar de ontwikkelaars.</string>
-    <string name="crash_title">EteSync is gecrasht!</string>
     <string name="notification_channel_sync_status_desc">Informatieve statusberichten zoals de samenvatting van de sync veranderingen</string>
     <string name="notification_channel_sync_status">Statusberichten</string>
     <string name="notification_channel_sync_warnings_desc">Niet-fotale synchronisatieproblemen zoals afgewezen veranderingen van read-only verzamelingen</string>
@@ -225,7 +218,7 @@
     <string name="loading">Aan het laden...</string>
     <string name="trust_certificate_unknown_certificate_found">EteSync heeft een onbekend certificaat tegengekomen. Wilt u het vertrouwen?</string>
     <string name="certificate_notification_connection_security">EteSync: Verbindingsveiligheid</string>
-    <string name="sync_calendar_attendees_email_content">U bent uitgenodigd op het volgende evenement:\n\n%s\nWanneer: %s\nWaar: %s\nAanwezigen: %s\n\n--\nVerstuurd door EteSync - veilige, end-to-end encrypted en private data sync.\nVerkrijg het via https://www.EteSync.com</string>
+    <string name="sync_calendar_attendees_email_content">U bent uitgenodigd op het volgende evenement:\n\n%s\nWanneer: %s\nWaar: %s\nAanwezigen: %s\n\n--\nVerstuurd door EteSync - veilige, end-to-end encrypted en private data sync.\nVerkrijg het via https://github.com/nikossvnk/etesync-android</string>
     <string name="sync_calendar_attendees_email_subject">Uitnodiging: %s @ %s</string>
     <string name="calendar_attendees_send_email_action">Verzend uitnodigingen</string>
     <string name="sync_calendar_attendees_notification_content">Uitnodigingen naar gasten versturen?</string>
@@ -307,7 +300,6 @@
     <string name="setting_up_encryption_content">Even geduld, encryptie aan het instellen…</string>
     <string name="setting_up_encryption">Encryptie instellen</string>
     <string name="login_wrong_username_or_password">Kan niet authenticeren (waarschijnlijk verkeerde gebruikersnaam of wachtwoord).\nBent u al geregistreerd?</string>
-    <string name="login_forgot_password">Wachtwoord vergeten?</string>
     <string name="login_service_details_description">Dit is uw login wachtwoord, *niet* uw encryptiewachtwoord!</string>
     <string name="login_encryption_account_label">Account:</string>
     <string name="login_enter_encryption_details">Geheim Encryptiewachtwoord</string>

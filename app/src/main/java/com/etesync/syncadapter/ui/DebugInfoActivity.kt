@@ -25,9 +25,11 @@ import android.view.MenuItem
 import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.core.os.BundleCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
 import at.bitfire.ical4android.TaskProvider.ProviderName
 import at.bitfire.vcard4android.ContactsStorageException
@@ -40,7 +42,7 @@ import com.etesync.syncadapter.utils.installerPackageName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.acra.ACRA
+import java.io.File
 import java.util.logging.Level
 
 class DebugInfoActivity : BaseActivity() {
@@ -69,14 +71,23 @@ class DebugInfoActivity : BaseActivity() {
 
 
     fun onShare(item: MenuItem) {
-        val extras = intent.extras
-        ACRA.errorReporter.putCustomData("debug_info", report ?: "")
-        val account = extras?.let { BundleCompat.getParcelable(it, KEY_ACCOUNT, Account::class.java) }
-        if (account != null) {
-            ACRA.errorReporter.putCustomData("username", account.name)
+        val report = report ?: return
+        val context = applicationContext
+        lifecycleScope.launch {
+            val uri = withContext(Dispatchers.IO) {
+                val dir = File(context.cacheDir, "debug-info")
+                dir.mkdirs()
+                val file = File(dir, "debug-info.txt")
+                file.writeText(report)
+                FileProvider.getUriForFile(context, context.getString(R.string.authority_log_provider), file)
+            }
+            val share = Intent(Intent.ACTION_SEND)
+                    .setType("text/plain")
+                    .putExtra(Intent.EXTRA_STREAM, uri)
+                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            share.clipData = ClipData.newRawUri(null, uri)
+            startActivity(Intent.createChooser(share, getString(R.string.send)))
         }
-        ACRA.errorReporter.handleException(extras?.let { BundleCompat.getSerializable(it, KEY_THROWABLE, Throwable::class.java) })
-        ACRA.errorReporter.removeCustomData("debug_info")
     }
 
 

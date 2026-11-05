@@ -133,11 +133,8 @@ class AccountsActivity : BaseActivity(), NavigationView.OnNavigationItemSelected
         when (item.itemId) {
             R.id.nav_about -> startActivity(Intent(this, AboutActivity::class.java))
             R.id.nav_app_settings -> startActivity(Intent(this, AppSettingsActivity::class.java))
-            R.id.nav_website -> startActivity(Intent(Intent.ACTION_VIEW, Constants.webUri))
-            R.id.nav_guide -> WebViewActivity.openUrl(this, Constants.helpUri)
-            R.id.nav_faq -> WebViewActivity.openUrl(this, Constants.faqUri)
-            R.id.nav_report_issue -> startActivity(Intent(Intent.ACTION_VIEW, Constants.reportIssueUri))
-            R.id.nav_contact -> startActivity(Intent(Intent.ACTION_VIEW, Constants.contactUri))
+            R.id.nav_website, R.id.nav_guide -> startActivity(Intent(Intent.ACTION_VIEW, Constants.sourceCodeUri))
+            R.id.nav_report_issue, R.id.nav_contact -> startActivity(Intent(Intent.ACTION_VIEW, Constants.reportIssueUri))
         }
 
         val drawer = findViewById<View>(R.id.drawer_layout) as DrawerLayout

@@ -6,7 +6,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
 import com.etesync.syncadapter.R
-import org.acra.ACRA
+import com.etesync.syncadapter.ui.DebugInfoActivity
 import java.io.Serializable
 
 /**
@@ -40,7 +40,8 @@ class ResultFragment : DialogFragment() {
                         // dismiss
                     }
                     .setPositiveButton(android.R.string.yes) { dialog, which ->
-                        ACRA.errorReporter.handleException(result!!.e)
+                        startActivity(DebugInfoActivity.newIntent(requireContext(), ResultFragment::class.java.name)
+                                .putExtra(DebugInfoActivity.KEY_THROWABLE, result!!.e))
                     }
                     .create()
         } else {

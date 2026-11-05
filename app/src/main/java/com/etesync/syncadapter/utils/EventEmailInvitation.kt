@@ -4,14 +4,13 @@ import android.accounts.Account
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.core.content.FileProvider
 import at.bitfire.ical4android.Event
 import at.bitfire.ical4android.util.TimeApiExtensions.requireZoneId
 import at.bitfire.ical4android.util.TimeApiExtensions.toTimestamp
 import com.etesync.syncadapter.R
 import com.etesync.syncadapter.log.Logger
 import net.fortuna.ical4j.model.property.Attendee
-import org.acra.attachment.AcraContentProvider
-import org.acra.util.IOUtils
 import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -98,12 +97,12 @@ class EventEmailInvitation constructor(val context: Context, val account: Accoun
 
     private fun createAttachmentFromString(context: Context, content: String): Uri? {
         val name = UUID.randomUUID().toString()
-        val parentDir = File(context.cacheDir, name)
+        val parentDir = File(File(context.cacheDir, "invitations"), name)
         parentDir.mkdirs()
         val cache = File(parentDir, "invite.ics")
         try {
-            IOUtils.writeStringToFile(cache, content)
-            return AcraContentProvider.getUriForFile(context, cache)
+            cache.writeText(content)
+            return FileProvider.getUriForFile(context, context.getString(R.string.authority_log_provider), cache)
         } catch (e: IOException) {
             e.printStackTrace()
         }

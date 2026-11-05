@@ -50,7 +50,6 @@ import com.etesync.syncadapter.utils.HintManager
 import com.etesync.syncadapter.utils.HintPopup
 import com.etesync.syncadapter.utils.packageInstalled
 import com.google.android.material.snackbar.Snackbar
-import org.acra.ACRA
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -97,9 +96,6 @@ class AccountActivity : BaseActivity(), Toolbar.OnMenuItemClickListener, PopupMe
         account = IntentCompat.getParcelableExtra(intent, EXTRA_ACCOUNT, Account::class.java)!!
         title = account.name
         settings = AccountSettings(this, account)
-
-        // Set it for ACRA in case we crash in any of the user views
-        ACRA.errorReporter.putCustomData("username", account.name)
 
         setContentView(R.layout.activity_account)
 

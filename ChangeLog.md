@@ -4,8 +4,9 @@
 ## Version 3.0.0
 * Require Android 6.0 or newer and target Android 16.
 * Remove EteSync 1.0 synchronization and migration. Export legacy data with the previous client before upgrading; existing legacy databases are not deleted automatically.
-* Build Etebase from maintained Rust sources through UniFFI-generated Kotlin bindings instead of flapigen JNI glue, with 16 KB native-library alignment and the repeated-chunk fix. Internal Etebase failures now surface as sync/setup errors or crash reports instead of aborting the app.
-* Upgrade Android build tools, AndroidX, OkHttp, ACRA, ical4j and ez-vcard; migrate calendar/contact date APIs.
+* Build Etebase from maintained Rust sources through UniFFI-generated Kotlin bindings instead of flapigen JNI glue, with 16 KB native-library alignment and the repeated-chunk fix. Internal Etebase failures now surface as catchable exceptions (sync/setup errors) instead of aborting the app.
+* Upgrade Android build tools, AndroidX, OkHttp, ical4j and ez-vcard; migrate calendar/contact date APIs.
+* Stop sending people to EteSync's website: Website, User Guide, About and login help open this fork's source code; Contact, Report issue and beta feedback open its issue tracker instead of upstream's. Remove the FAQ, pricing, free-trial and "Forgot password?" links and the vendor-bug FAQ dialog. Crash reports are no longer uploaded to EteSync's server (ACRA removed); "Send" on the debug info screen and failed-import reports now share the debug report through Android's share sheet. Calendar invitation emails link to the source code.
 * Replace abandoned UI dependencies and asynchronous task helpers with platform UI, view binding and lifecycle-owned coroutines.
 * Support predictive back navigation in the embedded browser while retaining Android 6 URL dispatch.
 * Keep collection names on one line and trim surrounding whitespace and line breaks when saving.

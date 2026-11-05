@@ -8,7 +8,7 @@ Secure, end-to-end encrypted, and privacy respecting sync for your contacts, cal
 [<img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png"
       alt="Get it on Google Play" 
       height="80" />](https://play.google.com/store/apps/details?id=com.etesync.syncadapter)
-[<img src="https://www.etesync.com/static/img/fdroid-badge.fe865d4c8f63.png"
+[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
       alt="Get it on F-Droid"
       height="80" />](https://f-droid.org/app/com.etesync.syncadapter)
 
@@ -17,7 +17,7 @@ Secure, end-to-end encrypted, and privacy respecting sync for your contacts, cal
 
 # Overview
 
-Please see the [EteSync website](https://www.etesync.com) for more information.
+Please report bugs and questions on the [issue tracker](https://github.com/nikossvnk/etesync-android/issues).
 
 EteSync is licensed under the [GPLv3 License](LICENSE).
 

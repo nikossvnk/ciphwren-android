@@ -36,9 +36,6 @@
     <string name="notification_channel_sync_status_desc">Informational status messages like the sync change summary</string>
 
     <!-- Crash -->
-    <string name="crash_title">EteSync has crashed!</string>
-    <string name="crash_message">Please send stack trace to developers.</string>
-    <string name="crash_email_body">If possible, please include any other relevant information such as what you did to trigger this error.</string>
 
     <!-- tourguide -->
     <string name="tourguide_title">Did you know?</string>
@@ -51,9 +48,6 @@
     <string name="startup_development_version">EteSync Preview Release</string>
     <string name="startup_development_version_message">This is a development version of EteSync. Be aware that things may not work as expected. Please give us constructive feedback to improve EteSync.</string>
     <string name="startup_development_version_give_feedback">Give feedback</string>
-    <string name="startup_vendor_specific_bugs">Potential Vendor Bugs</string>
-    <string name="startup_vendor_specific_bugs_message">EteSync has detected you are using an Android version that may contain vendor specific bugs.\nPlease take a look at the FAQ for more information.</string>
-    <string name="startup_vendor_specific_bugs_open_faq">Open FAQ</string>
 
     <!-- AboutActivity -->
     <string name="about_license_terms">License terms</string>
@@ -74,7 +68,6 @@
     <string name="navigation_drawer_settings">Settings</string>
     <string name="navigation_drawer_external_links">Useful links</string>
     <string name="navigation_drawer_website">Website</string>
-    <string name="navigation_drawer_faq">FAQ</string>
     <string name="navigation_drawer_guide">User Guide</string>
     <string name="navigation_drawer_report_issue">Report issue</string>
     <string name="navigation_drawer_contact">Contact</string>
@@ -267,7 +260,6 @@
     <string name="login_enter_encryption_details">Secret Encryption Password</string>
     <string name="login_encryption_account_label">Account:</string>
     <string name="login_service_details_description">This is your login password, *not* your encryption password!</string>
-    <string name="login_forgot_password">Forgot password?</string>
 
     <string name="login_wrong_username_or_password">Couldn\'t authenticate (probably wrong username or password).\nHave you registered?</string>
     <string name="login_view_logs">View logs</string>
@@ -428,7 +420,7 @@
     <string name="sync_calendar_attendees_notification_content">Send invitations to guests?</string>
     <string name="calendar_attendees_send_email_action">Send invitations</string>
     <string name="sync_calendar_attendees_email_subject">Invitation: %s @ %s</string>
-    <string name="sync_calendar_attendees_email_content">You have been invited to the following event:\n\n%s\nWhen: %s\nWhere: %s\nAttendees: %s\n\n--\nSent by EteSync - secure, end-to-end encrypted and private data sync.\nGet it at https://www.EteSync.com</string>
+    <string name="sync_calendar_attendees_email_content">You have been invited to the following event:\n\n%s\nWhen: %s\nWhere: %s\nAttendees: %s\n\n--\nSent by EteSync - secure, end-to-end encrypted and private data sync.\nGet it at https://github.com/nikossvnk/etesync-android</string>
 
     <!-- cert4android -->
     <string name="certificate_notification_connection_security">EteSync: Connection security</string>

@@ -25,10 +25,6 @@
                 android:icon="@drawable/ic_home_dark"
                 android:title="@string/navigation_drawer_website"/>
             <item
-                android:id="@+id/nav_faq"
-                android:icon="@drawable/ic_question_answer"
-                android:title="@string/navigation_drawer_faq"/>
-            <item
                 android:id="@+id/nav_guide"
                 android:icon="@drawable/ic_help_dark"
                 android:title="@string/navigation_drawer_guide"/>

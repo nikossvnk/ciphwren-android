@@ -30,7 +30,6 @@
     <string name="navigation_drawer_settings">Einstellungen</string>
     <string name="navigation_drawer_external_links">Externe Links</string>
     <string name="navigation_drawer_website">Website</string>
-    <string name="navigation_drawer_faq">FAQ</string>
     <string name="navigation_drawer_guide">Benutzerhandbuch</string>
     <string name="navigation_drawer_report_issue">Fehler melden</string>
     <string name="navigation_drawer_contact">Entwickler kontaktieren</string>
@@ -179,7 +178,7 @@
     <string name="sync_calendar_attendees_notification_content">Einladungen an Gäste versenden?</string>
     <string name="calendar_attendees_send_email_action">Einladungen senden</string>
     <string name="sync_calendar_attendees_email_subject">Einladung: %s @ %s</string>
-    <string name="sync_calendar_attendees_email_content">Sie wurden zu folgender Veranstaltung eingeladen:\n\n%s\nWann: %s\nWo: %s\nTeilnehmer: %s\n\n--\nGesendet mit EteSync - sichere, Ende-zu-Ende verschlüsselte und private Datensynchronisation.\nErhältlich unter https://www.EteSync.com</string>
+    <string name="sync_calendar_attendees_email_content">Sie wurden zu folgender Veranstaltung eingeladen:\n\n%s\nWann: %s\nWo: %s\nTeilnehmer: %s\n\n--\nGesendet mit EteSync - sichere, Ende-zu-Ende verschlüsselte und private Datensynchronisation.\nErhältlich unter https://github.com/nikossvnk/etesync-android</string>
     <!-- cert4android -->
     <string name="certificate_notification_connection_security">EteSync: Verbindungs-Sicherheit</string>
     <string name="trust_certificate_unknown_certificate_found">EteSync hat ein unbekanntes Zertifikat vorgefunden. Wollen Sie ihm vertrauen?</string>
@@ -190,7 +189,6 @@
     <string name="app_settings_prefer_tasksorg_on">Synchronisiert Aufgaben mit Tasks.org, falls verfügbar</string>
     <string name="app_settings_prefer_tasksorg">Aufgabenanbieter Tasks.org bevorzugen</string>
     <string name="app_settings_sync">Synchronisation</string>
-    <string name="startup_vendor_specific_bugs_open_faq">FAQ öffnen</string>
     <string name="app_name">EteSync</string>
     <string name="notification_channel_description">EteSync-Benachrichtigungen</string>
     <string name="notification_channel_name">EteSync</string>
@@ -240,7 +238,6 @@
     <string name="signup_title">Registrierungsdetails eingeben</string>
     <string name="wrong_encryption_password">Falsches Verschlüsselungspasswort</string>
     <string name="account_creation_failed">Kontoerstellung fehlgeschlagen</string>
-    <string name="login_forgot_password">Passwort vergessen?</string>
     <string name="login_encryption_extra_info">* Dieses Passwort wird zur Verschlüsselung Ihrer Daten verwendet, im Gegensatz zum vorherigen, das zur Anmeldung beim Dienst verwendet wird.\nAus Sicherheitsgründen werden Sie aufgefordert, ein separates Verschlüsselungspasswort auszuwählen. Weitere Informationen finden Sie in den FAQ unter: %s</string>
     <string name="login_encryption_set_new_password">Bitte legen Sie Ihr Verschlüsselungspasswort unten fest, und stellen Sie sicher, dass Sie es richtig eingegeben haben, da es bei Verlust *nicht* wiederhergestellt werden kann!</string>
     <string name="login_toggle_advanced">Erweiterte Einstellungen anzeigen</string>
@@ -325,9 +322,6 @@
     <string name="accounts_global_sync_enable">Aktivieren</string>
     <string name="accounts_global_sync_disabled">Systemweite automatische Synchronisation ist deaktiviert</string>
     <string name="tourguide_title">Wussten Sie schon?</string>
-    <string name="crash_email_body">Wenn möglich, fügen Sie bitte weitere relevante Informationen bei, z. B. was Sie getan haben, um diesen Fehler auszulösen.</string>
-    <string name="crash_message">Bitte senden Sie die Stapelrückverfolgung an die Entwickler.</string>
-    <string name="crash_title">EteSync ist abgestürzt!</string>
     <string name="notification_channel_sync_status">Statusmeldungen</string>
     <string name="notification_channel_sync_warnings_desc">Nicht schwerwiegende Synchronisationsprobleme wie verworfene Änderungen von schreibgeschützten Sammlungen</string>
     <string name="notification_channel_sync_warnings">Synchronisationswarnungen</string>
@@ -341,5 +335,4 @@
     <string name="create">Erstellen</string>
     <string name="address_books_authority_title">Adressbücher</string>
     <string name="account_title_address_book">EteSync Adressbuch</string>
-    <string name="startup_vendor_specific_bugs">Mögliche Fehler des Anbieters</string>
 </resources>

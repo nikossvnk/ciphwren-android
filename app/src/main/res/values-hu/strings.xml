@@ -23,7 +23,6 @@
     <string name="navigation_drawer_settings">Beállítások</string>
     <string name="navigation_drawer_external_links">Weblapok</string>
     <string name="navigation_drawer_website">Honlap</string>
-    <string name="navigation_drawer_faq">GYIK</string>
     <!--AccountUpdateService-->
   <!--AppSettingsActivity-->
   <string name="app_settings">Beállítások</string>

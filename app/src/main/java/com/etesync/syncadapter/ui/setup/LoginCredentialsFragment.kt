@@ -15,13 +15,10 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.CheckedTextView
 import android.widget.EditText
-import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
 import androidx.fragment.app.replace
-import com.etesync.syncadapter.Constants
 import com.etesync.syncadapter.R
-import com.etesync.syncadapter.ui.WebViewActivity
 import com.etesync.syncadapter.ui.etebase.SignupFragment
 import com.etesync.syncadapter.utils.setExpanded
 import com.google.android.material.textfield.TextInputEditText
@@ -66,9 +63,6 @@ class LoginCredentialsFragment : Fragment() {
             if (credentials != null)
                 DetectConfigurationFragment.newInstance(credentials).show(parentFragmentManager, null)
         }
-
-        val forgotPassword = v.findViewById<View>(R.id.forgot_password) as TextView
-        forgotPassword.setOnClickListener { WebViewActivity.openUrl(requireContext(), Constants.forgotPassword) }
 
         val advancedLayout = v.findViewById<View>(R.id.advanced_layout)
 

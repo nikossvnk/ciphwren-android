@@ -13,7 +13,6 @@ import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import androidx.appcompat.app.AlertDialog
@@ -29,8 +28,7 @@ class StartupDialogFragment : DialogFragment() {
     enum class Mode {
         BATTERY_OPTIMIZATIONS,
         DEVELOPMENT_VERSION,
-        GOOGLE_PLAY_ACCOUNTS_REMOVED,
-        VENDOR_SPECIFIC_BUGS
+        GOOGLE_PLAY_ACCOUNTS_REMOVED
     }
 
     @SuppressLint("BatteryLife")
@@ -57,14 +55,7 @@ class StartupDialogFragment : DialogFragment() {
                     .setTitle(R.string.startup_development_version)
                     .setMessage(R.string.startup_development_version_message)
                     .setPositiveButton(android.R.string.ok) { dialog, which -> }
-                    .setNeutralButton(R.string.startup_development_version_give_feedback) { dialog, which -> startActivity(Intent(Intent.ACTION_VIEW, Constants.feedbackUri)) }
-                    .create()
-            StartupDialogFragment.Mode.VENDOR_SPECIFIC_BUGS -> return AlertDialog.Builder(requireActivity())
-                    .setTitle(R.string.startup_vendor_specific_bugs)
-                    .setMessage(R.string.startup_vendor_specific_bugs_message)
-                    .setPositiveButton(android.R.string.ok) { dialog, which -> }
-                    .setNeutralButton(R.string.startup_vendor_specific_bugs_open_faq) { dialog, which -> WebViewActivity.openUrl(requireContext(), Constants.faqUri.buildUpon().encodedFragment("vendor-issues").build()) }
-                    .setNegativeButton(R.string.startup_dont_show_again) { dialog, which -> HintManager.setHintSeen(requireContext(), HINT_VENDOR_SPECIFIC_BUGS, true) }
+                    .setNeutralButton(R.string.startup_development_version_give_feedback) { dialog, which -> startActivity(Intent(Intent.ACTION_VIEW, Constants.reportIssueUri)) }
                     .create()
             StartupDialogFragment.Mode.GOOGLE_PLAY_ACCOUNTS_REMOVED -> {}
         }
@@ -74,7 +65,6 @@ class StartupDialogFragment : DialogFragment() {
 
     companion object {
         private val HINT_BATTERY_OPTIMIZATIONS = "BatteryOptimizations"
-        private val HINT_VENDOR_SPECIFIC_BUGS = "VendorSpecificBugs"
 
         private val ARGS_MODE = "mode"
 
@@ -89,12 +79,6 @@ class StartupDialogFragment : DialogFragment() {
                 val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager?
                 if (powerManager != null && !powerManager.isIgnoringBatteryOptimizations(BuildConfig.APPLICATION_ID))
                     dialogs.add(StartupDialogFragment.instantiate(Mode.BATTERY_OPTIMIZATIONS))
-            }
-
-            // Vendor specific bugs
-            val manu = Build.MANUFACTURER
-            if (!HintManager.getHintSeen(context, HINT_VENDOR_SPECIFIC_BUGS) && (manu.equals("Xiaomi", ignoreCase = true) || manu.equals("Huawei", ignoreCase = true)) && !Build.DISPLAY.contains("lineage")) {
-                dialogs.add(StartupDialogFragment.instantiate(Mode.VENDOR_SPECIFIC_BUGS))
             }
 
             Collections.reverse(dialogs)

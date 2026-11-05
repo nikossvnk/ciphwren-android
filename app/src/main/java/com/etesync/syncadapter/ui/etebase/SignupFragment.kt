@@ -19,7 +19,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.CheckedTextView
-import android.widget.TextView
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
@@ -36,7 +35,6 @@ import com.etebase.client.createClient
 import com.etesync.syncadapter.Constants
 import com.etesync.syncadapter.HttpClient
 import com.etesync.syncadapter.R
-import com.etesync.syncadapter.ui.WebViewActivity
 import com.etesync.syncadapter.ui.setup.*
 import com.etesync.syncadapter.utils.setExpanded
 import com.google.android.material.textfield.TextInputEditText
@@ -67,9 +65,6 @@ class SignupFragment : Fragment() {
         editPassword = v.findViewById(R.id.url_password)
         showAdvanced = v.findViewById(R.id.show_advanced)
         customServer = v.findViewById(R.id.custom_server)
-        v.findViewById<TextView>(R.id.trial_notice).setOnClickListener {
-            WebViewActivity.openUrl(requireContext(), Constants.pricing)
-        }
 
         if (savedInstanceState == null) {
             editUserName.editText?.setText(initialUsername ?: "")

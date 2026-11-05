@@ -25,5 +25,5 @@
 # EteSync + libs
 -keep,includedescriptorclasses class com.etesync.syncadapter.** { *; }    # all EteSync code and deps are required
 
-# ACRA, OkHttp, AndroidX, ez-vcard, the coroutines and the Etebase client (UniFFI/JNA)
+# OkHttp, AndroidX, ez-vcard, the coroutines and the Etebase client (UniFFI/JNA)
 # ship their own consumer rules.

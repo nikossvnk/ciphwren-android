@@ -23,7 +23,6 @@
     <string name="navigation_drawer_settings">Paramètres</string>
     <string name="navigation_drawer_external_links">Liens externes</string>
     <string name="navigation_drawer_website">Site Web</string>
-    <string name="navigation_drawer_faq">FAQ</string>
     <!--AccountUpdateService-->
     <!--AppSettingsActivity-->
     <string name="app_settings">Paramètres</string>
@@ -147,7 +146,6 @@
     <string name="navigation_drawer_report_issue">Signaler un problème</string>
     <string name="navigation_drawer_guide">Guide d’utilisation</string>
     <string name="navigation_drawer_subtitle">Adaptateur de synchro sécurisé</string>
-    <string name="startup_vendor_specific_bugs_open_faq">Ouvrir la FAQ</string>
     <string name="logging_davdroid_file_logging">La journalisation de fichiers EteSync est activée</string>
     <string name="startup_development_version_give_feedback">Envoyer des remarques</string>
     <string name="startup_battery_optimization_disable">Éteindre pour EteSync</string>
@@ -160,13 +158,11 @@
     <string name="app_settings_change_notification">Afficher les notifications de changement</string>
     <string name="app_settings_force_language_default">Auto</string>
     <string name="app_settings_force_language">Forcer la langue</string>
-    <string name="sync_calendar_attendees_email_content">Vous avez été invité·e à l\'évènement suivant :\n\n%s\nQuand : %s\nOù : %s\nParticipants : %s\n\n-\nEnvoyé par EteSync – synchronisation sécurisée, chiffrée de bout en bout et privée des données.\nObtenez-le sur https://www.EteSync.com</string>
+    <string name="sync_calendar_attendees_email_content">Vous avez été invité·e à l\'évènement suivant :\n\n%s\nQuand : %s\nOù : %s\nParticipants : %s\n\n-\nEnvoyé par EteSync – synchronisation sécurisée, chiffrée de bout en bout et privée des données.\nObtenez-le sur https://github.com/nikossvnk/etesync-android</string>
     <string name="sync_calendar_attendees_email_subject">Invitation : %s @ %s</string>
     <string name="calendar_attendees_send_email_action">Envoyer des invitations</string>
     <string name="debug_info_more_data_shared">Cliquez sur Partager pour ouvrir l\'application de messagerie avec les données ci-dessous, ainsi que des informations de débogage supplémentaires, jointes. Il peut contenir des informations sensibles, veuillez donc l\'examiner avant de l\'envoyer.</string>
     <string name="journal_item_email">Courriel</string>
-    <string name="crash_email_body">Si possible, veuillez inclure toute autre information pertinente telle que ce que vous avez fait pour déclencher cette erreur.</string>
-    <string name="crash_title">EteSync a planté !</string>
     <string name="notification_channel_sync_status_desc">Messages d’état informatifs comme le résumé des modifications de synchronisation</string>
     <string name="notification_channel_sync_status">Messages d’état</string>
     <string name="notification_channel_sync_warnings_desc">Problèmes de synchronisation non fatals tels que les modifications ignorées des collections en lecture seule</string>

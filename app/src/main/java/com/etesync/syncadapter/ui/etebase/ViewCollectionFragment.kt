@@ -60,7 +60,7 @@ class ViewCollectionFragment : Fragment(), MenuProvider {
                     .setIcon(R.drawable.ic_info_dark)
                     .setTitle(R.string.use_native_apps_title)
                     .setMessage(R.string.use_native_apps_body)
-                    .setNegativeButton(R.string.navigation_drawer_guide, { _: DialogInterface, _: Int -> WebViewActivity.openUrl(requireContext(), Constants.helpUri) })
+                    .setNegativeButton(R.string.navigation_drawer_guide, { _: DialogInterface, _: Int -> WebViewActivity.openUrl(requireContext(), Constants.sourceCodeUri) })
                     .setPositiveButton(android.R.string.yes) { _, _ -> }.show()
         }
 
