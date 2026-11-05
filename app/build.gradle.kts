@@ -78,6 +78,12 @@ android {
 
         buildConfigField("boolean", "customCerts", "true")
 
+        ndk {
+            // The ABIs libetebase_uniffi.so is built for. JNA's AAR also ships libjnidispatch.so
+            // for armeabi, mips and mips64, which couldn't load Etebase anyway.
+            abiFilters += setOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+        }
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

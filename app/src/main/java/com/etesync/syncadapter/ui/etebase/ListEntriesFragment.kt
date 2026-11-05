@@ -142,7 +142,7 @@ class ListEntriesFragment : ListFragment(), AdapterView.OnItemClickListener {
             tv.text = content
 
             val action = v.findViewById<View>(R.id.action) as ImageView
-            if (item.item.isDeleted) {
+            if (item.item.isDeleted()) {
                 action.setImageResource(R.drawable.action_delete)
             } else {
                 action.setImageResource(R.drawable.action_change)

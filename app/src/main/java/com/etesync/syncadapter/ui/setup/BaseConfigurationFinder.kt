@@ -9,8 +9,9 @@ package com.etesync.syncadapter.ui.setup
 
 import android.content.Context
 import com.etebase.client.Account
-import com.etebase.client.Client
-import com.etebase.client.exceptions.EtebaseException
+import com.etebase.client.EtebaseException
+import com.etebase.client.createClient
+import com.etebase.client.isEtebaseServer
 import com.etesync.syncadapter.Constants
 import com.etesync.syncadapter.HttpClient
 import com.etesync.syncadapter.R
@@ -28,13 +29,16 @@ class BaseConfigurationFinder(protected val context: Context, protected val cred
         var etebaseSession: String? = null
         var exception: Throwable? = null
         try {
-            val client = Client.create(httpClient, uri.toString())
+            val client = createClient(httpClient, uri.toString())
             if (credentials.uri != null) {
                 // a custom server must be an Etebase server (EteSync 1.0 servers aren't supported anymore)
-                try {
-                    Account.isEtebaseServer(client)
+                val isEtebase = try {
+                    isEtebaseServer(client)
                 } catch (e: EtebaseException) {
                     throw NotEtebaseServerException(context.getString(R.string.login_not_etebase_server), e)
+                }
+                if (!isEtebase) {
+                    throw NotEtebaseServerException(context.getString(R.string.login_not_etebase_server))
                 }
             }
 
@@ -54,7 +58,7 @@ class BaseConfigurationFinder(protected val context: Context, protected val cred
         )
     }
 
-    class NotEtebaseServerException(message: String, cause: Throwable): Exception(message, cause)
+    class NotEtebaseServerException(message: String, cause: Throwable? = null): Exception(message, cause)
 
     // data classes
 

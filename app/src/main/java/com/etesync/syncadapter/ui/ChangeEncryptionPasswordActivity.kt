@@ -21,7 +21,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AlertDialog
-import com.etebase.client.Client
+import com.etebase.client.createClient
 import com.etesync.syncadapter.AccountSettings
 import com.etesync.syncadapter.HttpClient
 import com.etesync.syncadapter.R
@@ -166,7 +166,7 @@ class PasswordChangeViewModel : ViewModel() {
                     val settings = AccountSettings(context, account)
                     val httpClient = HttpClient.Builder(context).setForeground(true).build().okHttpClient
                     Logger.log.info("Logging in with old password")
-                    val client = Client.create(httpClient, settings.uri?.toString())
+                    val client = createClient(httpClient, settings.uri?.toString())
                     val etebase = com.etebase.client.Account.login(client, account.name, oldPassword)
                     Logger.log.info("Login successful")
                     etebase.changePassword(newPassword)

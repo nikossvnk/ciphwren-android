@@ -19,7 +19,7 @@ import androidx.fragment.app.viewModels
 import com.etebase.client.Collection
 import com.etebase.client.FetchOptions
 import com.etebase.client.ItemMetadata
-import com.etebase.client.exceptions.EtebaseException
+import com.etebase.client.EtebaseException
 import com.etesync.syncadapter.Constants.*
 import com.etesync.syncadapter.R
 import com.etesync.syncadapter.syncadapter.requestSync
@@ -111,10 +111,13 @@ class WizardCheckFragment : Fragment() {
         loadingModel.setLoading(true)
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val collections = withContext(Dispatchers.IO) {
-                    colMgr.list(COLLECTION_TYPES, FetchOptions().limit(1))
+                val hasCollections = withContext(Dispatchers.IO) {
+                    val collections = colMgr.listMulti(COLLECTION_TYPES, FetchOptions(limit = 1u)).data
+                    // Only their number is needed
+                    collections.forEach { it.close() }
+                    collections.isNotEmpty()
                 }
-                if (collections.data.size > 0) {
+                if (hasCollections) {
                     activity?.finish()
                 } else {
                     parentFragmentManager.commit {
@@ -185,12 +188,12 @@ class WizardFragment : Fragment() {
                     )
 
                     baseMeta.forEach {
-                        val meta = ItemMetadata()
-                        meta.name = it.second
-                        meta.mtime = System.currentTimeMillis()
+                        val meta = ItemMetadata(name = it.second, mtime = System.currentTimeMillis())
 
-                        val col = colMgr.create(it.first, meta, "")
-                        uploadCollection(accountHolder, col)
+                        // Only the cache keeps the new collection
+                        colMgr.create(it.first, meta, ByteArray(0)).use { col ->
+                            uploadCollection(accountHolder, col)
+                        }
                     }
                     requestSync(applicationContext, accountHolder.account)
                 }

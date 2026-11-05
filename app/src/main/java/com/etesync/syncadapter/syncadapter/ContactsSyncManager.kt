@@ -120,10 +120,10 @@ constructor(context: Context, account: Account, settings: AccountSettings, extra
     }
 
     override fun processItem(item: Item) {
-        val local = localCollection!!.findByFilename(item.uid)
+        val local = localCollection!!.findByFilename(item.uid())
 
-        if (!item.isDeleted) {
-            val inputReader = StringReader(String(item.content))
+        if (!item.isDeleted()) {
+            val inputReader = StringReader(String(item.content()))
 
             val contacts = Contact.fromReader(inputReader, resourceDownloader)
             if (contacts.size == 0) {
@@ -140,7 +140,7 @@ constructor(context: Context, account: Account, settings: AccountSettings, extra
                 Logger.log.info("Removing local record which has been deleted on the server")
                 local.delete()
             } else {
-                Logger.log.warning("Tried deleting a non-existent record: " + item.uid)
+                Logger.log.warning("Tried deleting a non-existent record: " + item.uid())
             }
         }
     }
@@ -155,14 +155,14 @@ constructor(context: Context, account: Account, settings: AccountSettings, extra
             if (local is LocalGroup && newData.group) {
                 // update group
                 val group: LocalGroup = local
-                group.eTag = item.etag
+                group.eTag = item.etag()
                 group.update(newData)
                 syncResult.stats.numUpdates++
 
             } else if (local is LocalContact && !newData.group) {
                 // update contact
                 val contact: LocalContact = local
-                contact.eTag = item.etag
+                contact.eTag = item.etag()
                 contact.update(newData)
                 syncResult.stats.numUpdates++
 
@@ -180,14 +180,14 @@ constructor(context: Context, account: Account, settings: AccountSettings, extra
 
         if (local == null) {
             if (newData.group) {
-                Logger.log.log(Level.INFO, "Creating local group", item.uid)
-                val group = LocalGroup(localAddressBook(), newData, item.uid, item.etag)
+                Logger.log.log(Level.INFO, "Creating local group", item.uid())
+                val group = LocalGroup(localAddressBook(), newData, item.uid(), item.etag())
                 group.add()
 
                 local = group
             } else {
-                Logger.log.log(Level.INFO, "Creating local contact", item.uid)
-                val contact = LocalContact(localAddressBook(), newData, item.uid, item.etag)
+                Logger.log.log(Level.INFO, "Creating local contact", item.uid())
+                val contact = LocalContact(localAddressBook(), newData, item.uid(), item.etag())
                 contact.add()
 
                 local = contact

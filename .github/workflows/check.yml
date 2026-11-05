@@ -44,7 +44,10 @@ jobs:
       # Unit tests and lint of the app and libraries, and both APKs (the release one
       # unsigned: the release key is only used by the Release workflow).
       - name: Build
-        run: ./gradlew build compileDebugAndroidTestKotlin :etebase-client:compileDebugAndroidTestJavaWithJavac
+        run: ./gradlew build compileDebugAndroidTestKotlin :etebase-client:compileDebugAndroidTestKotlin
+
+      - name: Check the native libraries of the release APK
+        run: scripts/check-apk-native-libs.sh app/build/outputs/apk/release/app-release-unsigned.apk
 
       - name: Keep the reports
         if: failure()

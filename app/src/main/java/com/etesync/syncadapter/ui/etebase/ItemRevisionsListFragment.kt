@@ -135,15 +135,15 @@ class RevisionsViewModel : ViewModel() {
             val ret = withContext(Dispatchers.IO) {
                 val result = LinkedList<CachedItem>()
                 val col = cachedCollection.col
-                val itemManager = accountCollectionHolder.colMgr.getItemManager(col)
+                val itemManager = accountCollectionHolder.colMgr.itemManager(col)
                 var iterator: String? = null
                 var done = false
                 while (!done) {
-                    val chunk = itemManager.itemRevisions(cachedItem.item, FetchOptions().iterator(iterator).limit(30))
+                    val chunk = itemManager.itemRevisions(cachedItem.item, FetchOptions(iterator = iterator, limit = 30u))
                     iterator = chunk.iterator
-                    done = chunk.isDone
+                    done = chunk.done
 
-                    result.addAll(chunk.data.map { CachedItem(it, it.meta, it.contentString) })
+                    result.addAll(chunk.data.map { CachedItem(it, it.meta(), String(it.content(), Charsets.UTF_8)) })
                 }
                 result
             }

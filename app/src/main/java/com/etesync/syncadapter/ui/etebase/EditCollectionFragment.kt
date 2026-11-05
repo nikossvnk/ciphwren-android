@@ -12,7 +12,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.commit
 import androidx.fragment.app.viewModels
 import com.etebase.client.Collection
-import com.etebase.client.exceptions.EtebaseException
+import com.etebase.client.EtebaseException
 import com.etesync.syncadapter.CachedCollection
 import com.etesync.syncadapter.Constants
 import com.etesync.syncadapter.R
@@ -161,14 +161,12 @@ class EditCollectionFragment : Fragment(), MenuProvider {
             try {
                 withContext(Dispatchers.IO) {
                     val col = cachedCollection.col
-                    val meta = col.meta
-                    meta.mtime = System.currentTimeMillis()
-                    col.meta = meta
+                    col.setMeta(col.meta().copy(mtime = System.currentTimeMillis()))
                     col.markDeleted()
                     uploadCollection(col, accountHolder)
                     requestSync(applicationContext, accountHolder.account)
                 }
-                collectionModel.loadCollection(accountHolder, cachedCollection.col.uid)
+                collectionModel.loadCollection(accountHolder, cachedCollection.col.uid())
                 activity?.finish()
             } catch (e: EtebaseException) {
                 Logger.log.warning(e.localizedMessage)
@@ -188,27 +186,26 @@ class EditCollectionFragment : Fragment(), MenuProvider {
     private fun saveCollection() {
         var ok = true
 
-        val meta = cachedCollection.meta
         val v = requireView()
 
         var edit = v.findViewById<EditText>(R.id.display_name)
-        meta.name = edit.text.toString()
-        if (TextUtils.isEmpty(meta.name)) {
+        val name = edit.text.toString()
+        if (TextUtils.isEmpty(name)) {
             edit.error = getString(R.string.create_collection_display_name_required)
             ok = false
         }
 
         edit = v.findViewById<EditText>(R.id.description)
-        meta.description = edit.text.toString().trim().ifEmpty { null }
+        val description = edit.text.toString().trim().ifEmpty { null }
 
-        meta.mtime = System.currentTimeMillis()
+        var meta = cachedCollection.meta.copy(name = name, description = description, mtime = System.currentTimeMillis())
 
         if (ok) {
             when (cachedCollection.collectionType) {
                 Constants.ETEBASE_TYPE_CALENDAR, Constants.ETEBASE_TYPE_TASKS -> {
                     val view = v.findViewById<View>(R.id.color)
                     val color = (view.background as ColorDrawable).color
-                    meta.color = String.format("#%06X", 0xFFFFFF and color)
+                    meta = meta.copy(color = String.format("#%06X", 0xFFFFFF and color))
                 }
                 Constants.ETEBASE_TYPE_ADDRESS_BOOK -> {
                 }
@@ -221,11 +218,11 @@ class EditCollectionFragment : Fragment(), MenuProvider {
                 try {
                     withContext(Dispatchers.IO) {
                         val col = cachedCollection.col
-                        col.meta = meta
+                        col.setMeta(meta)
                         uploadCollection(col, accountHolder)
                         requestSync(applicationContext, accountHolder.account)
                     }
-                    collectionModel.loadCollection(accountHolder, cachedCollection.col.uid)
+                    collectionModel.loadCollection(accountHolder, cachedCollection.col.uid())
                     if (isCreating) {
                         // Load the items since we just created it
                         itemsModel.loadItems(model.value!!, cachedCollection)

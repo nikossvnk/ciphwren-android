@@ -9,6 +9,10 @@ package com.etesync.syncadapter;
 
 import android.net.Uri;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import static com.etesync.syncadapter.BuildConfig.DEBUG_REMOTE_URL;
 
 public class Constants {
@@ -50,9 +54,9 @@ public class Constants {
     public final static String ETEBASE_TYPE_ADDRESS_BOOK = "etebase.vcard";
     public final static String ETEBASE_TYPE_CALENDAR = "etebase.vevent";
     public final static String ETEBASE_TYPE_TASKS = "etebase.vtodo";
-    public final static String[] COLLECTION_TYPES = new String[] {
+    public final static List<String> COLLECTION_TYPES = Collections.unmodifiableList(Arrays.asList(
       ETEBASE_TYPE_ADDRESS_BOOK,
       ETEBASE_TYPE_CALENDAR,
       ETEBASE_TYPE_TASKS
-    };
+    ));
 }

@@ -15,9 +15,8 @@ import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.etebase.client.CollectionAccessLevel
-import com.etebase.client.Utils
-import com.etebase.client.exceptions.EtebaseException
-import com.etebase.client.exceptions.NotFoundException
+import com.etebase.client.EtebaseException
+import com.etebase.client.prettyFingerprint
 import com.etesync.syncadapter.CachedCollection
 import com.etesync.syncadapter.Constants
 import com.etesync.syncadapter.R
@@ -39,7 +38,7 @@ class CollectionMembersFragment : Fragment() {
     private var isAdmin: Boolean = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val ret = if (collectionModel.value!!.col.accessLevel == CollectionAccessLevel.Admin) {
+        val ret = if (collectionModel.value!!.col.accessLevel() == CollectionAccessLevel.ADMIN) {
             isAdmin = true
             inflater.inflate(R.layout.etebase_view_collection_members, container, false)
         } else {
@@ -91,7 +90,7 @@ class CollectionMembersFragment : Fragment() {
                 val applicationContext = requireContext().applicationContext
                 viewLifecycleOwner.lifecycleScope.launch {
                     withContext(Dispatchers.IO) {
-                        val membersManager = accountHolder.colMgr.getMemberManager(cachedCollection.col)
+                        val membersManager = accountHolder.colMgr.memberManager(cachedCollection.col)
                         membersManager.leave()
                         requestSync(applicationContext, accountHolder.account)
                     }
@@ -112,7 +111,7 @@ class CollectionMembersFragment : Fragment() {
                     val username = view.findViewById<EditText>(R.id.username).text.toString()
                     val readOnly = view.findViewById<CheckBox>(R.id.read_only).isChecked
 
-                    val frag = AddMemberFragment.newInstance(username, if (readOnly) CollectionAccessLevel.ReadOnly else CollectionAccessLevel.ReadWrite)
+                    val frag = AddMemberFragment.newInstance(username, if (readOnly) CollectionAccessLevel.READ_ONLY else CollectionAccessLevel.READ_WRITE)
                     frag.show(childFragmentManager, null)
                 }
                 .setNegativeButton(android.R.string.no) { _, _ -> }
@@ -161,7 +160,7 @@ class AddMemberFragment : DialogFragment() {
             AddMemberViewModel.State.CONFIRM -> {
                 val view = LayoutInflater.from(requireContext()).inflate(R.layout.fingerprint_alertdialog, null)
                 view.findViewById<TextView>(R.id.body).text = getString(R.string.trust_fingerprint_body, username)
-                view.findViewById<TextView>(R.id.fingerprint).text = Utils.prettyFingerprint(model.pubkey!!)
+                view.findViewById<TextView>(R.id.fingerprint).text = prettyFingerprint(model.pubkey!!)
                 prompt = AlertDialog.Builder(requireContext())
                     .setIcon(R.drawable.ic_fingerprint_dark)
                     .setTitle(R.string.trust_fingerprint_title)
@@ -181,7 +180,7 @@ class AddMemberFragment : DialogFragment() {
                     .show()
             }
             AddMemberViewModel.State.ERROR -> {
-                val message = if (model.error is NotFoundException) {
+                val message = if (model.error is EtebaseException.NotFound) {
                     getString(R.string.collection_members_error_user_not_found, username)
                 } else {
                     model.error?.localizedMessage
@@ -237,7 +236,7 @@ class AddMemberViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 pubkey = withContext(Dispatchers.IO) {
-                    holder.etebase.invitationManager.fetchUserProfile(username).pubkey
+                    holder.etebase.invitationManager().fetchUserProfile(username).pubkey
                 }
                 state.value = State.CONFIRM
             } catch (e: EtebaseException) {
@@ -253,7 +252,7 @@ class AddMemberViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 withContext(Dispatchers.IO) {
-                    holder.etebase.invitationManager.invite(collection.col, username, pubkey!!, accessLevel)
+                    holder.etebase.invitationManager().invite(collection.col, username, pubkey!!, accessLevel)
                 }
                 state.value = State.SUCCESS
             } catch (e: EtebaseException) {

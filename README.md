@@ -46,14 +46,17 @@ git clone --recurse-submodules https://github.com/nikossvnk/etesync-android.git
 cd etesync-android
 sdkmanager "platforms;android-37.0" "build-tools;37.0.0" "ndk;30.0.16248370"
 ./gradlew assembleDebug
-./gradlew build compileDebugAndroidTestKotlin :etebase-client:compileDebugAndroidTestJavaWithJavac
+./gradlew build compileDebugAndroidTestKotlin :etebase-client:compileDebugAndroidTestKotlin
 ```
 
 The four source submodules are maintained under `github.com/nikossvnk`:
-`ical4android`, `vcard4android`, `cert4android`, and `etebase-java`. Native Etebase
-bindings build automatically from the locked Rust dependencies for all four Android
-ABIs, with 16 KB ELF alignment. The first build downloads the repository-selected
-Rust toolchain and target libraries.
+`ical4android`, `vcard4android`, `cert4android`, and `etebase-java`. The Etebase
+native library and its UniFFI-generated Kotlin bindings build automatically from the
+locked Rust dependencies for all four Android ABIs, with 16 KB ELF alignment; the app
+packages only those ABIs (JNA's `libjnidispatch.so` included). The first build
+downloads the repository-selected Rust toolchain and target libraries.
+`scripts/check-apk-native-libs.sh <apk>` checks the packaged ABIs and their 16 KB
+alignment, as CI does.
 
 Release builds generate a narrow R8 library-API rule for SDK-hidden
 `ZoneRulesProvider`. Core-library desugaring supplies its runtime implementation;

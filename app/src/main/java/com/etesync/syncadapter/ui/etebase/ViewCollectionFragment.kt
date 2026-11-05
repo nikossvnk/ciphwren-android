@@ -66,7 +66,7 @@ class ViewCollectionFragment : Fragment(), MenuProvider {
 
         val col = cachedCollection.col
         val meta = cachedCollection.meta
-        val isAdmin = col.accessLevel == CollectionAccessLevel.Admin
+        val isAdmin = col.accessLevel() == CollectionAccessLevel.ADMIN
 
         val colorSquare = container.findViewById<View>(R.id.color)
         val color = LocalCalendar.parseColor(meta.color)
@@ -117,7 +117,7 @@ class ViewCollectionFragment : Fragment(), MenuProvider {
 
         when (menuItem.itemId) {
             R.id.on_edit -> {
-                if (cachedCollection.col.accessLevel == CollectionAccessLevel.Admin) {
+                if (cachedCollection.col.accessLevel() == CollectionAccessLevel.ADMIN) {
                     parentFragmentManager.commit {
                         replace(R.id.fragment_container, EditCollectionFragment.newInstance(cachedCollection))
                         addToBackStack(EditCollectionFragment::class.java.name)
@@ -138,7 +138,7 @@ class ViewCollectionFragment : Fragment(), MenuProvider {
                 }
             }
             R.id.on_import -> {
-                if (cachedCollection.col.accessLevel != CollectionAccessLevel.ReadOnly) {
+                if (cachedCollection.col.accessLevel() != CollectionAccessLevel.READ_ONLY) {
                     parentFragmentManager.commit {
                         replace(R.id.fragment_container, ImportCollectionFragment())
                         addToBackStack(null)

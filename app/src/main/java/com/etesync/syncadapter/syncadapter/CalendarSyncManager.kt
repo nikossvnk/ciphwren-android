@@ -64,10 +64,10 @@ class CalendarSyncManager(context: Context, account: Account, settings: AccountS
     }
 
     override fun processItem(item: Item) {
-        val local = localCollection!!.findByFilename(item.uid)
+        val local = localCollection!!.findByFilename(item.uid())
 
-        if (!item.isDeleted) {
-            val inputReader = StringReader(String(item.content))
+        if (!item.isDeleted()) {
+            val inputReader = StringReader(String(item.content()))
 
             val events = Event.eventsFromReader(inputReader)
             if (events.size == 0) {
@@ -84,7 +84,7 @@ class CalendarSyncManager(context: Context, account: Account, settings: AccountS
                 Logger.log.info("Removing local record #" + local.id + " which has been deleted on the server")
                 local.delete()
             } else {
-                Logger.log.warning("Tried deleting a non-existent record: " + item.uid)
+                Logger.log.warning("Tried deleting a non-existent record: " + item.uid())
             }
         }
     }
@@ -126,12 +126,12 @@ class CalendarSyncManager(context: Context, account: Account, settings: AccountS
         // delete local event, if it exists
         if (localEvent != null) {
             Logger.log.info("Updating " + newData.uid + " in local calendar")
-            localEvent.eTag = item.etag
+            localEvent.eTag = item.etag()
             localEvent.update(newData)
             syncResult.stats.numUpdates++
         } else {
             Logger.log.info("Adding " + newData.uid + " to local calendar")
-            localEvent = LocalEvent(localCalendar(), newData, item.uid, item.etag)
+            localEvent = LocalEvent(localCalendar(), newData, item.uid(), item.etag())
             localEvent.add()
             syncResult.stats.numInserts++
         }

@@ -80,7 +80,7 @@ class CollectionMembersListFragment : ListFragment(), AdapterView.OnItemClickLis
     override fun onItemClick(parent: AdapterView<*>, view: View, position: Int, id: Long) {
         val member = listAdapter?.getItem(position) as CollectionMember
 
-        if (member.accessLevel == CollectionAccessLevel.Admin) {
+        if (member.accessLevel == CollectionAccessLevel.ADMIN) {
             AlertDialog.Builder(requireActivity())
                     .setIcon(R.drawable.ic_error_dark)
                     .setTitle(R.string.collection_members_remove_title)
@@ -113,7 +113,7 @@ class CollectionMembersListFragment : ListFragment(), AdapterView.OnItemClickLis
 
             // FIXME: Also mark admins
             val readOnly = v.findViewById<View>(R.id.read_only)
-            readOnly.visibility = if (member.accessLevel == CollectionAccessLevel.ReadOnly) View.VISIBLE else View.GONE
+            readOnly.visibility = if (member.accessLevel == CollectionAccessLevel.READ_ONLY) View.VISIBLE else View.GONE
 
             return v
         }
@@ -129,13 +129,13 @@ class CollectionMembersViewModel : ViewModel() {
             val ret = withContext(Dispatchers.IO) {
                 val result = LinkedList<CollectionMember>()
                 val col = cachedCollection.col
-                val memberManager = accountCollectionHolder.colMgr.getMemberManager(col)
+                val memberManager = accountCollectionHolder.colMgr.memberManager(col)
                 var iterator: String? = null
                 var done = false
                 while (!done) {
-                    val chunk = memberManager.list(FetchOptions().iterator(iterator).limit(30))
-                    iterator = chunk.stoken
-                    done = chunk.isDone
+                    val chunk = memberManager.list(FetchOptions(iterator = iterator, limit = 30u))
+                    iterator = chunk.iterator
+                    done = chunk.done
 
                     result.addAll(chunk.data)
                 }
@@ -149,7 +149,7 @@ class CollectionMembersViewModel : ViewModel() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 val col = cachedCollection.col
-                val memberManager = accountCollectionHolder.colMgr.getMemberManager(col)
+                val memberManager = accountCollectionHolder.colMgr.memberManager(col)
                 memberManager.remove(username)
             }
             val ret = members.value!!.filter { it.username != username }

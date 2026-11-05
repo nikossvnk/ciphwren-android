@@ -44,7 +44,7 @@ class LocalAddressBook(
             val accountManager = AccountManager.get(context)
 
             val account = Account(accountName(mainAccount, cachedCollection), App.addressBookAccountType)
-            val userData = initialUserData(mainAccount, col.uid)
+            val userData = initialUserData(mainAccount, col.uid())
             Logger.log.log(Level.INFO, "Creating local address book $account", userData)
             if (!accountManager.addAccountExplicitly(account, null, userData))
                 throw IllegalStateException("Couldn't create address book account")
@@ -66,7 +66,7 @@ class LocalAddressBook(
             values.put(ContactsContract.Settings.SHOULD_SYNC, 1)
             values.put(ContactsContract.Settings.UNGROUPED_VISIBLE, 1)
             addressBook.settings = values
-            addressBook.readOnly = col.accessLevel == CollectionAccessLevel.ReadOnly
+            addressBook.readOnly = col.accessLevel() == CollectionAccessLevel.READ_ONLY
 
             return addressBook
         }
@@ -96,7 +96,7 @@ class LocalAddressBook(
             val col = cachedCollection.col
             val meta = cachedCollection.meta
             val displayName = meta.name
-            return "${displayName} (${mainAccount.name} ${col.uid.substring(0, 2)})"
+            return "${displayName} (${mainAccount.name} ${col.uid().substring(0, 2)})"
         }
 
         fun initialUserData(mainAccount: Account, url: String): Bundle {
@@ -169,7 +169,7 @@ class LocalAddressBook(
             account = future.result
         }
 
-        readOnly = col.accessLevel == CollectionAccessLevel.ReadOnly
+        readOnly = col.accessLevel() == CollectionAccessLevel.READ_ONLY
         Logger.log.info("Address book write permission? = ${!readOnly}")
 
         // make sure it will still be synchronized when contacts are updated

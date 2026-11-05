@@ -58,10 +58,10 @@ class TasksSyncManager(
     }
 
     override fun processItem(item: Item) {
-        val local = localCollection!!.findByFilename(item.uid)
+        val local = localCollection!!.findByFilename(item.uid())
 
-        if (!item.isDeleted) {
-            val inputReader = StringReader(String(item.content))
+        if (!item.isDeleted()) {
+            val inputReader = StringReader(String(item.content()))
 
             val tasks = Task.tasksFromReader(inputReader)
             if (tasks.size == 0) {
@@ -78,7 +78,7 @@ class TasksSyncManager(
                 Logger.log.info("Removing local record #" + local.id + " which has been deleted on the server")
                 local.delete()
             } else {
-                Logger.log.warning("Tried deleting a non-existent record: " + item.uid)
+                Logger.log.warning("Tried deleting a non-existent record: " + item.uid())
             }
         }
     }
@@ -87,13 +87,13 @@ class TasksSyncManager(
         var localTask = _localTask
         // delete local Task, if it exists
         if (localTask != null) {
-            Logger.log.info("Updating " + item.uid + " in local calendar")
-            localTask.eTag = item.etag
+            Logger.log.info("Updating " + item.uid() + " in local calendar")
+            localTask.eTag = item.etag()
             localTask.update(newData)
             syncResult.stats.numUpdates++
         } else {
-            Logger.log.info("Adding " + item.uid + " to local calendar")
-            localTask = LocalTask(localTaskList(), newData, item.uid, item.etag)
+            Logger.log.info("Adding " + item.uid() + " to local calendar")
+            localTask = LocalTask(localTaskList(), newData, item.uid(), item.etag())
             localTask.add()
             syncResult.stats.numInserts++
         }

@@ -51,9 +51,8 @@ class CollectionActivity() : BaseActivity() {
                 model.observe(this) {
                     lifecycleScope.launch {
                         val cachedCollection = withContext(Dispatchers.IO) {
-                            val meta = ItemMetadata()
-                            meta.name = ""
-                            CachedCollection(it.colMgr.create(colType, meta, ""), meta, colType)
+                            val meta = ItemMetadata(name = "")
+                            CachedCollection(it.colMgr.create(colType, meta, ByteArray(0)), meta, colType)
                         }
                         supportFragmentManager.commit {
                             replace(R.id.fragment_container, EditCollectionFragment.newInstance(cachedCollection, true))
@@ -98,7 +97,7 @@ class AccountViewModel : ViewModel() {
                 val etebaseLocalCache = EtebaseLocalCache.getInstance(applicationContext, account.name)
                 val httpClient = HttpClient.Builder(applicationContext).setForeground(true).build().okHttpClient
                 val etebase = EtebaseLocalCache.getEtebase(applicationContext, httpClient, settings)
-                val colMgr = etebase.collectionManager
+                val colMgr = etebase.collectionManager()
                 AccountHolder(
                         account,
                         etebaseLocalCache,
@@ -149,8 +148,8 @@ class ItemsViewModel : ViewModel() {
         viewModelScope.launch {
             val items = withContext(Dispatchers.IO) {
                 val col = cachedCollection.col
-                val itemMgr = accountCollectionHolder.colMgr.getItemManager(col)
-                accountCollectionHolder.etebaseLocalCache.itemList(itemMgr, col.uid, withDeleted = true)
+                val itemMgr = accountCollectionHolder.colMgr.itemManager(col)
+                accountCollectionHolder.etebaseLocalCache.itemList(itemMgr, col.uid(), withDeleted = true)
             }
             cachedItems.value = items
         }

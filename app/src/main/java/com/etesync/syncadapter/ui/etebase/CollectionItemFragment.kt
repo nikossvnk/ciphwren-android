@@ -127,7 +127,7 @@ class CollectionItemFragment : Fragment(), MenuProvider {
         when (cachedCol.collectionType) {
             Constants.ETEBASE_TYPE_CALENDAR -> {
                 val provider = context.contentResolver.acquireContentProviderClient(CalendarContract.CONTENT_URI)!!
-                val localCalendar = LocalCalendar.findByName(account, provider, LocalCalendar.Factory, cachedCol.col.uid)!!
+                val localCalendar = LocalCalendar.findByName(account, provider, LocalCalendar.Factory, cachedCol.col.uid())!!
                 val event = Event.eventsFromReader(StringReader(cachedItem.content))[0]
                 var localEvent = localCalendar.findByUid(event.uid!!)
                 if (localEvent != null) {
@@ -140,7 +140,7 @@ class CollectionItemFragment : Fragment(), MenuProvider {
             Constants.ETEBASE_TYPE_TASKS -> {
                 TaskProviderHandling.getWantedTaskSyncProvider(context)?.let {
                     val provider = TaskProvider.acquire(context, it)!!
-                    val localTaskList = LocalTaskList.findByName(account, provider, LocalTaskList.Factory, cachedCol.col.uid)!!
+                    val localTaskList = LocalTaskList.findByName(account, provider, LocalTaskList.Factory, cachedCol.col.uid())!!
                     val task = Task.tasksFromReader(StringReader(cachedItem.content))[0]
                     var localTask = localTaskList.findByUid(task.uid!!)
                     if (localTask != null) {
@@ -153,7 +153,7 @@ class CollectionItemFragment : Fragment(), MenuProvider {
             }
             Constants.ETEBASE_TYPE_ADDRESS_BOOK -> {
                 val provider = context.contentResolver.acquireContentProviderClient(ContactsContract.RawContacts.CONTENT_URI)!!
-                val localAddressBook = LocalAddressBook.findByUid(context, provider, account, cachedCol.col.uid)!!
+                val localAddressBook = LocalAddressBook.findByUid(context, provider, account, cachedCol.col.uid())!!
                 val contact = Contact.fromReader(StringReader(cachedItem.content), null)[0]
                 if (contact.group) {
                     // FIXME: not currently supported

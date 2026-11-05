@@ -28,7 +28,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
 import androidx.preference.*
 import at.bitfire.ical4android.TaskProvider.Companion.TASK_PROVIDERS
-import com.etebase.client.exceptions.EtebaseException
+import com.etebase.client.EtebaseException
 import com.etesync.syncadapter.*
 import com.etesync.syncadapter.Constants.KEY_ACCOUNT
 import com.etesync.syncadapter.R

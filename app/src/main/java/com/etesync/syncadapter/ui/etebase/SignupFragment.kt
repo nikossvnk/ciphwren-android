@@ -29,9 +29,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.etebase.client.Account
-import com.etebase.client.Client
+import com.etebase.client.EtebaseException
+import com.etebase.client.InternalException
 import com.etebase.client.User
-import com.etebase.client.exceptions.EtebaseException
+import com.etebase.client.createClient
 import com.etesync.syncadapter.Constants
 import com.etesync.syncadapter.HttpClient
 import com.etesync.syncadapter.R
@@ -218,11 +219,14 @@ class ConfigurationViewModel : ViewModel() {
                 var etebaseSession: String? = null
                 var exception: Throwable? = null
                 try {
-                    val client = Client.create(httpClient, uri.toString())
+                    val client = createClient(httpClient, uri.toString())
                     val user = User(credentials.userName, credentials.email)
                     val etebase = Account.signup(client, user, credentials.password)
                     etebaseSession = etebase.save(null)
                 } catch (e: EtebaseException) {
+                    exception = e
+                } catch (e: InternalException) {
+                    // Shown like any other signup failure, as login does
                     exception = e
                 }
 

@@ -34,8 +34,9 @@ import at.bitfire.ical4android.TaskProvider.Companion.TASK_PROVIDERS
 import at.bitfire.vcard4android.ContactsStorageException
 import com.etebase.client.CollectionAccessLevel
 import com.etebase.client.CollectionManager
-import com.etebase.client.Utils
-import com.etebase.client.exceptions.EtebaseException
+import com.etebase.client.EtebaseException
+import com.etebase.client.InternalException
+import com.etebase.client.prettyFingerprint
 import com.etesync.syncadapter.*
 import com.etesync.syncadapter.Constants.*
 import com.etesync.syncadapter.log.Logger
@@ -82,8 +83,8 @@ class AccountActivity : BaseActivity(), Toolbar.OnMenuItemClickListener, PopupMe
         get() {
             try {
                 val etebase = EtebaseLocalCache.getEtebase(this, HttpClient.sharedClient, settings)
-                val invitationManager = etebase.invitationManager
-                return Utils.prettyFingerprint(invitationManager.pubkey)
+                val invitationManager = etebase.invitationManager()
+                return prettyFingerprint(invitationManager.pubkey())
             } catch (e: Exception) {
                 e.printStackTrace()
                 return e.localizedMessage
@@ -385,21 +386,24 @@ class AccountActivity : BaseActivity(), Toolbar.OnMenuItemClickListener, PopupMe
 
             synchronized(etebaseLocalCache) {
                 return etebaseLocalCache.collectionList(colMgr).map {
-                    val meta = it.meta
-                    val collectionType = it.collectionType
+                    // Only the extracted info is kept, not the collection
+                    it.col.use { col ->
+                        val meta = it.meta
+                        val collectionType = it.collectionType
 
-                    if (strType != collectionType) {
-                        return@map null
+                        if (strType != collectionType) {
+                            return@map null
+                        }
+
+                        val accessLevel = col.accessLevel()
+                        val isReadOnly = accessLevel == CollectionAccessLevel.READ_ONLY
+                        val isAdmin = accessLevel == CollectionAccessLevel.ADMIN
+
+                        val metaColor = meta.color
+                        val color = if (!metaColor.isNullOrBlank()) LocalCalendar.parseColor(metaColor) else null
+                        CollectionListItemInfo(col.uid(), type, meta.name!!, meta.description
+                                ?: "", color, isReadOnly, isAdmin)
                     }
-
-                    val accessLevel = it.col.accessLevel
-                    val isReadOnly = accessLevel == CollectionAccessLevel.ReadOnly
-                    val isAdmin = accessLevel == CollectionAccessLevel.Admin
-
-                    val metaColor = meta.color
-                    val color = if (!metaColor.isNullOrBlank()) LocalCalendar.parseColor(metaColor) else null
-                    CollectionListItemInfo(it.col.uid, type, meta.name!!, meta.description
-                            ?: "", color, isReadOnly, isAdmin)
                 }.filterNotNull()
             }
         }
@@ -420,7 +424,7 @@ class AccountActivity : BaseActivity(), Toolbar.OnMenuItemClickListener, PopupMe
             val etebaseLocalCache = EtebaseLocalCache.getInstance(context, account.name)
             val httpClient = HttpClient.Builder(context).build().okHttpClient
             val etebase = EtebaseLocalCache.getEtebase(context, httpClient, settings)
-            val colMgr = etebase.collectionManager
+            val colMgr = etebase.collectionManager()
 
             info.carddav = AccountInfo.ServiceInfo()
             info.carddav!!.refreshing = ContentResolver.isSyncActive(account, App.addressBooksAuthority)
@@ -518,6 +522,9 @@ class AccountActivity : BaseActivity(), Toolbar.OnMenuItemClickListener, PopupMe
                         etebase.logout()
                     } catch (e: EtebaseException) {
                         // A failed remote logout must not prevent local account removal.
+                        Logger.log.warning(e.toString())
+                    } catch (e: InternalException) {
+                        // Nor may a failure inside the native library.
                         Logger.log.warning(e.toString())
                     }
                 }

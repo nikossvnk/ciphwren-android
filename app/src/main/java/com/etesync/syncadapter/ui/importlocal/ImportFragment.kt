@@ -367,7 +367,7 @@ class ImportFragment : DialogFragment() {
             val ret = ImportFragment()
             ret.arguments = Bundle().apply {
                 putParcelable(KEY_ACCOUNT, account)
-                putString(KEY_UID, cachedCollection.col.uid)
+                putString(KEY_UID, cachedCollection.col.uid())
                 putString(KEY_TYPE, enumType.name)
             }
             return ret

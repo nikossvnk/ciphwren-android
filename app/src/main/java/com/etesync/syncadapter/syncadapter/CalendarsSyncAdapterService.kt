@@ -53,13 +53,13 @@ class CalendarsSyncAdapterService : SyncAdapterService() {
             synchronized(etebaseLocalCache) {
                 val httpClient = HttpClient.Builder(context).setForeground(false).build()
                 val etebase = EtebaseLocalCache.getEtebase(context, httpClient.okHttpClient, settings)
-                val colMgr = etebase.collectionManager
+                val colMgr = etebase.collectionManager()
 
                 collections = etebaseLocalCache.collectionList(colMgr).filter { it.collectionType == Constants.ETEBASE_TYPE_CALENDAR }
             }
 
             for (collection in collections) {
-                remote[collection.col.uid] = collection
+                remote[collection.col.uid()] = collection
             }
 
             val local = AndroidCalendar.find(account, provider, LocalCalendar.Factory, null, null)

@@ -18,7 +18,7 @@ import androidx.lifecycle.ViewModel
 import com.etebase.client.CollectionAccessLevel
 import com.etebase.client.FetchOptions
 import com.etebase.client.SignedInvitation
-import com.etebase.client.Utils
+import com.etebase.client.prettyFingerprint
 import com.etesync.syncadapter.R
 import com.etesync.syncadapter.syncadapter.requestSync
 import androidx.lifecycle.viewModelScope
@@ -78,7 +78,7 @@ class InvitationsListFragment : ListFragment(), AdapterView.OnItemClickListener 
 
     override fun onItemClick(parent: AdapterView<*>, view_: View, position: Int, id: Long) {
         val invitation = listAdapter?.getItem(position) as SignedInvitation
-        val fingerprint = Utils.prettyFingerprint(invitation.fromPubkey)
+        val fingerprint = prettyFingerprint(invitation.senderPubkey())
         val view = layoutInflater.inflate(R.layout.invitation_alert_dialog, null)
         view.findViewById<TextView>(R.id.body).text = getString(R.string.invitations_accept_reject_dialog)
         view.findViewById<TextView>(R.id.fingerprint).text = fingerprint
@@ -112,11 +112,11 @@ class InvitationsListFragment : ListFragment(), AdapterView.OnItemClickListener 
 
             val tv = v!!.findViewById<View>(R.id.title) as TextView
             // FIXME: Should have a sensible string here
-            tv.text = "Invitation from ${invitation.fromUsername}"
+            tv.text = "Invitation from ${invitation.senderUsername()}"
 
             // FIXME: Also mark admins
             val readOnly = v.findViewById<View>(R.id.read_only)
-            readOnly.visibility = if (invitation.accessLevel == CollectionAccessLevel.ReadOnly) View.VISIBLE else View.GONE
+            readOnly.visibility = if (invitation.accessLevel() == CollectionAccessLevel.READ_ONLY) View.VISIBLE else View.GONE
 
             return v
         }
@@ -131,13 +131,13 @@ class InvitationsViewModel : ViewModel() {
         asyncTask = viewModelScope.launch {
             val ret = withContext(Dispatchers.IO) {
                 val result = LinkedList<SignedInvitation>()
-                val invitationManager = accountCollectionHolder.etebase.invitationManager
+                val invitationManager = accountCollectionHolder.etebase.invitationManager()
                 var iterator: String? = null
                 var done = false
                 while (!done) {
-                    val chunk = invitationManager.listIncoming(FetchOptions().iterator(iterator).limit(30))
-                    iterator = chunk.stoken
-                    done = chunk.isDone
+                    val chunk = invitationManager.listIncoming(FetchOptions(iterator = iterator, limit = 30u))
+                    iterator = chunk.iterator
+                    done = chunk.done
 
                     result.addAll(chunk.data)
                 }
@@ -150,7 +150,7 @@ class InvitationsViewModel : ViewModel() {
     fun accept(accountCollectionHolder: AccountHolder, invitation: SignedInvitation) {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                val invitationManager = accountCollectionHolder.etebase.invitationManager
+                val invitationManager = accountCollectionHolder.etebase.invitationManager()
                 invitationManager.accept(invitation)
             }
             val ret = invitations.value!!.filter { it != invitation }
@@ -161,7 +161,7 @@ class InvitationsViewModel : ViewModel() {
     fun reject(accountCollectionHolder: AccountHolder, invitation: SignedInvitation) {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                val invitationManager = accountCollectionHolder.etebase.invitationManager
+                val invitationManager = accountCollectionHolder.etebase.invitationManager()
                 invitationManager.reject(invitation)
             }
             val ret = invitations.value!!.filter { it != invitation }

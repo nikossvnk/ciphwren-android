@@ -58,12 +58,12 @@ class ImportCollectionFragment : Fragment() {
         card.setOnClickListener {
             if (cachedCollection.collectionType == Constants.ETEBASE_TYPE_CALENDAR) {
                 parentFragmentManager.commit {
-                    replace(R.id.fragment_container, LocalCalendarImportFragment.newInstance(accountHolder.account, cachedCollection.col.uid))
+                    replace(R.id.fragment_container, LocalCalendarImportFragment.newInstance(accountHolder.account, cachedCollection.col.uid()))
                     addToBackStack(null)
                 }
             } else if (cachedCollection.collectionType == Constants.ETEBASE_TYPE_ADDRESS_BOOK) {
                 parentFragmentManager.commit {
-                    replace(R.id.fragment_container, LocalContactImportFragment.newInstance(accountHolder.account, cachedCollection.col.uid))
+                    replace(R.id.fragment_container, LocalContactImportFragment.newInstance(accountHolder.account, cachedCollection.col.uid()))
                     addToBackStack(null)
                 }
             }

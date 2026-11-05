@@ -71,13 +71,13 @@ class LocalCalendar private constructor(
             val values = ContentValues()
             val col = cachedCollection.col
             val meta = cachedCollection.meta
-            values.put(Calendars.NAME, col.uid)
+            values.put(Calendars.NAME, col.uid())
             values.put(Calendars.CALENDAR_DISPLAY_NAME, meta.name)
 
             if (withColor)
                 values.put(Calendars.CALENDAR_COLOR, parseColor(meta.color))
 
-            if (col.accessLevel == CollectionAccessLevel.ReadOnly)
+            if (col.accessLevel() == CollectionAccessLevel.READ_ONLY)
                 values.put(Calendars.CALENDAR_ACCESS_LEVEL, Calendars.CAL_ACCESS_READ)
             else {
                 values.put(Calendars.CALENDAR_ACCESS_LEVEL, Calendars.CAL_ACCESS_OWNER)

@@ -21,10 +21,8 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import at.bitfire.ical4android.CalendarStorageException
 import at.bitfire.vcard4android.ContactsStorageException
+import com.etebase.client.EtebaseException
 import com.etebase.client.FetchOptions
-import com.etebase.client.exceptions.ConnectionException
-import com.etebase.client.exceptions.TemporaryServerErrorException
-import com.etebase.client.exceptions.UnauthorizedException
 import com.etesync.syncadapter.*
 import com.etesync.syncadapter.Constants.COLLECTION_TYPES
 import com.etesync.syncadapter.log.Logger
@@ -64,10 +62,10 @@ abstract class SyncAdapterService : Service() {
             } catch (e: SecurityException) {
                 // Shouldn't be needed - not sure why it doesn't fail
                 onSecurityException(account, extras, authority, syncResult)
-            } catch (e: TemporaryServerErrorException) {
+            } catch (e: EtebaseException.TemporaryServerException) {
                 syncResult.stats.numIoExceptions++
                 syncResult.delayUntil = Constants.DEFAULT_RETRY_DELAY
-            } catch (e: ConnectionException) {
+            } catch (e: EtebaseException.Connection) {
                 syncResult.stats.numIoExceptions++
                 syncResult.delayUntil = Constants.DEFAULT_RETRY_DELAY
             } catch (e: Exception) {
@@ -83,7 +81,7 @@ abstract class SyncAdapterService : Service() {
 
                 val detailsIntent = notificationManager.detailsIntent
                 detailsIntent.putExtra(Constants.KEY_ACCOUNT, account)
-                if (e !is UnauthorizedException) {
+                if (e !is EtebaseException.Unauthorized) {
                     detailsIntent.putExtra(DebugInfoActivity.KEY_AUTHORITY, authority)
                     detailsIntent.putExtra(DebugInfoActivity.KEY_PHASE, syncPhase)
                 }
@@ -197,24 +195,27 @@ abstract class SyncAdapterService : Service() {
                         return@synchronized
                     }
 
-                    val etebase = EtebaseLocalCache.getEtebase(context, httpClient.okHttpClient, settings)
-                    val colMgr = etebase.collectionManager
-                    var stoken = etebaseLocalCache.loadStoken()
-                    var done = false
-                    while (!done) {
-                        val colList = colMgr.list(COLLECTION_TYPES, FetchOptions().stoken(stoken))
-                        for (col in colList.data) {
-                            etebaseLocalCache.collectionSet(colMgr, col)
-                        }
+                    EtebaseLocalCache.getEtebase(context, httpClient.okHttpClient, settings).use { etebase ->
+                        etebase.collectionManager().use { colMgr ->
+                            var stoken = etebaseLocalCache.loadStoken()
+                            var done = false
+                            while (!done) {
+                                val colList = colMgr.listMulti(COLLECTION_TYPES, FetchOptions(stoken = stoken))
+                                for (col in colList.data) {
+                                    // Only the cache keeps the collection
+                                    col.use { etebaseLocalCache.collectionSet(colMgr, it) }
+                                }
 
-                        for (col in colList.removedMemberships) {
-                            etebaseLocalCache.collectionUnset(colMgr, col.uid())
-                        }
+                                for (col in colList.removedMemberships) {
+                                    etebaseLocalCache.collectionUnset(colMgr, col.uid)
+                                }
 
-                        stoken = colList.stoken
-                        done = colList.isDone
-                        if (stoken != null) {
-                            etebaseLocalCache.saveStoken(stoken)
+                                stoken = colList.stoken
+                                done = colList.done
+                                if (stoken != null) {
+                                    etebaseLocalCache.saveStoken(stoken)
+                                }
+                            }
                         }
                     }
                     collectionLastFetchMap[account.name] = now

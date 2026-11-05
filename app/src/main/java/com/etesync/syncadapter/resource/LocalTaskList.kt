@@ -48,7 +48,7 @@ class LocalTaskList private constructor(
             val col = cachedCollection.col
             val meta = cachedCollection.meta
             val values = ContentValues(3)
-            values.put(TaskLists._SYNC_ID, col.uid)
+            values.put(TaskLists._SYNC_ID, col.uid())
             values.put(TaskLists.LIST_NAME, meta.name)
 
             if (withColor)

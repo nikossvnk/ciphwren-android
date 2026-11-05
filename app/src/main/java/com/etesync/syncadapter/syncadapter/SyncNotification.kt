@@ -12,7 +12,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.os.BundleCompat
 import at.bitfire.ical4android.CalendarStorageException
 import at.bitfire.vcard4android.ContactsStorageException
-import com.etebase.client.exceptions.*
+import com.etebase.client.EtebaseException
 import com.etesync.syncadapter.R
 import com.etesync.syncadapter.log.Logger
 import com.etesync.syncadapter.ui.AccountSettingsActivity
@@ -36,16 +36,16 @@ class SyncNotification(internal val context: Context, internal val notificationT
 
     fun setThrowable(e: Throwable) {
         throwable = e
-        if (e is UnauthorizedException) {
+        if (e is EtebaseException.Unauthorized) {
             Logger.log.log(Level.SEVERE, "Not authorized anymore", e)
             messageInt = R.string.sync_error_unauthorized
-        } else if (e is TemporaryServerErrorException) {
+        } else if (e is EtebaseException.TemporaryServerException) {
             Logger.log.log(Level.SEVERE, "Service unavailable")
             messageInt = R.string.sync_error_unavailable
-        } else if (e is PermissionDeniedException) {
+        } else if (e is EtebaseException.PermissionDenied) {
             Logger.log.log(Level.SEVERE, "Permission denied", e)
             messageString = context.getString(R.string.sync_error_permission_denied, e.localizedMessage)
-        } else if (e is ServerErrorException) {
+        } else if (e is EtebaseException.ServerException) {
             Logger.log.log(Level.SEVERE, "HTTP Exception during sync", e)
             messageInt = R.string.sync_error_http_dav
         } else if (e is CalendarStorageException || e is ContactsStorageException || e is SQLiteException) {
@@ -114,7 +114,7 @@ class SyncNotification(internal val context: Context, internal val notificationT
             val e = BundleCompat.getSerializable(intent.extras!!, DebugInfoActivity.KEY_THROWABLE, Throwable::class.java)
 
             val detailsIntent: Intent
-            if (e is PermissionDeniedException || e is UnauthorizedException) {
+            if (e is EtebaseException.PermissionDenied || e is EtebaseException.Unauthorized) {
                 detailsIntent = Intent(this, AccountSettingsActivity::class.java)
             } else {
                 detailsIntent = DebugInfoActivity.newIntent(this, this::class.toString())

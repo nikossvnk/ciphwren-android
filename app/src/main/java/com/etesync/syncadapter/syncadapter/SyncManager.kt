@@ -15,10 +15,6 @@ import android.os.Bundle
 import at.bitfire.ical4android.CalendarStorageException
 import at.bitfire.vcard4android.ContactsStorageException
 import com.etebase.client.*
-import com.etebase.client.exceptions.ConnectionException
-import com.etebase.client.exceptions.HttpException
-import com.etebase.client.exceptions.TemporaryServerErrorException
-import com.etebase.client.exceptions.UnauthorizedException
 import com.etesync.syncadapter.*
 import com.etesync.syncadapter.Constants.KEY_ACCOUNT
 import com.etesync.syncadapter.log.Logger
@@ -45,11 +41,11 @@ abstract class SyncManager<T: LocalResource<*>>(protected val context: Context, 
 
     protected val etebaseLocalCache: EtebaseLocalCache = EtebaseLocalCache.getInstance(context, accountName)
     protected val etebase: com.etebase.client.Account = EtebaseLocalCache.getEtebase(context, httpClient.okHttpClient, settings)
-    protected val colMgr: CollectionManager = etebase.collectionManager
+    protected val colMgr: CollectionManager = etebase.collectionManager()
     protected val cachedCollection: CachedCollection = synchronized(etebaseLocalCache) {
         etebaseLocalCache.collectionGet(colMgr, collectionUid)
     }
-    protected val itemMgr: ItemManager = colMgr.getItemManager(cachedCollection.col)
+    protected val itemMgr: ItemManager = colMgr.itemManager(cachedCollection.col)
 
     // Sync counters
     private var syncItemsTotal = 0
@@ -83,6 +79,11 @@ abstract class SyncManager<T: LocalResource<*>>(protected val context: Context, 
 
     override fun close() {
         httpClient.close()
+        // Native handles created for this sync only; Cleaner would otherwise release them later
+        itemMgr.close()
+        cachedCollection.col.close()
+        colMgr.close()
+        etebase.close()
     }
 
     fun performSync() {
@@ -106,7 +107,7 @@ abstract class SyncManager<T: LocalResource<*>>(protected val context: Context, 
 
             var itemList: ItemListResponse?
             var stoken = synchronized(etebaseLocalCache) {
-                etebaseLocalCache.collectionLoadStoken(cachedCollection.col.uid)
+                etebaseLocalCache.collectionLoadStoken(cachedCollection.col.uid())
             }
             // Push local changes
             var chunkPushItems: List<Item>
@@ -150,10 +151,10 @@ abstract class SyncManager<T: LocalResource<*>>(protected val context: Context, 
                 stoken = itemList.stoken
                 if (stoken != null) {
                     synchronized(etebaseLocalCache) {
-                        etebaseLocalCache.collectionSaveStoken(cachedCollection.col.uid, stoken)
+                        etebaseLocalCache.collectionSaveStoken(cachedCollection.col.uid(), stoken)
                     }
                 }
-            } while (!itemList!!.isDone)
+            } while (!itemList!!.done)
 
             /* Cleanup and finalize changes */
             if (Thread.interrupted())
@@ -183,17 +184,17 @@ abstract class SyncManager<T: LocalResource<*>>(protected val context: Context, 
         } catch (e: IOException) {
             Logger.log.log(Level.WARNING, "I/O exception during sync, trying again later", e)
             syncResult.stats.numIoExceptions++
-        } catch (e: TemporaryServerErrorException) {
+        } catch (e: EtebaseException.TemporaryServerException) {
             syncResult.stats.numIoExceptions++
             syncResult.delayUntil = Constants.DEFAULT_RETRY_DELAY
-        } catch (e: ConnectionException) {
+        } catch (e: EtebaseException.Connection) {
             syncResult.stats.numIoExceptions++
             syncResult.delayUntil = Constants.DEFAULT_RETRY_DELAY
         } catch (e: InterruptedException) {
             // Restart sync if interrupted
             syncResult.fullSyncRequested = true
         } catch (e: Exception) {
-            if (e is UnauthorizedException) {
+            if (e is EtebaseException.Unauthorized) {
                 syncResult.stats.numAuthExceptions++
             } else if (e is CalendarStorageException || e is ContactsStorageException) {
                 syncResult.databaseError = true
@@ -205,7 +206,7 @@ abstract class SyncManager<T: LocalResource<*>>(protected val context: Context, 
 
             val detailsIntent = notificationManager.detailsIntent
             detailsIntent.putExtra(KEY_ACCOUNT, account)
-            if (e !is UnauthorizedException) {
+            if (e !is EtebaseException.Unauthorized) {
                 detailsIntent.putExtra(DebugInfoActivity.KEY_AUTHORITY, authority)
                 detailsIntent.putExtra(DebugInfoActivity.KEY_PHASE, syncPhase)
             }
@@ -231,7 +232,7 @@ abstract class SyncManager<T: LocalResource<*>>(protected val context: Context, 
         val notificationHelper = SyncNotification(context,
                 System.currentTimeMillis().toString(), notificationId())
         val resources = context.resources
-        val intent = CollectionActivity.newIntent(context, account, cachedCollection.col.uid)
+        val intent = CollectionActivity.newIntent(context, account, cachedCollection.col.uid())
         notificationHelper.notify(syncSuccessfullyTitle,
                 String.format(context.getString(R.string.sync_successfully_modified),
                         resources.getQuantityString(R.plurals.sync_successfully,
@@ -260,29 +261,29 @@ abstract class SyncManager<T: LocalResource<*>>(protected val context: Context, 
     private fun persistItem(item: Item) {
         synchronized(etebaseLocalCache) {
             // FIXME: it's terrible that we are fetching and decrypting the item here - we really don't have to
-            val cached = etebaseLocalCache.itemGet(itemMgr, cachedCollection.col.uid, item.uid)
-            if (cached?.item?.etag != item.etag) {
+            val cachedEtag = etebaseLocalCache.itemGet(itemMgr, cachedCollection.col.uid(), item.uid())?.item?.use { it.etag() }
+            if (cachedEtag != item.etag()) {
                 syncItemsTotal++
 
-                if (item.isDeleted) {
+                if (item.isDeleted()) {
                     syncItemsDeleted++
                 } else {
                     syncItemsChanged++
                 }
-                etebaseLocalCache.itemSet(itemMgr, cachedCollection.col.uid, item)
+                etebaseLocalCache.itemSet(itemMgr, cachedCollection.col.uid(), item)
             }
         }
     }
 
     @Throws(IOException::class, CalendarStorageException::class, ContactsStorageException::class)
     protected fun prepareFetch() {
-        remoteCTag = cachedCollection.col.stoken
+        remoteCTag = cachedCollection.col.stoken()
     }
 
     private fun fetchItems(stoken: String?): ItemListResponse? {
         if (remoteCTag != stoken) {
-            val ret = itemMgr.list(FetchOptions().stoken(stoken))
-            Logger.log.info("Fetched items. Done=${ret.isDone}")
+            val ret = itemMgr.list(FetchOptions(stoken = stoken))
+            Logger.log.info("Fetched items. Done=${ret.done}")
             return ret
         } else {
             Logger.log.info("Skipping fetch because local stoken == lastStoken (${remoteCTag})")
@@ -301,10 +302,13 @@ abstract class SyncManager<T: LocalResource<*>>(protected val context: Context, 
                 throw InterruptedException()
             }
             i++
-            Logger.log.info("Processing (${i}/${size}) UID=${item.uid} Etag=${item.etag}")
+            Logger.log.info("Processing (${i}/${size}) UID=${item.uid()} Etag=${item.etag()}")
 
-            processItem(item)
-            persistItem(item)
+            // Nothing keeps the fetched items after they were applied and cached
+            item.use {
+                processItem(it)
+                persistItem(it)
+            }
         }
     }
 
@@ -315,11 +319,11 @@ abstract class SyncManager<T: LocalResource<*>>(protected val context: Context, 
         try {
             if (!chunkPushItems.isEmpty()) {
                 val items = chunkPushItems
-                itemMgr.batch(items.toTypedArray())
+                itemMgr.batch(items)
 
                 // Persist the items
                 synchronized(etebaseLocalCache) {
-                    val colUid = cachedCollection.col.uid
+                    val colUid = cachedCollection.col.uid()
 
                     for (item in items) {
                         etebaseLocalCache.itemSet(itemMgr, colUid, item)
@@ -349,7 +353,7 @@ abstract class SyncManager<T: LocalResource<*>>(protected val context: Context, 
                     break
                 }
                 Logger.log.info("Added/changed resource with filename: " + local.fileName)
-                local.clearDirty(chunkPushItems[i].etag)
+                local.clearDirty(chunkPushItems[i].etag())
                 i++
             }
             if (left > 0) {
@@ -360,13 +364,16 @@ abstract class SyncManager<T: LocalResource<*>>(protected val context: Context, 
             if (pushed > 0) {
                 Logger.log.severe("Unprocessed localentries left, this should never happen!")
             }
+
+            // The items were created or loaded by createPushItems() for this push only
+            for (item in chunkPushItems_) {
+                item.close()
+            }
         }
     }
 
     private fun itemUpdateMtime(item: Item) {
-        val meta = item.meta
-        meta.setMtime(System.currentTimeMillis())
-        item.meta = meta
+        item.setMeta(item.meta().copy(mtime = System.currentTimeMillis()))
     }
 
     private fun prepareLocalItemForUpload(colUid: String, local: T): Item {
@@ -377,16 +384,14 @@ abstract class SyncManager<T: LocalResource<*>>(protected val context: Context, 
             itemUpdateMtime(item)
         } else {
             val uid = local.uuid ?: UUID.randomUUID().toString()
-            val meta = ItemMetadata()
-            meta.name = uid
-            meta.mtime = System.currentTimeMillis()
-            item = itemMgr.create(meta, "")
+            val meta = ItemMetadata(name = uid, mtime = System.currentTimeMillis())
+            item = itemMgr.create(meta, ByteArray(0))
 
-            local.prepareForUpload(item.uid, uid)
+            local.prepareForUpload(item.uid(), uid)
         }
 
         try {
-            item.setContent(local.content)
+            item.setContent(local.content.toByteArray(Charsets.UTF_8))
         } catch (e: Exception) {
             Logger.log.warning("Failed creating local entry ${local.uuid}")
             if (local is LocalContact) {
@@ -404,7 +409,7 @@ abstract class SyncManager<T: LocalResource<*>>(protected val context: Context, 
 
     private fun createPushItems(): List<Item> {
         val ret = LinkedList<Item>()
-        val colUid = cachedCollection.col.uid
+        val colUid = cachedCollection.col.uid()
 
         synchronized(etebaseLocalCache) {
             for (local in localDeleted!!) {
@@ -454,7 +459,7 @@ abstract class SyncManager<T: LocalResource<*>>(protected val context: Context, 
         val localList = localCollection!!.findDeleted()
         val ret = ArrayList<T>(localList.size)
 
-        val readOnly = cachedCollection.col.accessLevel == CollectionAccessLevel.ReadOnly
+        val readOnly = cachedCollection.col.accessLevel() == CollectionAccessLevel.READ_ONLY
         if (readOnly) {
             for (local in localList) {
                 Logger.log.info("Restoring locally deleted resource on a read only collection: ${local.uuid}")
@@ -481,7 +486,7 @@ abstract class SyncManager<T: LocalResource<*>>(protected val context: Context, 
 
     @Throws(CalendarStorageException::class, ContactsStorageException::class)
     protected open fun prepareDirty() {
-        val readOnly = cachedCollection.col.accessLevel == CollectionAccessLevel.ReadOnly
+        val readOnly = cachedCollection.col.accessLevel() == CollectionAccessLevel.READ_ONLY
         if (readOnly) {
             for (local in localDirty) {
                 Logger.log.info("Restoring locally modified resource on a read only collection: ${local.uuid}")
@@ -506,7 +511,7 @@ abstract class SyncManager<T: LocalResource<*>>(protected val context: Context, 
     }
 
     private fun notifyDiscardedChange() {
-        val notification = SyncNotification(context, "discarded_${cachedCollection.col.uid}", notificationId())
+        val notification = SyncNotification(context, "discarded_${cachedCollection.col.uid()}", notificationId())
         val intent = Intent(context, AccountsActivity::class.java)
         notification.notify(context.getString(R.string.sync_journal_readonly, cachedCollection.meta.name), context.getString(R.string.sync_journal_readonly_message, numDiscarded), null, intent, R.drawable.ic_error_light)
     }

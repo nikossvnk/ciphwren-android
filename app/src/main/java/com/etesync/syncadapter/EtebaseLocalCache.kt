@@ -3,8 +3,6 @@ package com.etesync.syncadapter
 import android.content.Context
 import com.etebase.client.*
 import com.etebase.client.Collection
-import com.etebase.client.exceptions.EtebaseException
-import com.etebase.client.exceptions.UrlParseException
 import okhttp3.OkHttpClient
 import java.io.File
 import java.util.*
@@ -41,16 +39,20 @@ class EtebaseLocalCache private constructor(context: Context, username: String) 
     }
 
     fun collectionList(colMgr: CollectionManager, withDeleted: Boolean = false): List<CachedCollection> {
-        return fsCache._unstable_collectionList(colMgr).filter {
-            withDeleted || !it.isDeleted
-        }.map{
-            CachedCollection(it, it.meta, it.collectionType)
+        return fsCache.collectionList(colMgr).mapNotNull {
+            if (withDeleted || !it.isDeleted()) {
+                CachedCollection(it, it.meta(), it.collectionType())
+            } else {
+                // Skipped, so nothing else references it
+                it.close()
+                null
+            }
         }
     }
 
     fun collectionGet(colMgr: CollectionManager, colUid: String): CachedCollection {
         return fsCache.collectionGet(colMgr, colUid).let {
-            CachedCollection(it, it.meta, it.collectionType)
+            CachedCollection(it, it.meta(), it.collectionType())
         }
     }
 
@@ -61,16 +63,20 @@ class EtebaseLocalCache private constructor(context: Context, username: String) 
     fun collectionUnset(colMgr: CollectionManager, colUid: String) {
         try {
             fsCache.collectionUnset(colMgr, colUid)
-        } catch (e: UrlParseException) {
+        } catch (e: EtebaseException.UrlParse) {
             // Ignore, as it just means the file doesn't exist
         }
     }
 
     fun itemList(itemMgr: ItemManager, colUid: String, withDeleted: Boolean = false): List<CachedItem> {
-        return fsCache._unstable_itemList(itemMgr, colUid).filter {
-            withDeleted || !it.isDeleted
-        }.map {
-            CachedItem(it, it.meta, it.contentString)
+        return fsCache.itemList(itemMgr, colUid).mapNotNull {
+            if (withDeleted || !it.isDeleted()) {
+                CachedItem(it, it.meta(), it.contentString())
+            } else {
+                // Skipped, so nothing else references it
+                it.close()
+                null
+            }
         }
     }
 
@@ -82,7 +88,7 @@ class EtebaseLocalCache private constructor(context: Context, username: String) 
             return null
         }
         return ret.let {
-            CachedItem(it, it.meta, it.contentString)
+            CachedItem(it, it.meta(), it.contentString())
         }
     }
 
@@ -118,9 +124,13 @@ class EtebaseLocalCache private constructor(context: Context, username: String) 
 
         // FIXME: If we ever cache this we need to cache bust on changePassword
         fun getEtebase(context: Context, httpClient: OkHttpClient, settings: AccountSettings): Account {
-            val client = Client.create(httpClient, settings.uri?.toString())
-            return Account.restore(client, settings.etebaseSession!!, null)
+            // The account keeps its own reference to the client
+            return createClient(httpClient, settings.uri?.toString()).use { client ->
+                Account.restore(client, settings.etebaseSession!!, null)
+            }
         }
+
+        private fun Item.contentString(): String = String(content(), Charsets.UTF_8)
     }
 }
 
