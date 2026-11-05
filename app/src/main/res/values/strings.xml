@@ -243,9 +243,9 @@
     <string name="login_email_address_error">Valid email required</string>
     <string name="login_password">Password</string>
     <string name="login_custom_server">EteSync Server URL</string>
+    <string name="login_server_required">Enter the URL of your Etebase server</string>
     <string name="login_custom_server_error">Invalid URL found, did you forget to include https://?</string>
     <string name="login_not_etebase_server">This is not an Etebase server. EteSync 1.0 servers are not supported anymore.</string>
-    <string name="login_toggle_advanced">Show advanced settings</string>
     <string name="login_encryption_password">Encryption Password</string>
     <string name="login_encryption_set_new_password">Please set your encryption password below, and make sure you got it right, as it *can\'t* be recovered if lost!</string>
     <string name="login_encryption_enter_password">You are logged in as \"%s\". Please enter your encryption password to continue, or log out from the side menu.</string>
@@ -426,11 +426,9 @@
     <string name="certificate_notification_connection_security">EteSync: Connection security</string>
     <string name="trust_certificate_unknown_certificate_found">EteSync has encountered an unknown certificate. Do you want to trust it?</string>
 
-    <!-- WebView activity-->
+    <!-- Loading -->
     <string name="loading">Loading...</string>
     <string name="loading_error_title">Loading Error</string>
-    <string name="loading_error_content">Refresh</string>
-    <string name="open_url_no_activity">Failed opening link: link is not supported!</string>
 
     <!-- Import Activity -->
     <string name="import_button_file">From File</string>

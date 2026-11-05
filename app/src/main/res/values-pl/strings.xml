@@ -142,7 +142,6 @@
     <string name="login_password">Hasło</string>
     <string name="login_custom_server">Niestandardowy adres URL serwera</string>
     <string name="login_custom_server_error">Wykryto nieprawidłowy adres URL, czy nie zapomniałeś o https://?</string>
-    <string name="login_toggle_advanced">Pokaż ustawienia zaawansowane</string>
     <string name="login_encryption_password">Hasło szyfrowania</string>
     <string name="login_encryption_check_password">* Upewnij się, że pamiętasz hasło, gdyż nie ma możliwości jego odzyskania!</string>
     <string name="login_encryption_extra_info">To hasło jest używane w celu zaszyfrowania Twoich danych, w przeciwieństwie do poprzedniego, które służy do zalogowania się w usłudze.\nZostałeś zapytany o wybranie osobnego hasła szyfrowania z powodów bezpieczeństwa. W celu uzyskania informacji, proszę zapoznać się z FAQ: %s</string>
@@ -259,7 +258,6 @@
     <!-- WebView activity-->
     <string name="loading">Ładowanie...</string>
     <string name="loading_error_title">Błąd Ładowania</string>
-    <string name="loading_error_content">Odśwież</string>
     <!-- Import Activity -->
     <string name="import_button_file">Z Pliku</string>
     <string name="import_button_local">Z Konta</string>
@@ -283,7 +281,6 @@
     <string name="notification_channel_crash_reports">Raporty z awarii</string>
     <string name="notification_channel_description">Powiadomienia EteSync</string>
     <string name="notification_channel_name">EteSync</string>
-    <string name="open_url_no_activity">Nie udało się otworzyć linku: link nie jest obsługiwany!</string>
     <string name="sync_calendar_attendees_email_content">Zostałeś zaproszony na następujące wydarzenie:\n\n%s\nKiedy: %s\nGdzie: %s\nUczestnicy: %s\n\n--\nWysłane przez EteSync - bezpieczna, szyfrowana end-to-end i prywatna synchronizacja danych.\nWejdź na https://github.com/nikossvnk/etesync-android</string>
     <string name="sync_calendar_attendees_email_subject">Zaproszenie: %s @ %s</string>
     <string name="calendar_attendees_send_email_action">Wyślij zaproszenia</string>

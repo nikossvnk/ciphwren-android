@@ -108,7 +108,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
                         val etebase = EtebaseLocalCache.getEtebase(applicationContext, httpClient.okHttpClient, settings)
                         etebase.fetchDashboardUrl()
                     }
-                    WebViewActivity.openUrl(requireActivity(), url.toUri())
+                    startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
                 } catch (e: EtebaseException) {
                     val context = context
                     if (context != null) {

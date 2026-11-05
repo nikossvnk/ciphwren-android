@@ -1,5 +1,7 @@
 Requires Android 6.0+. Targets Android 16.
-EteSync 1.0 is no longer supported. Export legacy data with the previous client before upgrading; removing its Android account can delete local data.
-Updated Etebase with the repeated-chunk fix and 16 KB native support.
-Updated calendar/contact libraries, Android dependencies and UI tooling.
-Links open this fork's source code and issue tracker; crash reports are no longer uploaded. Debug info is shared via the share sheet.
+EteSync 1.0 is no longer supported. Export legacy data with the previous client first; removing its account can delete local data.
+No default server: enter your server URL at login and signup.
+Links and Manage account open in your browser; the in-app browser is gone.
+Updated Etebase (repeated-chunk fix, 16 KB support) and libraries.
+No crash report uploads; debug info is shared via the share sheet.
+Translations are maintained in the repository.

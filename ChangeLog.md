@@ -8,7 +8,9 @@
 * Upgrade Android build tools, AndroidX, OkHttp, ical4j and ez-vcard; migrate calendar/contact date APIs.
 * Stop sending people to EteSync's website: Website, User Guide, About and login help open this fork's source code; Contact, Report issue and beta feedback open its issue tracker instead of upstream's. Remove the FAQ, pricing, free-trial and "Forgot password?" links and the vendor-bug FAQ dialog. Crash reports are no longer uploaded to EteSync's server (ACRA removed); "Send" on the debug info screen and failed-import reports now share the debug report through Android's share sheet. Calendar invitation emails link to the source code.
 * Replace abandoned UI dependencies and asynchronous task helpers with platform UI, view binding and lifecycle-owned coroutines.
-* Support predictive back navigation in the embedded browser while retaining Android 6 URL dispatch.
+* No default server: the server URL field is always shown at login and signup and must be filled in (leaving it empty is an error). The app no longer falls back to the hosted etebase service. Accounts without a stored server are reported as invalid.
+* Remove the in-app browser: help links and "Manage account" (the dashboard URL provided by the server) open in the default browser.
+* Translations are maintained in this repository; contributors send pull requests. `scripts/translation-status.sh` reports per-locale progress and stale strings, replacing the script that downloaded from a third-party Transifex project.
 * Keep collection names on one line and trim surrounding whitespace and line breaks when saving.
 * Add weekly dependency checks, build/test/lint workflows, and signed GitHub tag releases.
 

@@ -13,7 +13,7 @@ import android.os.Parcelable
 import androidx.core.os.ParcelCompat
 import java.net.URI
 
-class LoginCredentials(val uri: URI?, val userName: String, val password: String) : Parcelable {
+class LoginCredentials(val uri: URI, val userName: String, val password: String) : Parcelable {
 
     override fun describeContents(): Int {
         return 0
@@ -30,7 +30,7 @@ class LoginCredentials(val uri: URI?, val userName: String, val password: String
         val CREATOR: Parcelable.Creator<LoginCredentials> = object : Parcelable.Creator<LoginCredentials> {
             override fun createFromParcel(source: Parcel): LoginCredentials {
                 return LoginCredentials(
-                        ParcelCompat.readSerializable(source, URI::class.java.classLoader, URI::class.java),
+                        ParcelCompat.readSerializable(source, URI::class.java.classLoader, URI::class.java)!!,
                         source.readString()!!, source.readString()!!
                 )
             }

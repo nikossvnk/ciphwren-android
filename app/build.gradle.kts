@@ -100,7 +100,7 @@ android {
     buildTypes {
         debug {
             /*
-             * To override the server's url (for example when developing),
+             * To prefill the server URL on the login and signup screens (for example when developing),
              * create file gradle.properties in ~/.gradle/ with this content:
              *
              * appDebugRemoteUrl="http://localserver:8080/"

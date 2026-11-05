@@ -30,20 +30,17 @@ constructor(internal val context: Context, internal val account: Account) {
 
     // authentication settings
 
-    var uri: URI?
+    /** The account's Etebase server. There is no default server, so an account without one is invalid. */
+    val uri: URI
+        @Throws(InvalidAccountException::class)
         get() {
-            val uri = accountManager.getUserData(account, KEY_URI)
-            if (uri == null) {
-                return null
-            }
+            val uri = accountManager.getUserData(account, KEY_URI) ?: throw InvalidAccountException(account)
             try {
                 return URI(uri)
             } catch (e: URISyntaxException) {
-                return null
+                throw InvalidAccountException(account)
             }
-
         }
-        set(uri) = accountManager.setUserData(account, KEY_URI, uri.toString())
 
     var etebaseSession: String?
         get() = accountManager.getUserData(account, KEY_ETEBASE_SESSION)
@@ -214,10 +211,10 @@ constructor(internal val context: Context, internal val account: Account) {
         val SYNC_INTERVAL_MANUALLY: Long = -1
 
         // XXX: Workaround a bug in Android where passing a bundle to addAccountExplicitly doesn't work.
-        fun setUserData(accountManager: AccountManager, account: Account, uri: URI?, userName: String) {
+        fun setUserData(accountManager: AccountManager, account: Account, uri: URI, userName: String) {
             accountManager.setUserData(account, KEY_SETTINGS_VERSION, CURRENT_VERSION.toString())
             accountManager.setUserData(account, KEY_USERNAME, userName)
-            accountManager.setUserData(account, KEY_URI, uri?.toString())
+            accountManager.setUserData(account, KEY_URI, uri.toString())
         }
     }
 }

@@ -186,7 +186,6 @@
     <string name="login_encryption_enter_password">אתה מחובר כעת כ\"%s\". כדי להמשיך, הזן את סיסמת ההצפנה, או התנתק מהתפריט הצדדי.</string>
     <string name="login_encryption_set_new_password">נא הגדר את סיסמת ההצפנה שלך. וודא את נכונותה, משום שלא תוכל לשחזר אותה אם היא תאבד!</string>
     <string name="login_encryption_password">סיסמת הצפנה</string>
-    <string name="login_toggle_advanced">הצג הגדרות מתקדמות</string>
     <string name="login_custom_server_error">נמצאה כתובת שרת לא חוקית. האם שכחת לכלול ‪https://‬?</string>
     <string name="login_custom_server">כתובת שרת EteSync</string>
     <string name="login_password">סיסמה</string>
@@ -290,8 +289,6 @@
     <string name="import_select_account">בחר חשבון</string>
     <string name="import_button_local">מחשבון</string>
     <string name="import_button_file">מקובץ</string>
-    <string name="open_url_no_activity">נכשל בפתיחת קישור: הקישור אינו נתמך!</string>
-    <string name="loading_error_content">רענן</string>
     <string name="loading_error_title">שגיאה בטעינה</string>
     <string name="loading">טוען…</string>
     <string name="trust_certificate_unknown_certificate_found">EteSync נתקלה באישור לא ידוע. האם אתה רוצה לתת אמון?</string>

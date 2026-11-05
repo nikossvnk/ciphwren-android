@@ -8,6 +8,7 @@
 
 package com.etesync.syncadapter.ui.setup
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -15,7 +16,6 @@ import android.view.MenuItem
 import com.etesync.syncadapter.Constants
 import com.etesync.syncadapter.R
 import com.etesync.syncadapter.ui.BaseActivity
-import com.etesync.syncadapter.ui.WebViewActivity
 
 /**
  * Activity to initially connect to a server and create an account.
@@ -41,6 +41,6 @@ class LoginActivity : BaseActivity() {
     }
 
     fun showHelp(item: MenuItem) {
-        WebViewActivity.openUrl(this, Constants.sourceCodeUri)
+        startActivity(Intent(Intent.ACTION_VIEW, Constants.sourceCodeUri))
     }
 }

@@ -13,14 +13,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.CheckedTextView
 import android.widget.EditText
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
 import androidx.fragment.app.replace
+import com.etesync.syncadapter.BuildConfig
 import com.etesync.syncadapter.R
 import com.etesync.syncadapter.ui.etebase.SignupFragment
-import com.etesync.syncadapter.utils.setExpanded
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
@@ -30,11 +29,11 @@ class LoginCredentialsFragment : Fragment() {
     internal lateinit var editUserName: EditText
     internal lateinit var editUrlPassword: TextInputLayout
 
-    internal lateinit var showAdvanced: CheckedTextView
-    internal lateinit var customServer: EditText
+    internal lateinit var server: EditText
 
     internal var initialUsername: String? = null
     internal var initialPassword: String? = null
+    internal var initialServer: String? = null
 
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -42,18 +41,18 @@ class LoginCredentialsFragment : Fragment() {
 
         editUserName = v.findViewById<TextInputEditText>(R.id.user_name)
         editUrlPassword = v.findViewById<TextInputLayout>(R.id.url_password)
-        showAdvanced = v.findViewById<CheckedTextView>(R.id.show_advanced)
-        customServer = v.findViewById<TextInputEditText>(R.id.custom_server)
+        server = v.findViewById<TextInputEditText>(R.id.server)
 
         if (savedInstanceState == null) {
             editUserName.setText(initialUsername ?: "")
             editUrlPassword.editText?.setText(initialPassword ?: "")
+            server.setText(initialServer ?: BuildConfig.DEBUG_REMOTE_URL ?: "")
         }
 
         val createAccount = v.findViewById<View>(R.id.create_account) as Button
         createAccount.setOnClickListener {
             parentFragmentManager.commit {
-                replace(android.R.id.content, SignupFragment.newInstance(editUserName.text.toString(), editUrlPassword.editText?.text.toString()))
+                replace(android.R.id.content, SignupFragment.newInstance(editUserName.text.toString(), editUrlPassword.editText?.text.toString(), server.text.toString()))
             }
         }
 
@@ -62,13 +61,6 @@ class LoginCredentialsFragment : Fragment() {
             val credentials = validateLoginData()
             if (credentials != null)
                 DetectConfigurationFragment.newInstance(credentials).show(parentFragmentManager, null)
-        }
-
-        val advancedLayout = v.findViewById<View>(R.id.advanced_layout)
-
-        showAdvanced.setOnClickListener {
-            showAdvanced.isChecked = !showAdvanced.isChecked
-            advancedLayout.setExpanded(showAdvanced.isChecked)
         }
 
         return v
@@ -93,31 +85,33 @@ class LoginCredentialsFragment : Fragment() {
             editUrlPassword.error = null
         }
 
-        var uri: URI? = null
-        if (showAdvanced.isChecked) {
-            val server = customServer.text.toString()
-            // If this field is null, just use the default
-            if (!server.isEmpty()) {
-                val url = server.toHttpUrlOrNull()
-                if (url != null) {
-                    uri = url.toUri()
-                    customServer.error = null
-                } else {
-                    customServer.error = getString(R.string.login_custom_server_error)
-                    valid = false
-                }
-            }
-        }
+        val uri = parseServerUrl(server)
 
-        return if (valid) LoginCredentials(uri, userName, password) else null
+        return if (valid && uri != null) LoginCredentials(uri, userName, password) else null
     }
 
     companion object {
-        fun newInstance(initialUsername: String?, initialPassword: String?): LoginCredentialsFragment {
+        fun newInstance(initialUsername: String?, initialPassword: String?, initialServer: String?): LoginCredentialsFragment {
             val ret = LoginCredentialsFragment()
             ret.initialUsername = initialUsername
             ret.initialPassword = initialPassword
+            ret.initialServer = initialServer
             return ret
         }
     }
+}
+
+/**
+ * Returns the Etebase server URL entered in [server]. The URL is mandatory: there is no default
+ * server. Sets the field error and returns null when it is empty or invalid.
+ */
+internal fun parseServerUrl(server: EditText): URI? {
+    val text = server.text.toString().trim()
+    val url = text.toHttpUrlOrNull()
+    server.error = when {
+        text.isEmpty() -> server.context.getString(R.string.login_server_required)
+        url == null -> server.context.getString(R.string.login_custom_server_error)
+        else -> null
+    }
+    return url?.toUri()
 }

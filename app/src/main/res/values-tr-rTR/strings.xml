@@ -123,8 +123,6 @@
     <string name="import_select_account">Hesap Seç</string>
     <string name="import_button_local">Hesaptan</string>
     <string name="import_button_file">Dosyadan</string>
-    <string name="open_url_no_activity">Bağlantı açılamadı: bağlantı desteklenmiyor!</string>
-    <string name="loading_error_content">Yenile</string>
     <string name="loading_error_title">Yükleme Hatası</string>
     <string name="loading">Yükleniyor...</string>
     <string name="trust_certificate_unknown_certificate_found">EteSync bilinmeyen bir sertifikayla karşılaştı. Güvenmek ister misiniz?</string>
@@ -217,7 +215,6 @@
     <string name="login_encryption_enter_password">\"%s\" olarak oturum açtınız. Devam etmek için lütfen şifreleme parolanızı girin veya yan menüden oturumu kapatın.</string>
     <string name="login_encryption_set_new_password">Lütfen aşağıda şifreleme parolanızı belirleyin ve doğru parolayı girdiğinizden emin olun, çünkü kaybolursa kurtarılamaz!</string>
     <string name="login_encryption_password">Şifreleme Parolası</string>
-    <string name="login_toggle_advanced">Gelişmiş ayarları göster</string>
     <string name="login_custom_server_error">Geçersiz URL bulundu, https:// eklemeyi mi unuttunuz?</string>
     <string name="login_custom_server">EteSync Sunucu URL\'si</string>
     <string name="permissions_tasks_org_request">Tasks.org izinlerini iste</string>

@@ -166,7 +166,7 @@ class PasswordChangeViewModel : ViewModel() {
                     val settings = AccountSettings(context, account)
                     val httpClient = HttpClient.Builder(context).setForeground(true).build().okHttpClient
                     Logger.log.info("Logging in with old password")
-                    val client = createClient(httpClient, settings.uri?.toString())
+                    val client = createClient(httpClient, settings.uri.toString())
                     val etebase = com.etebase.client.Account.login(client, account.name, oldPassword)
                     Logger.log.info("Login successful")
                     etebase.changePassword(newPassword)

@@ -38,13 +38,10 @@
     <string name="import_select_account">Pilih Akun</string>
     <string name="import_button_local">Dari Akun</string>
     <string name="import_button_file">Dari Berkas</string>
-    <string name="open_url_no_activity">Gagal membuka tautan: tautan tidak didukung!</string>
-    <string name="loading_error_content">Segarkan</string>
     <string name="login_encryption_check_password">* Pastikan Anda mengingat kata sandi Anda, karena tidak dapat dipulihkan jika hilang!</string>
     <string name="login_encryption_enter_password">Anda masuk sebagai \"%s\". Masukkan kata sandi enkripsi Anda untuk melanjutkan, atau keluar dari menu samping.</string>
     <string name="login_encryption_set_new_password">Silakan atur kata sandi enkripsi Anda di bawah ini, dan pastikan Anda mengingatnya, karena *tidak dapat* dipulihkan jika hilang!</string>
     <string name="login_encryption_password">Enkripsi Kata sandi</string>
-    <string name="login_toggle_advanced">Tampilkan setelan lanjut</string>
     <string name="login_custom_server_error">URL tidak valid, apakah Anda lupa menyertakan https: //?</string>
     <string name="login_custom_server">URL Server EteSync</string>
     <string name="login_password">Kata sandi</string>

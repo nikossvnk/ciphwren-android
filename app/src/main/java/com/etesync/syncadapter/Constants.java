@@ -13,8 +13,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static com.etesync.syncadapter.BuildConfig.DEBUG_REMOTE_URL;
-
 public class Constants {
 
     // notification IDs
@@ -31,10 +29,6 @@ public class Constants {
 
     public static final Uri sourceCodeUri = Uri.parse("https://github.com/nikossvnk/etesync-android");
     public static final Uri reportIssueUri = sourceCodeUri.buildUpon().appendEncodedPath("issues").build();
-    public static final Uri etebaseDashboardPrefix = Uri.parse("https://dashboard.etebase.com/user/partner/");
-
-    public static final String etebaseServiceUrl = (DEBUG_REMOTE_URL == null) ? "https://api.etebase.com/partner/etesync/" : DEBUG_REMOTE_URL;
-
     public static final String PRODID_BASE = "-//EteSync//" + BuildConfig.APPLICATION_ID + "/" + BuildConfig.VERSION_NAME;
 
     public static final int DEFAULT_SYNC_INTERVAL = 4 * 3600;  // 4 hours

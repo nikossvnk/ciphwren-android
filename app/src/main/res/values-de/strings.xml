@@ -196,7 +196,6 @@
     <string name="import_select_account">Konto auswählen</string>
     <string name="import_button_local">Von Konto</string>
     <string name="import_button_file">Aus Datei</string>
-    <string name="open_url_no_activity">Öffnen des Links ist fehlgeschlagen: Link wird nicht unterstützt!</string>
     <string name="loading_error_title">Ladefehler</string>
     <string name="loading">Wird geladen ...</string>
     <string name="sync_calendar_attendees_notification_title">%s</string>
@@ -240,7 +239,6 @@
     <string name="account_creation_failed">Kontoerstellung fehlgeschlagen</string>
     <string name="login_encryption_extra_info">* Dieses Passwort wird zur Verschlüsselung Ihrer Daten verwendet, im Gegensatz zum vorherigen, das zur Anmeldung beim Dienst verwendet wird.\nAus Sicherheitsgründen werden Sie aufgefordert, ein separates Verschlüsselungspasswort auszuwählen. Weitere Informationen finden Sie in den FAQ unter: %s</string>
     <string name="login_encryption_set_new_password">Bitte legen Sie Ihr Verschlüsselungspasswort unten fest, und stellen Sie sicher, dass Sie es richtig eingegeben haben, da es bei Verlust *nicht* wiederhergestellt werden kann!</string>
-    <string name="login_toggle_advanced">Erweiterte Einstellungen anzeigen</string>
     <string name="login_custom_server_error">Ungültige URL gefunden, haben Sie vergessen, https:// anzugeben?</string>
     <string name="login_custom_server">EteSync-Server-URL</string>
     <string name="login_username_error">Der Benutzername sollte mindestens 6 Zeichen lang sein und nur aus Buchstaben, Ziffern und ./-/_ bestehen.</string>

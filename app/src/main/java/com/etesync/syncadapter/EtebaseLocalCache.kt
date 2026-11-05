@@ -125,7 +125,7 @@ class EtebaseLocalCache private constructor(context: Context, username: String) 
         // FIXME: If we ever cache this we need to cache bust on changePassword
         fun getEtebase(context: Context, httpClient: OkHttpClient, settings: AccountSettings): Account {
             // The account keeps its own reference to the client
-            return createClient(httpClient, settings.uri?.toString()).use { client ->
+            return createClient(httpClient, settings.uri.toString()).use { client ->
                 Account.restore(client, settings.etebaseSession!!, null)
             }
         }

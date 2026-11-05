@@ -18,7 +18,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.CheckedTextView
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
@@ -32,18 +31,16 @@ import com.etebase.client.EtebaseException
 import com.etebase.client.InternalException
 import com.etebase.client.User
 import com.etebase.client.createClient
-import com.etesync.syncadapter.Constants
+import com.etesync.syncadapter.BuildConfig
 import com.etesync.syncadapter.HttpClient
 import com.etesync.syncadapter.R
 import com.etesync.syncadapter.ui.setup.*
-import com.etesync.syncadapter.utils.setExpanded
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import java.net.URI
 
 class SignupFragment : Fragment() {
@@ -53,8 +50,8 @@ class SignupFragment : Fragment() {
     internal lateinit var editEmail: TextInputLayout
     internal lateinit var editPassword: TextInputLayout
 
-    internal lateinit var showAdvanced: CheckedTextView
-    internal lateinit var customServer: TextInputEditText
+    internal var initialServer: String? = null
+    internal lateinit var server: TextInputEditText
 
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -63,18 +60,18 @@ class SignupFragment : Fragment() {
         editUserName = v.findViewById(R.id.user_name)
         editEmail = v.findViewById(R.id.email)
         editPassword = v.findViewById(R.id.url_password)
-        showAdvanced = v.findViewById(R.id.show_advanced)
-        customServer = v.findViewById(R.id.custom_server)
+        server = v.findViewById(R.id.server)
 
         if (savedInstanceState == null) {
             editUserName.editText?.setText(initialUsername ?: "")
             editPassword.editText?.setText(initialPassword ?: "")
+            server.setText(initialServer ?: BuildConfig.DEBUG_REMOTE_URL ?: "")
         }
 
         val login = v.findViewById<Button>(R.id.login)
         login.setOnClickListener {
             parentFragmentManager.commit {
-                replace(android.R.id.content, LoginCredentialsFragment.newInstance(editUserName.editText?.text.toString(), editPassword.editText?.text.toString()))
+                replace(android.R.id.content, LoginCredentialsFragment.newInstance(editUserName.editText?.text.toString(), editPassword.editText?.text.toString(), server.text.toString()))
             }
         }
 
@@ -84,13 +81,6 @@ class SignupFragment : Fragment() {
             if (credentials != null) {
                 SignupDoFragment.newInstance(credentials).show(parentFragmentManager, null)
             }
-        }
-
-        val advancedLayout = v.findViewById<View>(R.id.advanced_layout)
-
-        showAdvanced.setOnClickListener {
-            showAdvanced.isChecked = !showAdvanced.isChecked
-            advancedLayout.setExpanded(showAdvanced.isChecked)
         }
 
         return v
@@ -124,30 +114,17 @@ class SignupFragment : Fragment() {
             editPassword.error = null
         }
 
-        var uri: URI? = null
-        if (showAdvanced.isChecked) {
-            val server = customServer.text.toString()
-            // If this field is null, just use the default
-            if (!server.isEmpty()) {
-                val url = server.toHttpUrlOrNull()
-                if (url != null) {
-                    uri = url.toUri()
-                    customServer.error = null
-                } else {
-                    customServer.error = getString(R.string.login_custom_server_error)
-                    valid = false
-                }
-            }
-        }
+        val uri = parseServerUrl(server)
 
-        return if (valid) SignupCredentials(uri, userName, email, password) else null
+        return if (valid && uri != null) SignupCredentials(uri, userName, email, password) else null
     }
 
     companion object {
-        fun newInstance(initialUsername: String?, initialPassword: String?): SignupFragment {
+        fun newInstance(initialUsername: String?, initialPassword: String?, initialServer: String?): SignupFragment {
             val ret = SignupFragment()
             ret.initialUsername = initialUsername
             ret.initialPassword = initialPassword
+            ret.initialServer = initialServer
             return ret
         }
     }
@@ -210,7 +187,7 @@ class ConfigurationViewModel : ViewModel() {
         asyncTask = viewModelScope.launch {
             val result = withContext(Dispatchers.IO) {
                 val httpClient = HttpClient.Builder(context).build().okHttpClient
-                val uri = credentials.uri ?: URI(Constants.etebaseServiceUrl)
+                val uri = credentials.uri
                 var etebaseSession: String? = null
                 var exception: Throwable? = null
                 try {
@@ -244,4 +221,4 @@ class ConfigurationViewModel : ViewModel() {
             account.observe(owner) { observer(it) }
 }
 
-data class SignupCredentials(val uri: URI?, val userName: String, val email: String, val password: String) : java.io.Serializable
+data class SignupCredentials(val uri: URI, val userName: String, val email: String, val password: String) : java.io.Serializable

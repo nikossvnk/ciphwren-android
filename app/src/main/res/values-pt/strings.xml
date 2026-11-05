@@ -89,8 +89,6 @@
     <string name="certificate_notification_connection_security">EteSync: Segurança de conexão</string>
     <string name="trust_certificate_unknown_certificate_found">EteSync encontrou um certificado desconhecido. Pretende confiar no certificado?</string>
     <string name="loading">A carregar...</string>
-    <string name="loading_error_content">Atualizar</string>
-    <string name="open_url_no_activity">Falha ao abrir link:o link não é compatível!</string>
     <string name="import_button_file">De ficheiro</string>
     <string name="import_select_account">Selecionar conta</string>
     <string name="event_info_organizer">Organizador:</string>
@@ -234,7 +232,6 @@
     <string name="login_encryption_enter_password">Está logado como \"%s\". Por favor digite a senha de encriptação para continuar, ou faça logout no menu lateral.</string>
     <string name="login_encryption_set_new_password">Por favor, define a sua palavra-passe de encriptação abaixo e certifique-se de que está correta, porque *não* poderá ser recuperada se perdida!</string>
     <string name="login_encryption_password">Senha de encriptação</string>
-    <string name="login_toggle_advanced">Mostrar configurações avançadas</string>
     <string name="login_custom_server_error">URL inválido, esqueceu de incluir https://?</string>
     <string name="login_custom_server">URL do servidor EteSync</string>
     <string name="login_password">Senha</string>

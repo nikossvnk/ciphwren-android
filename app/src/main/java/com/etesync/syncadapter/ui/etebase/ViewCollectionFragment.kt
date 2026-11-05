@@ -1,6 +1,7 @@
 package com.etesync.syncadapter.ui.etebase
 
 import android.content.DialogInterface
+import android.content.Intent
 import android.os.Bundle
 import android.view.*
 import android.widget.TextView
@@ -17,7 +18,6 @@ import com.etesync.syncadapter.Constants
 import com.etesync.syncadapter.R
 import com.etesync.syncadapter.resource.LocalCalendar
 import com.etesync.syncadapter.ui.BaseActivity
-import com.etesync.syncadapter.ui.WebViewActivity
 import com.etesync.syncadapter.utils.HintManager
 import com.etesync.syncadapter.utils.HintPopup
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -60,7 +60,7 @@ class ViewCollectionFragment : Fragment(), MenuProvider {
                     .setIcon(R.drawable.ic_info_dark)
                     .setTitle(R.string.use_native_apps_title)
                     .setMessage(R.string.use_native_apps_body)
-                    .setNegativeButton(R.string.navigation_drawer_guide, { _: DialogInterface, _: Int -> WebViewActivity.openUrl(requireContext(), Constants.sourceCodeUri) })
+                    .setNegativeButton(R.string.navigation_drawer_guide, { _: DialogInterface, _: Int -> startActivity(Intent(Intent.ACTION_VIEW, Constants.sourceCodeUri)) })
                     .setPositiveButton(android.R.string.yes) { _, _ -> }.show()
         }
 

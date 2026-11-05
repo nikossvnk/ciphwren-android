@@ -212,8 +212,6 @@
     <string name="import_select_account">Selecteer Account</string>
     <string name="import_button_local">Van Account</string>
     <string name="import_button_file">Van Bestand</string>
-    <string name="open_url_no_activity">Openen link niet gelukt: link is niet ondersteund!</string>
-    <string name="loading_error_content">Vernieuw</string>
     <string name="loading_error_title">Fout Bij Laden</string>
     <string name="loading">Aan het laden...</string>
     <string name="trust_certificate_unknown_certificate_found">EteSync heeft een onbekend certificaat tegengekomen. Wilt u het vertrouwen?</string>
@@ -312,7 +310,6 @@
     <string name="login_encryption_enter_password">U bent ingelogd als \"%s\". Gelieve uw encryptiewachtwoord in te geven om verder te gaan, of meld u af via het zijmenu.</string>
     <string name="login_encryption_set_new_password">Stel a.u.b. uw encryptiewachtwoord hieronder in, en wees er zeker van dat het correct is aangezien het *niet* hersteld kan worden indien verloren!</string>
     <string name="login_encryption_password">Encryptiewachtwoord</string>
-    <string name="login_toggle_advanced">Toon geavanceerde instellingen</string>
     <string name="login_custom_server_error">Ongeldige URL gevonden, bent u vergeten om https:// toe te voegen?</string>
     <string name="login_custom_server">EteSync Server URL</string>
     <string name="login_username_error">Geldige gebruikersnaam vereist</string>

@@ -167,7 +167,6 @@
     <string name="login_password">Passord</string>
     <string name="login_custom_server">EteSync-tjenernettadresse</string>
     <string name="login_custom_server_error">Ugyldig nettadresse finnet, glemte du å ta med https://?</string>
-    <string name="login_toggle_advanced">Vis avanserte innstillinger</string>
     <string name="login_encryption_password">Krypteringspassord</string>
     <string name="login_encryption_check_password">* Husk passordet ditt, det kan ikke gjenopprettes hvis du mister det!</string>
     <string name="login_encryption_extra_info">Dette passordet bruker til å kryptere dataen din, i motsetning til det forrige, som brukes til å logge inn på tjenesten.\nDu bes om å sette et eget krypteringspassord av sikkerhetsgrunner. For mer info, sjekk ofte stilte spørsmål her: %s</string>
@@ -315,8 +314,6 @@
     <!-- WebView activity-->
     <string name="loading">Laster …</string>
     <string name="loading_error_title">Innlastingsfeil</string>
-    <string name="loading_error_content">Oppdater</string>
-    <string name="open_url_no_activity">Kunne ikke åpne lenke: Lenken støttes ikke!</string>
     <!-- Import Activity -->
     <string name="import_button_file">Fra fil</string>
     <string name="import_button_local">Fra konto</string>

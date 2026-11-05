@@ -15,14 +15,12 @@ import android.content.SyncStatusObserver
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
-import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
-import com.etesync.syncadapter.BuildConfig.DEBUG
 import com.etesync.syncadapter.Constants
 import com.etesync.syncadapter.R
 import com.etesync.syncadapter.ui.setup.LoginActivity
@@ -76,10 +74,6 @@ class AccountsActivity : BaseActivity(), NavigationView.OnNavigationItemSelected
             for (fragment in StartupDialogFragment.getStartupDialogs(this))
                 ft.add(fragment, null)
             ft.commit()
-
-            if (DEBUG) {
-                Toast.makeText(this, "Server: " + Constants.etebaseServiceUrl, Toast.LENGTH_SHORT).show()
-            }
         }
 
         if (savedInstanceState == null) {

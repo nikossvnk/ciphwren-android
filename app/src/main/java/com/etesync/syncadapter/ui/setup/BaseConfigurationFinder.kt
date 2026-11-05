@@ -12,7 +12,6 @@ import com.etebase.client.Account
 import com.etebase.client.EtebaseException
 import com.etebase.client.createClient
 import com.etebase.client.isEtebaseServer
-import com.etesync.syncadapter.Constants
 import com.etesync.syncadapter.HttpClient
 import com.etesync.syncadapter.R
 import com.etesync.syncadapter.log.Logger
@@ -24,22 +23,20 @@ class BaseConfigurationFinder(protected val context: Context, protected val cred
     protected var httpClient: OkHttpClient = HttpClient.Builder(context).build().okHttpClient
 
     fun findInitialConfiguration(): Configuration {
-        val uri = credentials.uri ?: URI(Constants.etebaseServiceUrl)
+        val uri = credentials.uri
 
         var etebaseSession: String? = null
         var exception: Throwable? = null
         try {
             val client = createClient(httpClient, uri.toString())
-            if (credentials.uri != null) {
-                // a custom server must be an Etebase server (EteSync 1.0 servers aren't supported anymore)
-                val isEtebase = try {
-                    isEtebaseServer(client)
-                } catch (e: EtebaseException) {
-                    throw NotEtebaseServerException(context.getString(R.string.login_not_etebase_server), e)
-                }
-                if (!isEtebase) {
-                    throw NotEtebaseServerException(context.getString(R.string.login_not_etebase_server))
-                }
+            // EteSync 1.0 servers aren't supported anymore
+            val isEtebase = try {
+                isEtebaseServer(client)
+            } catch (e: EtebaseException) {
+                throw NotEtebaseServerException(context.getString(R.string.login_not_etebase_server), e)
+            }
+            if (!isEtebase) {
+                throw NotEtebaseServerException(context.getString(R.string.login_not_etebase_server))
             }
 
             Logger.log.fine("Attempting to login to etebase")
@@ -65,7 +62,7 @@ class BaseConfigurationFinder(protected val context: Context, protected val cred
     class Configuration
     // We have to use URI here because HttpUrl is not serializable!
 
-    (val url: URI?, val userName: String, val etebaseSession: String?, var error: Throwable?) : Serializable {
+    (val url: URI, val userName: String, val etebaseSession: String?, var error: Throwable?) : Serializable {
         val isFailed: Boolean
             get() = this.error != null
 

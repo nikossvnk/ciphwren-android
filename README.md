@@ -13,11 +13,14 @@ Secure, end-to-end encrypted, and privacy respecting sync for your contacts, cal
       height="80" />](https://f-droid.org/app/com.etesync.syncadapter)
 
 ![GitHub tag](https://img.shields.io/github/tag/nikossvnk/etesync-android.svg)
-[![Chat with us](https://img.shields.io/badge/chat-IRC%20|%20Matrix%20|%20Web-blue.svg)](https://www.etebase.com/community-chat/)
 
 # Overview
 
 Please report bugs and questions on the [issue tracker](https://github.com/nikossvnk/etesync-android/issues).
+
+The app has no default server: enter the URL of your Etebase server when you log
+in or sign up. Links (including the server's account dashboard) open in your
+browser.
 
 EteSync is licensed under the [GPLv3 License](LICENSE).
 
@@ -91,8 +94,21 @@ missing signing credentials and debug-signed APKs.
 
 # Translating
 
-Translators are highly welcome! 
-To help with translation please go to [our Weblate page](https://hosted.weblate.org/projects/etesync/) and translate it from there.
+Translators are highly welcome! Translations live in this repository, in
+`app/src/main/res/values-<locale>/strings.xml`, next to the English source
+strings in `app/src/main/res/values/strings.xml`. To add or improve a language,
+edit (or create) the locale's `strings.xml` and open a pull request. Keep
+placeholders such as `%s` and `%1$d` intact and skip strings marked
+`translatable="false"`.
+
+`scripts/translation-status.sh` shows, per locale, how many strings are
+translated and which are missing. It runs offline and exits with an error when a
+translation contains strings that no longer exist in the English file; delete
+those. `-q` hides the names of the missing strings:
+
+```sh
+scripts/translation-status.sh -q
+```
 
 
 Third Party Code
