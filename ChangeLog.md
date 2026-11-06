@@ -16,6 +16,7 @@
 * Enable task sync for accounts added while OpenTasks or Tasks.org is already installed; previously it stayed off until the app restarted.
 * Offer to send invitations for every changed event you organize with guests, even when an earlier changed event in the same sync has none.
 * Change journal titles no longer carry the item's trailing carriage return.
+* Release the certificate service connection after every collection refresh, including failed ones.
 
 ## Version 2.7.0
 * Updated translations.

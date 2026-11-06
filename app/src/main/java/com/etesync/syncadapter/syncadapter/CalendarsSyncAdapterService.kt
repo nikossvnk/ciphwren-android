@@ -51,11 +51,12 @@ class CalendarsSyncAdapterService : SyncAdapterService() {
             val etebaseLocalCache = EtebaseLocalCache.getInstance(context, account.name)
             val collections: List<CachedCollection>
             synchronized(etebaseLocalCache) {
-                val httpClient = HttpClient.Builder(context).setForeground(false).build()
-                val etebase = EtebaseLocalCache.getEtebase(context, httpClient.okHttpClient, settings)
-                val colMgr = etebase.collectionManager()
+                collections = HttpClient.Builder(context).setForeground(false).build().use { httpClient ->
+                    val etebase = EtebaseLocalCache.getEtebase(context, httpClient.okHttpClient, settings)
+                    val colMgr = etebase.collectionManager()
 
-                collections = etebaseLocalCache.collectionList(colMgr).filter { it.collectionType == Constants.ETEBASE_TYPE_CALENDAR }
+                    etebaseLocalCache.collectionList(colMgr).filter { it.collectionType == Constants.ETEBASE_TYPE_CALENDAR }
+                }
             }
 
             for (collection in collections) {

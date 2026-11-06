@@ -183,8 +183,6 @@ abstract class SyncAdapterService : Service() {
                 Logger.log.info("Refreshing " + serviceType + " collections of service #" + serviceType.toString())
 
                 val settings = AccountSettings(context, account)
-                val httpClient = HttpClient.Builder(context).setForeground(false).build()
-
                 val etebaseLocalCache = EtebaseLocalCache.getInstance(context, account.name)
                 synchronized(etebaseLocalCache) {
                     val cacheAge = 5 * 1000 // 5 seconds - it's just a hack for burst fetching
@@ -195,33 +193,34 @@ abstract class SyncAdapterService : Service() {
                         return@synchronized
                     }
 
-                    EtebaseLocalCache.getEtebase(context, httpClient.okHttpClient, settings).use { etebase ->
-                        etebase.collectionManager().use { colMgr ->
-                            var stoken = etebaseLocalCache.loadStoken()
-                            var done = false
-                            while (!done) {
-                                val colList = colMgr.listMulti(COLLECTION_TYPES, FetchOptions(stoken = stoken))
-                                for (col in colList.data) {
-                                    // Only the cache keeps the collection
-                                    col.use { etebaseLocalCache.collectionSet(colMgr, it) }
-                                }
+                    // close even when the fetch fails, or the certificate service binding leaks
+                    HttpClient.Builder(context).setForeground(false).build().use { httpClient ->
+                        EtebaseLocalCache.getEtebase(context, httpClient.okHttpClient, settings).use { etebase ->
+                            etebase.collectionManager().use { colMgr ->
+                                var stoken = etebaseLocalCache.loadStoken()
+                                var done = false
+                                while (!done) {
+                                    val colList = colMgr.listMulti(COLLECTION_TYPES, FetchOptions(stoken = stoken))
+                                    for (col in colList.data) {
+                                        // Only the cache keeps the collection
+                                        col.use { etebaseLocalCache.collectionSet(colMgr, it) }
+                                    }
 
-                                for (col in colList.removedMemberships) {
-                                    etebaseLocalCache.collectionUnset(colMgr, col.uid)
-                                }
+                                    for (col in colList.removedMemberships) {
+                                        etebaseLocalCache.collectionUnset(colMgr, col.uid)
+                                    }
 
-                                stoken = colList.stoken
-                                done = colList.done
-                                if (stoken != null) {
-                                    etebaseLocalCache.saveStoken(stoken)
+                                    stoken = colList.stoken
+                                    done = colList.done
+                                    if (stoken != null) {
+                                        etebaseLocalCache.saveStoken(stoken)
+                                    }
                                 }
                             }
                         }
                     }
                     collectionLastFetchMap[account.name] = now
                 }
-
-                httpClient.close()
             }
         }
     }
