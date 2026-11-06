@@ -13,6 +13,7 @@
 * Translations are maintained in this repository; contributors send pull requests. `scripts/translation-status.sh` reports per-locale progress and stale strings, replacing the script that downloaded from a third-party Transifex project.
 * Keep collection names on one line and trim surrounding whitespace and line breaks when saving.
 * Add weekly dependency checks, build/test/lint workflows, and signed GitHub tag releases.
+* Enable task sync for accounts added while OpenTasks or Tasks.org is already installed; previously it stayed off until the app restarted.
 
 ## Version 2.7.0
 * Updated translations.

@@ -11,6 +11,7 @@ package com.etesync.syncadapter.ui.setup
 import android.accounts.Account
 import android.accounts.AccountManager
 import android.app.Activity
+import android.content.ContentResolver
 import android.app.Dialog
 import android.widget.ProgressBar
 import androidx.appcompat.app.AlertDialog
@@ -76,7 +77,10 @@ class CreateAccountFragment : DialogFragment() {
             // contact sync is automatically enabled by isAlwaysSyncable="true" in res/xml/sync_contacts.xml
             settings.setSyncInterval(App.addressBooksAuthority, Constants.DEFAULT_SYNC_INTERVAL.toLong())
 
-            // calendar sync is automatically enabled by isAlwaysSyncable="true" in res/xml/sync_contacts.xml
+            // isAlwaysSyncable="true" (res/xml/sync_calendars.xml) is applied lazily by the framework, so a
+            // fresh account still reports "not syncable" here. Mark it explicitly: updateTaskSync() copies
+            // the calendar interval and skips task sync while the calendar authority is not syncable.
+            ContentResolver.setIsSyncable(account, CalendarContract.AUTHORITY, 1)
             settings.setSyncInterval(CalendarContract.AUTHORITY, Constants.DEFAULT_SYNC_INTERVAL.toLong())
 
             TASK_PROVIDERS.forEach {
