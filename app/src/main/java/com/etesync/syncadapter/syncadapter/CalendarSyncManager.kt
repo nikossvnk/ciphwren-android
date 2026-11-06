@@ -102,7 +102,7 @@ class CalendarSyncManager(context: Context, account: Account, settings: AccountS
             val event = local.event
 
             if (event == null || event.attendees.isEmpty() || event.organizer?.calAddress?.toString()?.removePrefix("mailto:") != account.name) {
-                return
+                continue
             }
             createInviteAttendeesNotification(event, local.content)
         }

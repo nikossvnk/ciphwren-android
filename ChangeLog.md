@@ -14,6 +14,7 @@
 * Keep collection names on one line and trim surrounding whitespace and line breaks when saving.
 * Add weekly dependency checks, build/test/lint workflows, and signed GitHub tag releases.
 * Enable task sync for accounts added while OpenTasks or Tasks.org is already installed; previously it stayed off until the app restarted.
+* Offer to send invitations for every changed event you organize with guests, even when an earlier changed event in the same sync has none.
 
 ## Version 2.7.0
 * Updated translations.
