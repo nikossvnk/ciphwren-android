@@ -42,6 +42,7 @@ class AccountSettingsActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        padContentForSystemBars()
 
         account = BundleCompat.getParcelable(intent.extras!!, KEY_ACCOUNT, Account::class.java)!!
         title = getString(R.string.settings_title, account.name)

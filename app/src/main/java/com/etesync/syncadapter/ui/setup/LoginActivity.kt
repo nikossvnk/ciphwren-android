@@ -26,6 +26,7 @@ class LoginActivity : BaseActivity() {
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        padContentForSystemBars()
 
         if (savedInstanceState == null)
         // first call, add fragment

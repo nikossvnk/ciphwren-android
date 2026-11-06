@@ -33,6 +33,7 @@ class AppSettingsActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        padContentForSystemBars()
 
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
