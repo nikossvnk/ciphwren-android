@@ -101,17 +101,15 @@ class ListEntriesFragment : ListFragment(), AdapterView.OnItemClickListener {
 
     companion object {
         private val dateFormatter = SimpleDateFormat()
-        private fun getLine(content: String?, prefix: String): String? {
-            var content: String? = content ?: return null
+        // iCalendar and vCard content uses CRLF line endings; the CR must not end up in the title.
+        internal fun getLine(content: String?, prefix: String): String? {
+            content ?: return null
 
-            val start = content!!.indexOf(prefix)
-            if (start >= 0) {
-                val end = content.indexOf("\n", start)
-                content = content.substring(start + prefix.length, end)
-            } else {
-                content = null
-            }
-            return content
+            val start = content.indexOf(prefix)
+            if (start < 0)
+                return null
+            val end = content.indexOf('\n', start).let { if (it < 0) content.length else it }
+            return content.substring(start + prefix.length, end).removeSuffix("\r")
         }
 
         fun setItemView(v: View, collectionType: String, item: CachedItem) {
