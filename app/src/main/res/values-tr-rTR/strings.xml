@@ -127,7 +127,7 @@
     <string name="loading">Yükleniyor...</string>
     <string name="trust_certificate_unknown_certificate_found">Ciphwren bilinmeyen bir sertifikayla karşılaştı. Güvenmek ister misiniz?</string>
     <string name="certificate_notification_connection_security">Ciphwren: Bağlantı güvenliği</string>
-    <string name="sync_calendar_attendees_email_content">Aşağıdaki etkinliğe davet edildiniz:\n\n%s\nNe zaman: %s\nNerede: %s\nKatılanlar: %s\n\n--\nCiphwren ile gönderildi - güvenli, uçtan uca şifreli ve özel veri eşzamanlama.\nhttps://github.com/nikossvnk/etesync-android adresinden edinin</string>
+    <string name="sync_calendar_attendees_email_content">Aşağıdaki etkinliğe davet edildiniz:\n\n%s\nNe zaman: %s\nNerede: %s\nKatılanlar: %s\n\n--\nCiphwren ile gönderildi - güvenli, uçtan uca şifreli ve özel veri eşzamanlama.\nhttps://github.com/nikossvnk/ciphwren-android adresinden edinin</string>
     <string name="sync_calendar_attendees_email_subject">Davet: %s @ %s</string>
     <string name="calendar_attendees_send_email_action">Davet gönder</string>
     <string name="sync_calendar_attendees_notification_content">Misafirlere davet gönderilsin mi?</string>

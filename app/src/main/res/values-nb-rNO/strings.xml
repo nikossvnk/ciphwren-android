@@ -307,7 +307,7 @@
     <string name="sync_calendar_attendees_notification_content">Send invitasjoner til gjester?</string>
     <string name="calendar_attendees_send_email_action">Send invitasjoner</string>
     <string name="sync_calendar_attendees_email_subject">Invitasjon: %s @ %s</string>
-    <string name="sync_calendar_attendees_email_content">Du har blitt invitert til følgende hendelse:\n\n%s\nNår: %s\nHvor: %s\nDeltakere: %s\n\n--\nSendt med Ciphwren - sikker, ende-til-ende-kryptert og privat synkronisering.\nFå det på https://github.com/nikossvnk/etesync-android</string>
+    <string name="sync_calendar_attendees_email_content">Du har blitt invitert til følgende hendelse:\n\n%s\nNår: %s\nHvor: %s\nDeltakere: %s\n\n--\nSendt med Ciphwren - sikker, ende-til-ende-kryptert og privat synkronisering.\nFå det på https://github.com/nikossvnk/ciphwren-android</string>
     <!-- cert4android -->
     <string name="certificate_notification_connection_security">Ciphwren: Tilkoblingssikkerhet</string>
     <string name="trust_certificate_unknown_certificate_found">Ciphwren har mottatt et ukjent sertifikat. Ønsker du å klarere det?</string>

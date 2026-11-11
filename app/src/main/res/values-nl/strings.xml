@@ -216,7 +216,7 @@
     <string name="loading">Aan het laden...</string>
     <string name="trust_certificate_unknown_certificate_found">Ciphwren heeft een onbekend certificaat tegengekomen. Wilt u het vertrouwen?</string>
     <string name="certificate_notification_connection_security">Ciphwren: Verbindingsveiligheid</string>
-    <string name="sync_calendar_attendees_email_content">U bent uitgenodigd op het volgende evenement:\n\n%s\nWanneer: %s\nWaar: %s\nAanwezigen: %s\n\n--\nVerstuurd door Ciphwren - veilige, end-to-end encrypted en private data sync.\nVerkrijg het via https://github.com/nikossvnk/etesync-android</string>
+    <string name="sync_calendar_attendees_email_content">U bent uitgenodigd op het volgende evenement:\n\n%s\nWanneer: %s\nWaar: %s\nAanwezigen: %s\n\n--\nVerstuurd door Ciphwren - veilige, end-to-end encrypted en private data sync.\nVerkrijg het via https://github.com/nikossvnk/ciphwren-android</string>
     <string name="sync_calendar_attendees_email_subject">Uitnodiging: %s @ %s</string>
     <string name="calendar_attendees_send_email_action">Verzend uitnodigingen</string>
     <string name="sync_calendar_attendees_notification_content">Uitnodigingen naar gasten versturen?</string>
