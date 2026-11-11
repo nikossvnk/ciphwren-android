@@ -178,7 +178,7 @@
     <string name="sync_calendar_attendees_notification_content">Einladungen an Gäste versenden?</string>
     <string name="calendar_attendees_send_email_action">Einladungen senden</string>
     <string name="sync_calendar_attendees_email_subject">Einladung: %s @ %s</string>
-    <string name="sync_calendar_attendees_email_content">Sie wurden zu folgender Veranstaltung eingeladen:\n\n%s\nWann: %s\nWo: %s\nTeilnehmer: %s\n\n--\nGesendet mit Ciphwren - sichere, Ende-zu-Ende verschlüsselte und private Datensynchronisation.\nErhältlich unter https://github.com/nikossvnk/ciphwren-android</string>
+    <string name="sync_calendar_attendees_email_content">Sie wurden zu folgender Veranstaltung eingeladen:\n\n%s\nWann: %s\nWo: %s\nTeilnehmer: %s\n\n--\nGesendet mit Ciphwren - sichere, Ende-zu-Ende verschlüsselte und private Datensynchronisation.</string>
     <!-- cert4android -->
     <string name="certificate_notification_connection_security">Ciphwren: Verbindungs-Sicherheit</string>
     <string name="trust_certificate_unknown_certificate_found">Ciphwren hat ein unbekanntes Zertifikat vorgefunden. Wollen Sie ihm vertrauen?</string>

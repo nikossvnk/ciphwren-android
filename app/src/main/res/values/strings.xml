@@ -420,7 +420,7 @@
     <string name="sync_calendar_attendees_notification_content">Send invitations to guests?</string>
     <string name="calendar_attendees_send_email_action">Send invitations</string>
     <string name="sync_calendar_attendees_email_subject">Invitation: %s @ %s</string>
-    <string name="sync_calendar_attendees_email_content">You have been invited to the following event:\n\n%s\nWhen: %s\nWhere: %s\nAttendees: %s\n\n--\nSent by Ciphwren - secure, end-to-end encrypted and private data sync.\nGet it at https://github.com/nikossvnk/ciphwren-android</string>
+    <string name="sync_calendar_attendees_email_content">You have been invited to the following event:\n\n%s\nWhen: %s\nWhere: %s\nAttendees: %s\n\n--\nSent by Ciphwren - secure, end-to-end encrypted and private data sync.</string>
 
     <!-- cert4android -->
     <string name="certificate_notification_connection_security">Ciphwren: Connection security</string>

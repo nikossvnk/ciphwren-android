@@ -293,5 +293,5 @@
     <string name="loading">טוען…</string>
     <string name="trust_certificate_unknown_certificate_found">Ciphwren נתקלה באישור לא ידוע. האם אתה רוצה לתת אמון?</string>
     <string name="certificate_notification_connection_security">Ciphwren: אבטחת חיבור</string>
-    <string name="sync_calendar_attendees_email_content">הוזמנת לאירוע הבא:\n\n‪%s‬\nמתי: ‪%s‬\nאיפה: ‪‬%s‬\nמשתתפים: ‪‬%s‬‪\n\n--\nנשלח על-ידי Ciphwren - סינכרון נתונים מאובטח ופרטי מקצה לקצה.\nhttps://github.com/nikossvnk/ciphwren-android</string>
+    <string name="sync_calendar_attendees_email_content">הוזמנת לאירוע הבא:\n\n‪%s‬\nמתי: ‪%s‬\nאיפה: ‪‬%s‬\nמשתתפים: ‪‬%s‬‪\n\n--\nנשלח על-ידי Ciphwren - סינכרון נתונים מאובטח ופרטי מקצה לקצה.</string>
 </resources>

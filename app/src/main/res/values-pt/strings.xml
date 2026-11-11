@@ -85,7 +85,7 @@
     <string name="sync_calendar_attendees_notification_content">Enviar convites aos convidados?</string>
     <string name="calendar_attendees_send_email_action">Enviar convites</string>
     <string name="sync_calendar_attendees_email_subject">Convite: %s @ %s</string>
-    <string name="sync_calendar_attendees_email_content">Foi convidado para o seguinte evento:\n\n%s\nQuando: %s\nOnde: %s\nParticipantes: %s\n\n--\nEnviado por Ciphwren - sincronização de dados segura, cifrada e privada.\nObtenha-o em https://github.com/nikossvnk/ciphwren-android</string>
+    <string name="sync_calendar_attendees_email_content">Foi convidado para o seguinte evento:\n\n%s\nQuando: %s\nOnde: %s\nParticipantes: %s\n\n--\nEnviado por Ciphwren - sincronização de dados segura, cifrada e privada.</string>
     <string name="certificate_notification_connection_security">Ciphwren: Segurança de conexão</string>
     <string name="trust_certificate_unknown_certificate_found">Ciphwren encontrou um certificado desconhecido. Pretende confiar no certificado?</string>
     <string name="loading">A carregar...</string>

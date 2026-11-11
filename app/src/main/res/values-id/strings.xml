@@ -219,7 +219,7 @@
     <string name="loading">Memuat...</string>
     <string name="trust_certificate_unknown_certificate_found">Ciphwren menemukan sertifikat yang tidak dikenal. Apakah Anda ingin mempercayainya?</string>
     <string name="certificate_notification_connection_security">Ciphwren: Keamanan koneksi</string>
-    <string name="sync_calendar_attendees_email_content">Anda telah diundang ke acara berikut:\n\n%s\nWaktu: %s\nTempat: %s\nPeserta: %s\n\n--\nDikirim oleh Ciphwren - sinkronisasi data terenkripsi dan pribadi yang aman dan menyeluruh.\nDapatkan di https://github.com/nikossvnk/ciphwren-android</string>
+    <string name="sync_calendar_attendees_email_content">Anda telah diundang ke acara berikut:\n\n%s\nWaktu: %s\nTempat: %s\nPeserta: %s\n\n--\nDikirim oleh Ciphwren - sinkronisasi data terenkripsi dan pribadi yang aman dan menyeluruh.</string>
     <string name="sync_journal_readonly_message">Jurnal hanya read only sehingga semua perubahan Anda (%d) telah dikembalikan.</string>
     <string name="loading_error_title">Galat Pemuatan</string>
     <string name="notification_channel_description">Notifikasi Ciphwren</string>

@@ -17,7 +17,7 @@ dependencyResolutionManagement {
 rootProject.name = "ciphwren-android"
 
 include(":app")
-// Git submodules (github.com/nikossvnk/*), built as part of this project
+// Git submodules, built as part of this project
 include(":ical4android")
 include(":vcard4android")
 include(":cert4android")

@@ -281,7 +281,7 @@
     <string name="notification_channel_crash_reports">Raporty z awarii</string>
     <string name="notification_channel_description">Powiadomienia Ciphwren</string>
     <string name="notification_channel_name">Ciphwren</string>
-    <string name="sync_calendar_attendees_email_content">Zostałeś zaproszony na następujące wydarzenie:\n\n%s\nKiedy: %s\nGdzie: %s\nUczestnicy: %s\n\n--\nWysłane przez Ciphwren - bezpieczna, szyfrowana end-to-end i prywatna synchronizacja danych.\nWejdź na https://github.com/nikossvnk/ciphwren-android</string>
+    <string name="sync_calendar_attendees_email_content">Zostałeś zaproszony na następujące wydarzenie:\n\n%s\nKiedy: %s\nGdzie: %s\nUczestnicy: %s\n\n--\nWysłane przez Ciphwren - bezpieczna, szyfrowana end-to-end i prywatna synchronizacja danych.</string>
     <string name="sync_calendar_attendees_email_subject">Zaproszenie: %s @ %s</string>
     <string name="calendar_attendees_send_email_action">Wyślij zaproszenia</string>
     <string name="sync_calendar_attendees_notification_content">Wysłać gościom zaproszenia?</string>

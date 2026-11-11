@@ -11,8 +11,6 @@ Secure, end-to-end encrypted, and privacy respecting sync for your contacts, cal
 > separate app (`com.ciphwren.android`): an EteSync install doesn't update to it, and its accounts
 > are added again in it. The APKs are on the [releases page](https://github.com/nikossvnk/ciphwren-android/releases).
 
-![GitHub tag](https://img.shields.io/github/tag/nikossvnk/ciphwren-android.svg)
-
 # Overview
 
 Please report bugs and questions on the [issue tracker](https://github.com/nikossvnk/ciphwren-android/issues).
@@ -51,7 +49,7 @@ sdkmanager "platforms;android-37.0" "build-tools;37.0.0" "ndk;30.0.16248370"
 ./gradlew build compileDebugAndroidTestKotlin :etebase-client:compileDebugAndroidTestKotlin
 ```
 
-The four source submodules are maintained under `github.com/nikossvnk`:
+The four source submodules are maintained alongside this repository:
 `ical4android`, `vcard4android`, `cert4android`, and `etebase-java`. The Etebase
 native library and its UniFFI-generated Kotlin bindings build automatically from the
 locked Rust dependencies for all four Android ABIs, with 16 KB ELF alignment; the app
