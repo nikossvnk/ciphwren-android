@@ -1,6 +1,9 @@
 # Changelog
 *NOTE:* may be removed in the future in favor of the fastlane changelog.
 
+## Unreleased
+* Renamed to Ciphwren, a separate app (`com.ciphwren.android`, with its own account type): an EteSync install doesn't update to it, so add the accounts again in Ciphwren, then remove them from EteSync.
+
 ## Version 3.0.0
 * Require Android 6.0 or newer and target Android 16.
 * Remove EteSync 1.0 synchronization and migration. Export legacy data with the previous client before upgrading; existing legacy databases are not deleted automatically.

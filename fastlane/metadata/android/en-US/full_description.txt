@@ -1,10 +1,10 @@
-Secure, end-to-end encrypted, and privacy respecting sync for your contacts, calendars, and tasks (using Tasks.org and OpenTasks). For notes, please use the EteSync Notes application.
+Secure, end-to-end encrypted, and privacy respecting sync for your contacts, calendars, and tasks (using Tasks.org and OpenTasks). For notes, please use the Ciphwren Notes application.
 
 In order to use this application you need an Etebase account, either with a hosting provider or on your own instance (free and open source).
 
 Easy to Use
 ===========
-EteSync is very easy to use. It seamlessly integrates with Android so you won't even notice you are using it. Security doesn't always have to come at a cost.
+Ciphwren is very easy to use. It seamlessly integrates with Android so you won't even notice you are using it. Security doesn't always have to come at a cost.
 
 Secure & Open
 ============
@@ -17,4 +17,4 @@ A full history of your data is saved in an encrypted tamper-proof journal which 
 
 How does it work?
 ===============
-EteSync integrates seamlessly with your existing apps. All you need to do is sign up (or run your own instance), install the app, and enter your password. After that, you will be able to save your contacts, calendar events and tasks to EteSync using your existing Android apps, and EteSync will transparently encrypt your data and update the change journal in the background. More security, same work-flow.
+Ciphwren integrates seamlessly with your existing apps. All you need to do is sign up (or run your own instance), install the app, and enter your password. After that, you will be able to save your contacts, calendar events and tasks to Ciphwren using your existing Android apps, and Ciphwren will transparently encrypt your data and update the change journal in the background. More security, same work-flow.

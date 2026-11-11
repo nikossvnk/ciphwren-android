@@ -1,0 +1,44 @@
+package com.ciphwren.android.ui.etebase
+
+import android.accounts.Account
+import android.content.Context
+import android.content.Intent
+import android.os.Bundle
+import androidx.activity.viewModels
+import androidx.core.content.IntentCompat
+import androidx.fragment.app.commit
+import com.ciphwren.android.R
+import com.ciphwren.android.ui.BaseActivity
+
+class InvitationsActivity : BaseActivity() {
+    private lateinit var account: Account
+    private val model: AccountViewModel by viewModels()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        account = IntentCompat.getParcelableExtra(intent, EXTRA_ACCOUNT, Account::class.java)!!
+
+        setContentView(R.layout.etebase_fragment_activity)
+
+        if (savedInstanceState == null) {
+            model.loadAccount(this, account)
+            title = getString(R.string.invitations_title)
+            supportFragmentManager.commit {
+                replace(R.id.fragment_container, InvitationsListFragment())
+            }
+        }
+
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+    }
+
+    companion object {
+        private val EXTRA_ACCOUNT = "account"
+
+        fun newIntent(context: Context, account: Account): Intent {
+            val intent = Intent(context, InvitationsActivity::class.java)
+            intent.putExtra(EXTRA_ACCOUNT, account)
+            return intent
+        }
+    }
+}

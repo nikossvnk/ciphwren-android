@@ -94,8 +94,8 @@
             android:title="@string/app_settings_show_debug_info"
             android:summary="@string/app_settings_show_debug_info_details">
             <intent
-                android:targetPackage="com.etesync.syncadapter"
-                android:targetClass="com.etesync.syncadapter.ui.DebugInfoActivity"/>
+                android:targetPackage="com.ciphwren.android"
+                android:targetClass="com.ciphwren.android.ui.DebugInfoActivity"/>
         </Preference>
 
     </PreferenceCategory>

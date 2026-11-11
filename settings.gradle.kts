@@ -14,7 +14,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "etesync-android"
+rootProject.name = "ciphwren-android"
 
 include(":app")
 // Git submodules (github.com/nikossvnk/*), built as part of this project

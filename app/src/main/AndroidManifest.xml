@@ -58,7 +58,7 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.PACKAGE_REPLACED" />
-                <data android:scheme="package" android:path="com.etesync.syncadapter" />
+                <data android:scheme="package" android:path="com.ciphwren.android" />
             </intent-filter>
         </receiver>
 
@@ -67,7 +67,7 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.PACKAGE_REPLACED" />
-                <data android:scheme="package" android:path="com.etesync.syncadapter" />
+                <data android:scheme="package" android:path="com.ciphwren.android" />
             </intent-filter>
         </receiver>
 

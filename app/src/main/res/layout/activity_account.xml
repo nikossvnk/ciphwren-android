@@ -54,7 +54,7 @@
 			    android:visibility="gone"
 			    android:indeterminate="true"/>
 
-			<com.etesync.syncadapter.ui.widget.MaximizedListView
+			<com.ciphwren.android.ui.widget.MaximizedListView
 			    android:id="@+id/address_books"
 			    android:layout_width="match_parent"
 			    android:layout_height="wrap_content"
@@ -94,7 +94,7 @@
 			    android:visibility="gone"
 			    android:indeterminate="true"/>
 
-			<com.etesync.syncadapter.ui.widget.MaximizedListView
+			<com.ciphwren.android.ui.widget.MaximizedListView
 			    android:id="@+id/calendars"
 			    android:layout_width="match_parent"
 			    android:layout_height="wrap_content"
@@ -147,7 +147,7 @@
 			    android:text="@string/account_tasks_not_showing"
 			    android:visibility="gone" />
 
-			<com.etesync.syncadapter.ui.widget.MaximizedListView
+			<com.ciphwren.android.ui.widget.MaximizedListView
 			    android:id="@+id/tasklists"
 			    android:layout_width="match_parent"
 			    android:layout_height="wrap_content"

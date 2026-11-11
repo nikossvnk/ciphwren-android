@@ -110,7 +110,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          apk="etesync-${TAG#v}.apk"
+          apk="ciphwren-${TAG#v}.apk"
           cp app/build/outputs/apk/release/app-release.apk "$apk"
           sha256sum "$apk" > "$apk.sha256"
           gh release create "$TAG" "$apk" "$apk.sha256" --repo "$GITHUB_REPOSITORY" --title "$TAG" --generate-notes

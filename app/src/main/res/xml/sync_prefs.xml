@@ -11,8 +11,8 @@
     
     <PreferenceScreen android:title="@string/manage_accounts">
         <intent
-            android:targetPackage="com.etesync.syncadapter"
-            android:targetClass="com.etesync.syncadapter.ui.AccountsActivity"
+            android:targetPackage="com.ciphwren.android"
+            android:targetClass="com.ciphwren.android.ui.AccountsActivity"
             android:action="ACTION_VIEW" />
     </PreferenceScreen>
 

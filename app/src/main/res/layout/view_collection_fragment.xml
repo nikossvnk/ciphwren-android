@@ -49,7 +49,7 @@
                 android:layout_gravity="right" />
         </LinearLayout>
 
-        <fragment android:name="com.etesync.syncadapter.ui.etebase.ListEntriesFragment"
+        <fragment android:name="com.ciphwren.android.ui.etebase.ListEntriesFragment"
             android:id="@+id/list_entries_container"
             android:layout_weight="1"
             android:layout_width="match_parent"

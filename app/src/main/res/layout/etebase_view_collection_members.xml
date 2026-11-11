@@ -47,7 +47,7 @@
 
     </LinearLayout>
 
-    <fragment android:name="com.etesync.syncadapter.ui.etebase.CollectionMembersListFragment"
+    <fragment android:name="com.ciphwren.android.ui.etebase.CollectionMembersListFragment"
         android:id="@+id/list_entries_container"
         android:layout_weight="1"
         android:layout_width="match_parent"

@@ -1,28 +1,27 @@
 <p align="center">
   <img width="120" src="app/src/main/res/mipmap/ic_launcher.png" />
-  <h1 align="center">EteSync - Secure Data Sync</h1>
+  <h1 align="center">Ciphwren</h1>
 </p>
 
 Secure, end-to-end encrypted, and privacy respecting sync for your contacts, calendars and tasks (Android client).
 
-[<img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png"
-      alt="Get it on Google Play" 
-      height="80" />](https://play.google.com/store/apps/details?id=com.etesync.syncadapter)
-[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
-      alt="Get it on F-Droid"
-      height="80" />](https://f-droid.org/app/com.etesync.syncadapter)
+> [!NOTE]
+> **This is an independent fork** of [EteSync for Android](https://github.com/etesync/android), the
+> original project of the EteSync authors, and is not affiliated with or supported by EteSync. It's a
+> separate app (`com.ciphwren.android`): an EteSync install doesn't update to it, and its accounts
+> are added again in it. The APKs are on the [releases page](https://github.com/nikossvnk/ciphwren-android/releases).
 
-![GitHub tag](https://img.shields.io/github/tag/nikossvnk/etesync-android.svg)
+![GitHub tag](https://img.shields.io/github/tag/nikossvnk/ciphwren-android.svg)
 
 # Overview
 
-Please report bugs and questions on the [issue tracker](https://github.com/nikossvnk/etesync-android/issues).
+Please report bugs and questions on the [issue tracker](https://github.com/nikossvnk/ciphwren-android/issues).
 
 The app has no default server: enter the URL of your Etebase server when you log
 in or sign up. Links (including the server's account dashboard) open in your
 browser.
 
-EteSync is licensed under the [GPLv3 License](LICENSE).
+Ciphwren is licensed under the [GPLv3 License](LICENSE).
 
 # Upgrading to 3.0
 
@@ -45,8 +44,8 @@ Plugin 9.5.0, Kotlin 2.4.21, and Java 17 bytecode. Install Android SDK Platform
 The app targets Android 16 (API 36).
 
 ```sh
-git clone --recurse-submodules https://github.com/nikossvnk/etesync-android.git
-cd etesync-android
+git clone --recurse-submodules https://github.com/nikossvnk/ciphwren-android.git
+cd ciphwren-android
 sdkmanager "platforms;android-37.0" "build-tools;37.0.0" "ndk;30.0.16248370"
 ./gradlew assembleDebug
 ./gradlew build compileDebugAndroidTestKotlin :etebase-client:compileDebugAndroidTestKotlin
@@ -114,7 +113,7 @@ scripts/translation-status.sh -q
 Third Party Code
 ================
 
-EteSync's source code was originally based on [DAVdroid](https://www.davx5.com) but the codebases has since diverged quite significantly.
+EteSync's source code, which this is a fork of, was originally based on [DAVdroid](https://www.davx5.com) but the codebases has since diverged quite significantly.
 
 This project relies on many great third party libraries. Please take a look at the
 app's about menu for more information about them and their licenses.
