@@ -7,17 +7,17 @@
     <string name="send">Senden</string>
     <!-- startup dialogs -->
     <string name="startup_battery_optimization">Akku-Leistungsoptimierung</string>
-    <string name="startup_battery_optimization_message">Android kann EteSync Synchronisation nach ein paar Tagen abschalten/reduzieren. Um dies zu verhindern, schalten Sie die Akku-Leistungsoptimierung ab.</string>
-    <string name="startup_battery_optimization_disable">Für EteSync abschalten</string>
+    <string name="startup_battery_optimization_message">Android kann Ciphwren Synchronisation nach ein paar Tagen abschalten/reduzieren. Um dies zu verhindern, schalten Sie die Akku-Leistungsoptimierung ab.</string>
+    <string name="startup_battery_optimization_disable">Für Ciphwren abschalten</string>
     <string name="startup_dont_show_again">Nicht erneut zeigen</string>
-    <string name="startup_development_version">EteSync Vorschau-Version</string>
-    <string name="startup_development_version_message">Dies ist eine Entwicklungsversion von EteSync. Bitte beachten Sie, dass manche Funktionen nicht wie erwartet funktionieren können. Bitte geben Sie uns konstruktives Feedback um EteSync zu verbessern.</string>
+    <string name="startup_development_version">Ciphwren Vorschau-Version</string>
+    <string name="startup_development_version_message">Dies ist eine Entwicklungsversion von Ciphwren. Bitte beachten Sie, dass manche Funktionen nicht wie erwartet funktionieren können. Bitte geben Sie uns konstruktives Feedback um Ciphwren zu verbessern.</string>
     <string name="startup_development_version_give_feedback">Rückmeldung geben</string>
     <!-- AboutActivity -->
     <string name="about_license_terms">Lizenzbedingungen</string>
     <string name="about_license_info_no_warranty">Dieses Programm wird OHNE JEDE GEWÄHRLEISTUNG bereitgestellt. Es ist freie Software, Sie können es also unter bestimmten Bedingungen weiterverbreiten.</string>
     <!-- global settings -->
-    <string name="logging_davdroid_file_logging">EteSync-Dateiprotokollierung ist aktiviert</string>
+    <string name="logging_davdroid_file_logging">Ciphwren-Dateiprotokollierung ist aktiviert</string>
     <string name="logging_to_external_storage">Protokollierung auf externenen Speicher: %s</string>
     <string name="logging_to_external_storage_warning">Protokolle so schnell wie möglich löschen</string>
     <string name="logging_couldnt_create_file">Externe Logdatei konnte nicht erstellt werden: %s</string>
@@ -33,7 +33,7 @@
     <string name="navigation_drawer_guide">Benutzerhandbuch</string>
     <string name="navigation_drawer_report_issue">Fehler melden</string>
     <string name="navigation_drawer_contact">Entwickler kontaktieren</string>
-    <string name="account_list_empty">Willkommen bei EteSync!</string>
+    <string name="account_list_empty">Willkommen bei Ciphwren!</string>
     <!-- AccountUpdateService -->
     <!-- AppSettingsActivity -->
     <string name="app_settings">Einstellungen</string>
@@ -70,15 +70,15 @@
     <string name="account_delete_collection_last_title">Letzte Sammlung kann nicht gelöscht werden</string>
     <string name="account_delete_collection_last_text">Die letzte Sammlung kann nicht gelöscht werden, bitte erstellen Sie eine neue Sammlung wenn Sie diese löschen wollen.</string>
     <!-- PermissionsActivity -->
-    <string name="permissions_title">EteSync-Berechtigungen</string>
+    <string name="permissions_title">Ciphwren-Berechtigungen</string>
     <string name="permissions_calendar">Kalender-Zugriff</string>
-    <string name="permissions_calendar_details">Damit EteSync Kalender-Ereignisse mit Ihren lokalen Kalendern synchronisieren kann, muss EteSync auf Ihre Kalender zugreifen.</string>
+    <string name="permissions_calendar_details">Damit Ciphwren Kalender-Ereignisse mit Ihren lokalen Kalendern synchronisieren kann, muss Ciphwren auf Ihre Kalender zugreifen.</string>
     <string name="permissions_calendar_request">Kalender-Zugriff anfordern</string>
     <string name="permissions_contacts">Kontakt-Zugriff</string>
-    <string name="permissions_contacts_details">Damit EteSync Addressbüchern mit Ihren lokalen Kontakten synchronisieren kann, muss EteSync auf Ihre Kontakte zugreifen.</string>
+    <string name="permissions_contacts_details">Damit Ciphwren Addressbüchern mit Ihren lokalen Kontakten synchronisieren kann, muss Ciphwren auf Ihre Kontakte zugreifen.</string>
     <string name="permissions_contacts_request">Kontakt-Zugriff anfordern</string>
     <string name="permissions_opentasks">OpenTasks-Zugriff</string>
-    <string name="permissions_opentasks_details">Damit EteSync Aufgaben mit Ihren lokalen Aufgaben-Listen synchronisieren kann, muss EteSync auf OpenTasks zugreifen.</string>
+    <string name="permissions_opentasks_details">Damit Ciphwren Aufgaben mit Ihren lokalen Aufgaben-Listen synchronisieren kann, muss Ciphwren auf OpenTasks zugreifen.</string>
     <string name="permissions_opentasks_request">OpenTasks-Zugriff anfordern</string>
     <!-- AddAccountActivity -->
     <string name="login_title">Konto hinzufügen</string>
@@ -153,7 +153,7 @@
     <string name="exception_show_details">Details anzeigen</string>
     <!-- sync errors and DebugInfoActivity -->
     <string name="debug_info_title">Informationen zur Fehlersuche</string>
-    <string name="sync_error_permissions">EteSync-Berechtigungen</string>
+    <string name="sync_error_permissions">Ciphwren-Berechtigungen</string>
     <string name="sync_error_permissions_text">Zusätzliche Berechtigungen benötigt</string>
     <string name="sync_error_calendar">Kalender-Synchronisation fehlgeschlagen (%s)</string>
     <string name="sync_error_contacts">Kontakte-Synchronisation fehlgeschlagen (%s)</string>
@@ -178,10 +178,10 @@
     <string name="sync_calendar_attendees_notification_content">Einladungen an Gäste versenden?</string>
     <string name="calendar_attendees_send_email_action">Einladungen senden</string>
     <string name="sync_calendar_attendees_email_subject">Einladung: %s @ %s</string>
-    <string name="sync_calendar_attendees_email_content">Sie wurden zu folgender Veranstaltung eingeladen:\n\n%s\nWann: %s\nWo: %s\nTeilnehmer: %s\n\n--\nGesendet mit EteSync - sichere, Ende-zu-Ende verschlüsselte und private Datensynchronisation.\nErhältlich unter https://github.com/nikossvnk/etesync-android</string>
+    <string name="sync_calendar_attendees_email_content">Sie wurden zu folgender Veranstaltung eingeladen:\n\n%s\nWann: %s\nWo: %s\nTeilnehmer: %s\n\n--\nGesendet mit Ciphwren - sichere, Ende-zu-Ende verschlüsselte und private Datensynchronisation.</string>
     <!-- cert4android -->
-    <string name="certificate_notification_connection_security">EteSync: Verbindungs-Sicherheit</string>
-    <string name="trust_certificate_unknown_certificate_found">EteSync hat ein unbekanntes Zertifikat vorgefunden. Wollen Sie ihm vertrauen?</string>
+    <string name="certificate_notification_connection_security">Ciphwren: Verbindungs-Sicherheit</string>
+    <string name="trust_certificate_unknown_certificate_found">Ciphwren hat ein unbekanntes Zertifikat vorgefunden. Wollen Sie ihm vertrauen?</string>
     <string name="app_settings_log_verbose">Ausführliche Protokollierung</string>
     <string name="tasks_not_showing">* Das Protokoll wird nur angezeigt, wenn ein Aufgabenanbieter installiert ist.</string>
     <string name="account_tasks_not_showing">* Aufgaben werden nicht synchronisiert (installieren Sie einen Anbieter)</string>
@@ -189,9 +189,9 @@
     <string name="app_settings_prefer_tasksorg_on">Synchronisiert Aufgaben mit Tasks.org, falls verfügbar</string>
     <string name="app_settings_prefer_tasksorg">Aufgabenanbieter Tasks.org bevorzugen</string>
     <string name="app_settings_sync">Synchronisation</string>
-    <string name="app_name">EteSync</string>
-    <string name="notification_channel_description">EteSync-Benachrichtigungen</string>
-    <string name="notification_channel_name">EteSync</string>
+    <string name="app_name">Ciphwren</string>
+    <string name="notification_channel_description">Ciphwren-Benachrichtigungen</string>
+    <string name="notification_channel_name">Ciphwren</string>
     <string name="event_info_organizer">Organisator:</string>
     <string name="import_select_account">Konto auswählen</string>
     <string name="import_button_local">Von Konto</string>
@@ -240,11 +240,11 @@
     <string name="login_encryption_extra_info">* Dieses Passwort wird zur Verschlüsselung Ihrer Daten verwendet, im Gegensatz zum vorherigen, das zur Anmeldung beim Dienst verwendet wird.\nAus Sicherheitsgründen werden Sie aufgefordert, ein separates Verschlüsselungspasswort auszuwählen. Weitere Informationen finden Sie in den FAQ unter: %s</string>
     <string name="login_encryption_set_new_password">Bitte legen Sie Ihr Verschlüsselungspasswort unten fest, und stellen Sie sicher, dass Sie es richtig eingegeben haben, da es bei Verlust *nicht* wiederhergestellt werden kann!</string>
     <string name="login_custom_server_error">Ungültige URL gefunden, haben Sie vergessen, https:// anzugeben?</string>
-    <string name="login_custom_server">EteSync-Server-URL</string>
+    <string name="login_custom_server">Ciphwren-Server-URL</string>
     <string name="login_username_error">Der Benutzername sollte mindestens 6 Zeichen lang sein und nur aus Buchstaben, Ziffern und ./-/_ bestehen.</string>
     <string name="login_username">Benutzername</string>
     <string name="permissions_tasks_org_request">Tasks.org-Berechtigungen anfordern</string>
-    <string name="permissions_tasks_org_details">Um Aufgaben mit Ihren lokalen Aufgabenlisten zu synchronisieren, muss EteSync auf Tasks.org zugreifen.</string>
+    <string name="permissions_tasks_org_details">Um Aufgaben mit Ihren lokalen Aufgabenlisten zu synchronisieren, muss Ciphwren auf Tasks.org zugreifen.</string>
     <string name="permissions_tasks_org">Tasks.org-Berechtigungen</string>
     <string name="journal_item_restore_dialog_body">Der Eintrag wurde erfolgreich in den vorherigen Zustand wiederhergestellt.</string>
     <string name="journal_item_restore_action">Zustand wiederherstellen</string>
@@ -313,10 +313,10 @@
     <string name="migrate_v2_wizard_welcome_body_extra">Bitte stellen Sie sicher, dass Sie eine gute Internetverbindung und genügend Akku haben, da dies eine Weile dauern kann.\nUm fortzufahren, wählen Sie bitte unten, ob Sie sich für ein neues EteSync 2.0-Konto registrieren oder mit einem bestehenden Konto anmelden möchten.</string>
     <string name="migrate_v2_wizard_welcome_body">Mit diesem Werkzeug können Sie Ihre Daten auf EteSync 2.0 migrieren. Bei der Migration werden keine Daten gelöscht. Es werden lediglich Ihre Daten auf den neuen EteSync 2.0 Server kopiert. Somit besteht bei der Migration kein Risiko eines Datenverlustes.</string>
     <string name="migrate_v2_wizard_welcome_title">EteSync 2.0 Migration</string>
-    <string name="account_wizard_collections_body">Um mit der Nutzung von EteSync zu beginnen, müssen Sie Sammlungen zum Speichern Ihrer Daten erstellen. Klicken Sie auf Erstellen, um einen Standardkalender, ein Adressbuch und eine Aufgabenliste für Sie zu erstellen.</string>
-    <string name="account_wizard_collections_title">Willkommen bei EteSync!</string>
+    <string name="account_wizard_collections_body">Um mit der Nutzung von Ciphwren zu beginnen, müssen Sie Sammlungen zum Speichern Ihrer Daten erstellen. Klicken Sie auf Erstellen, um einen Standardkalender, ein Adressbuch und eine Aufgabenliste für Sie zu erstellen.</string>
+    <string name="account_wizard_collections_title">Willkommen bei Ciphwren!</string>
     <string name="accounts_missing_permissions">Fehlende Berechtigungen: %s</string>
-    <string name="accounts_showcase_add">Sie müssen ein Konto hinzufügen, um EteSync verwenden zu können. Klicken Sie hier, um eines hinzuzufügen ...</string>
+    <string name="accounts_showcase_add">Sie müssen ein Konto hinzufügen, um Ciphwren verwenden zu können. Klicken Sie hier, um eines hinzuzufügen ...</string>
     <string name="accounts_global_sync_enable">Aktivieren</string>
     <string name="accounts_global_sync_disabled">Systemweite automatische Synchronisation ist deaktiviert</string>
     <string name="tourguide_title">Wussten Sie schon?</string>
@@ -332,5 +332,5 @@
     <string name="skip">Überspringen</string>
     <string name="create">Erstellen</string>
     <string name="address_books_authority_title">Adressbücher</string>
-    <string name="account_title_address_book">EteSync Adressbuch</string>
+    <string name="account_title_address_book">Ciphwren Adressbuch</string>
 </resources>

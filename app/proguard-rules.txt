@@ -1,7 +1,7 @@
-# R8 usage for EteSync:
+# R8 usage for Ciphwren:
 #       shrinking        yes (main reason for using R8)
 #       optimization     yes
-#       obfuscation      no (EteSync is open-source)
+#       obfuscation      no (Ciphwren is open-source)
 
 -dontobfuscate
 
@@ -22,8 +22,8 @@
 -dontwarn org.jparsec.**
 -dontwarn java.beans.**
 
-# EteSync + libs
--keep,includedescriptorclasses class com.etesync.syncadapter.** { *; }    # all EteSync code and deps are required
+# Ciphwren + libs
+-keep,includedescriptorclasses class com.ciphwren.android.** { *; }    # all Ciphwren code and deps are required
 
 # OkHttp, AndroidX, ez-vcard, the coroutines and the Etebase client (UniFFI/JNA)
 # ship their own consumer rules.

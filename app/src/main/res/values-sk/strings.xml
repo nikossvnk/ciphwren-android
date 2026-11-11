@@ -16,6 +16,6 @@
     <string name="manage_accounts">Spravovať účty</string>
     <string name="help">Pomoc</string>
     <string name="address_books_authority_title">Zoznamy kontaktov</string>
-    <string name="account_title_address_book">EteSync Kontakty</string>
-    <string name="app_name">EteSync</string>
+    <string name="account_title_address_book">Ciphwren Kontakty</string>
+    <string name="app_name">Ciphwren</string>
 </resources>

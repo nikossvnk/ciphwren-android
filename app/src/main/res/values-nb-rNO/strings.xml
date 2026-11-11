@@ -7,8 +7,8 @@
   ~ http://www.gnu.org/licenses/gpl.html
   --><resources xmlns:tools="http://schemas.android.com/tools" xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- common strings -->
-    <string name="app_name">EteSync</string>
-    <string name="account_title_address_book">EteSync-adressebok</string>
+    <string name="app_name">Ciphwren</string>
+    <string name="account_title_address_book">Ciphwren-adressebok</string>
     <string name="address_books_authority_title">Adressebøker</string>
     <string name="help">Hjelp</string>
     <string name="manage_accounts">Behandle kontoer</string>
@@ -29,17 +29,17 @@
     <string name="tourguide_title">Visste du at?</string>
     <!-- startup dialogs -->
     <string name="startup_battery_optimization">Batterioptimalisering</string>
-    <string name="startup_battery_optimization_message">Android kan skru av/redusere EteSync-synkronisering etter noen dager. For å hindre dette, skru av batterioptimalisering.</string>
-    <string name="startup_battery_optimization_disable">Skru av for EteSync</string>
+    <string name="startup_battery_optimization_message">Android kan skru av/redusere Ciphwren-synkronisering etter noen dager. For å hindre dette, skru av batterioptimalisering.</string>
+    <string name="startup_battery_optimization_disable">Skru av for Ciphwren</string>
     <string name="startup_dont_show_again">Ikke vis igjen</string>
-    <string name="startup_development_version">EteSync-testversjon</string>
-    <string name="startup_development_version_message">Dette er en utviklerversjon av EteSync. Det kan hende at ting ikke virker som de skal. Send gjerne konstruktive tilbakemeldinger for å forbedre EteSync.</string>
+    <string name="startup_development_version">Ciphwren-testversjon</string>
+    <string name="startup_development_version_message">Dette er en utviklerversjon av Ciphwren. Det kan hende at ting ikke virker som de skal. Send gjerne konstruktive tilbakemeldinger for å forbedre Ciphwren.</string>
     <string name="startup_development_version_give_feedback">Gi tilbakemelding</string>
     <!-- AboutActivity -->
     <string name="about_license_terms">Lisensbetingelser</string>
     <string name="about_license_info_no_warranty">Dette programmet kommer UTEN NOEN GARANTIER. Det et fri programvare, og du må gjerne distribuere det videre under visse betingelser.</string>
     <!-- global settings -->
-    <string name="logging_davdroid_file_logging">EteSync-fillogging er PÅ</string>
+    <string name="logging_davdroid_file_logging">Ciphwren-fillogging er PÅ</string>
     <string name="logging_to_external_storage">Loggfører til ekstern lagring: %s</string>
     <string name="logging_to_external_storage_warning">Deaktivering vil slette loggene</string>
     <string name="logging_couldnt_create_file">Kunne ikke opprette ekstern loggfil: %s</string>
@@ -55,10 +55,10 @@
     <string name="navigation_drawer_guide">Brukerveiledning</string>
     <string name="navigation_drawer_report_issue">Rapporter feil</string>
     <string name="navigation_drawer_contact">Kontakt</string>
-    <string name="account_list_empty">Velkommen til EteSync.</string>
+    <string name="account_list_empty">Velkommen til Ciphwren.</string>
     <string name="accounts_global_sync_disabled">Full automatisk synkronisering av systemet er avskrudd</string>
     <string name="accounts_global_sync_enable">Skru på</string>
-    <string name="accounts_showcase_add">Du må legge til en bruker for å kunne bruke EteSync. Klikk her for å legge til en …</string>
+    <string name="accounts_showcase_add">Du må legge til en bruker for å kunne bruke Ciphwren. Klikk her for å legge til en …</string>
     <!-- AccountUpdateService -->
     <!-- AppSettingsActivity -->
     <string name="app_settings">Innstillinger</string>
@@ -150,22 +150,22 @@
     <string name="journal_item_restore_action">Gjenopprett tilstand</string>
     <string name="journal_item_restore_dialog_body">Gjenopprettet elementet til forrige tilstand.</string>
     <!-- PermissionsActivity -->
-    <string name="permissions_title">EteSync-tilganger</string>
+    <string name="permissions_title">Ciphwren-tilganger</string>
     <string name="permissions_calendar">Kalendertilgang</string>
-    <string name="permissions_calendar_details">For å synkronisere kalenderhendelser med de lokale kalendrene dine, trenger EteSync tilgang til kalendrene dine.</string>
+    <string name="permissions_calendar_details">For å synkronisere kalenderhendelser med de lokale kalendrene dine, trenger Ciphwren tilgang til kalendrene dine.</string>
     <string name="permissions_calendar_request">Be om kalendertilgang</string>
     <string name="permissions_contacts">Kontakttilgang</string>
-    <string name="permissions_contacts_details">For å synkronisere adressebøker med de lokale kontaktlistene dine, trenger EteSync tilgang til kontaktene dine.</string>
+    <string name="permissions_contacts_details">For å synkronisere adressebøker med de lokale kontaktlistene dine, trenger Ciphwren tilgang til kontaktene dine.</string>
     <string name="permissions_contacts_request">Be om kontakttilgang</string>
     <string name="permissions_opentasks">OpenTasks-tilgang</string>
-    <string name="permissions_opentasks_details">For å synkronisere gjøremål med de lokale gjøremålslistene dine, trenger EteSync tilgang til OpenTasks.</string>
+    <string name="permissions_opentasks_details">For å synkronisere gjøremål med de lokale gjøremålslistene dine, trenger Ciphwren tilgang til OpenTasks.</string>
     <string name="permissions_opentasks_request">Be om OpenTasks-tilgang</string>
     <!-- AddAccountActivity -->
     <string name="login_title">Legg til konto</string>
     <string name="login_email_address">E-post</string>
     <string name="login_email_address_error">Gyldig e-postadresse kreves</string>
     <string name="login_password">Passord</string>
-    <string name="login_custom_server">EteSync-tjenernettadresse</string>
+    <string name="login_custom_server">Ciphwren-tjenernettadresse</string>
     <string name="login_custom_server_error">Ugyldig nettadresse finnet, glemte du å ta med https://?</string>
     <string name="login_encryption_password">Krypteringspassord</string>
     <string name="login_encryption_check_password">* Husk passordet ditt, det kan ikke gjenopprettes hvis du mister det!</string>
@@ -272,7 +272,7 @@
     <!-- sync errors and DebugInfoActivity -->
     <string name="debug_info_title">Feilsporingsinfo</string>
     <string name="debug_info_more_data_shared">Når du klikker på «Del» vil dataene under bli sendt til utviklerne, i tillegg til noe ekstra feilsporingsinfo, vedlagt. Merk at forsendelsen kan inneholde sensitiv info.</string>
-    <string name="sync_error_permissions">EteSync-tillatelser</string>
+    <string name="sync_error_permissions">Ciphwren-tillatelser</string>
     <string name="sync_error_permissions_text">Ekstra tillatelser kreves</string>
     <string name="sync_error_calendar">Kalendersynkronisering mislyktes (%s)</string>
     <string name="sync_error_contacts">Kontaktsynkronisering mislyktes (%s)</string>
@@ -307,10 +307,10 @@
     <string name="sync_calendar_attendees_notification_content">Send invitasjoner til gjester?</string>
     <string name="calendar_attendees_send_email_action">Send invitasjoner</string>
     <string name="sync_calendar_attendees_email_subject">Invitasjon: %s @ %s</string>
-    <string name="sync_calendar_attendees_email_content">Du har blitt invitert til følgende hendelse:\n\n%s\nNår: %s\nHvor: %s\nDeltakere: %s\n\n--\nSendt med EteSync - sikker, ende-til-ende-kryptert og privat synkronisering.\nFå det på https://github.com/nikossvnk/etesync-android</string>
+    <string name="sync_calendar_attendees_email_content">Du har blitt invitert til følgende hendelse:\n\n%s\nNår: %s\nHvor: %s\nDeltakere: %s\n\n--\nSendt med Ciphwren - sikker, ende-til-ende-kryptert og privat synkronisering.</string>
     <!-- cert4android -->
-    <string name="certificate_notification_connection_security">EteSync: Tilkoblingssikkerhet</string>
-    <string name="trust_certificate_unknown_certificate_found">EteSync har mottatt et ukjent sertifikat. Ønsker du å klarere det?</string>
+    <string name="certificate_notification_connection_security">Ciphwren: Tilkoblingssikkerhet</string>
+    <string name="trust_certificate_unknown_certificate_found">Ciphwren har mottatt et ukjent sertifikat. Ønsker du å klarere det?</string>
     <!-- WebView activity-->
     <string name="loading">Laster …</string>
     <string name="loading_error_title">Innlastingsfeil</string>
@@ -321,16 +321,16 @@
     <!-- Event (from Etar) -->
     <string name="event_info_organizer">Arrangør:</string>
     <!-- Notifications -->
-    <string name="notification_channel_name">EteSync</string>
-    <string name="notification_channel_description">EteSync-varsler</string>
+    <string name="notification_channel_name">Ciphwren</string>
+    <string name="notification_channel_description">Ciphwren-varsler</string>
     <string name="install_tasksorg">Installer Tasks.org</string>
     <string name="import_account_top_notice">Velg en konto å importere alle dens oppføringer fra.</string>
     <string name="login_encryption_enter_password">Du er innlogget som «%s». Skriv inn ditt krypteringspassord for å fortsette, eller logg ut fra sidemenyen.</string>
     <string name="login_encryption_set_new_password">Sett ditt krypteringspassord nedenfor, og forsikre deg om at det er riktig, siden det *ikke* kan gjenopprettes!</string>
     <string name="permissions_tasks_org_request">Forespør tilgang til Tasks.org</string>
-    <string name="permissions_tasks_org_details">For å synkronisere gjøremål med din lokale gjøremålsliste, trenger EteSync tilgang til Tasks.org.</string>
+    <string name="permissions_tasks_org_details">For å synkronisere gjøremål med din lokale gjøremålsliste, trenger Ciphwren tilgang til Tasks.org.</string>
     <string name="permissions_tasks_org">Tasks.org-tilganger</string>
-    <string name="use_native_apps_body">EteSync integrerer seg sømløst med Android, slik at du kan bruke eksisterende kontaktliste og kalenderprogrammer.\n\nFor mer info, sjekk ut brukerveiledningen.</string>
+    <string name="use_native_apps_body">Ciphwren integrerer seg sømløst med Android, slik at du kan bruke eksisterende kontaktliste og kalenderprogrammer.\n\nFor mer info, sjekk ut brukerveiledningen.</string>
     <string name="use_native_apps_title">Visste du at?</string>
     <string name="tasks_not_showing">* Loggføring vises kun hvis en gjøremålstilbyder er installert.</string>
     <string name="account_tasks_not_showing">* Synkroniserer ikke gjøremål (installer en tilbyder)</string>
@@ -359,8 +359,8 @@
     <string name="edit_owner_only_anon">Kun eiere av denne samlingen kan redigere den.</string>
     <string name="collection_members_add_success">Invitasjon sendt. Brukeren vil bli lagt til når invitasjonen har blitt godkjent.</string>
     <string name="collection_members_add_read_only">Skrivebeskyttet</string>
-    <string name="account_wizard_collections_body">For å kunne bruke EteSync må du opprette samlinger å lagre dataen din i. Klikk «Opprett» for å opprette en forvalgt kalender, adressebok og gjøremålsliste.</string>
-    <string name="account_wizard_collections_title">Velkommen til EteSync.</string>
+    <string name="account_wizard_collections_body">For å kunne bruke Ciphwren må du opprette samlinger å lagre dataen din i. Klikk «Opprett» for å opprette en forvalgt kalender, adressebok og gjøremålsliste.</string>
+    <string name="account_wizard_collections_title">Velkommen til Ciphwren.</string>
     <string name="retry">Prøv igjen</string>
     <string name="skip">Hopp over</string>
     <string name="create">Opprett</string>

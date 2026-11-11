@@ -1,0 +1,269 @@
+package com.ciphwren.android.ui.etebase
+
+import android.graphics.drawable.ColorDrawable
+import android.os.Bundle
+import android.text.TextUtils
+import android.view.*
+import android.widget.EditText
+import androidx.appcompat.app.AlertDialog
+import androidx.core.view.MenuProvider
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.commit
+import androidx.fragment.app.viewModels
+import com.etebase.client.Collection
+import com.etebase.client.EtebaseException
+import com.ciphwren.android.CachedCollection
+import com.ciphwren.android.Constants
+import com.ciphwren.android.R
+import com.ciphwren.android.log.Logger
+import com.ciphwren.android.resource.LocalCalendar
+import com.ciphwren.android.syncadapter.requestSync
+import com.ciphwren.android.ui.BaseActivity
+import com.ciphwren.android.ui.ColorPickerDialog
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+class EditCollectionFragment : Fragment(), MenuProvider {
+    private val model: AccountViewModel by activityViewModels()
+    private val collectionModel: CollectionViewModel by activityViewModels()
+    private val itemsModel: ItemsViewModel by activityViewModels()
+    private val loadingModel: LoadingViewModel by viewModels()
+
+    private lateinit var cachedCollection: CachedCollection
+    private var isCreating: Boolean = false
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        val ret = inflater.inflate(R.layout.activity_create_collection, container, false)
+
+        if (savedInstanceState == null) {
+            updateTitle()
+            if (container != null) {
+                initUi(inflater, ret)
+            }
+        }
+
+        return ret
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        requireActivity().addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
+    }
+
+    fun updateTitle() {
+        cachedCollection.let {
+            var titleId: Int = R.string.create_calendar
+            if (isCreating) {
+                when (cachedCollection.collectionType) {
+                    Constants.ETEBASE_TYPE_CALENDAR -> {
+                        titleId = R.string.create_calendar
+                    }
+                    Constants.ETEBASE_TYPE_TASKS -> {
+                        titleId = R.string.create_tasklist
+                    }
+                    Constants.ETEBASE_TYPE_ADDRESS_BOOK -> {
+                        titleId = R.string.create_addressbook
+                    }
+                }
+            } else {
+                titleId = R.string.edit_collection
+            }
+            (activity as? BaseActivity?)?.supportActionBar?.setTitle(titleId)
+        }
+    }
+
+    private fun initUi(inflater: LayoutInflater, v: View) {
+        val title = v.findViewById<EditText>(R.id.display_name)
+        val desc = v.findViewById<EditText>(R.id.description)
+
+        val meta = cachedCollection.meta
+
+        title.setText(meta.name)
+        desc.setText(meta.description)
+
+        val colorSquare = v.findViewById<View>(R.id.color)
+        when (cachedCollection.collectionType) {
+            Constants.ETEBASE_TYPE_CALENDAR -> {
+                title.setHint(R.string.create_calendar_display_name_hint)
+
+                val color = LocalCalendar.parseColor(meta.color)
+                colorSquare.setBackgroundColor(color)
+                colorSquare.setOnClickListener {
+                    ColorPickerDialog.show(requireContext(), (colorSquare.background as ColorDrawable).color) { color ->
+                        colorSquare.setBackgroundColor(color)
+                    }
+                }
+            }
+            Constants.ETEBASE_TYPE_TASKS -> {
+                title.setHint(R.string.create_tasklist_display_name_hint)
+
+                val color = LocalCalendar.parseColor(meta.color)
+                colorSquare.setBackgroundColor(color)
+                colorSquare.setOnClickListener {
+                    ColorPickerDialog.show(requireContext(), (colorSquare.background as ColorDrawable).color) { color ->
+                        colorSquare.setBackgroundColor(color)
+                    }
+                }
+            }
+            Constants.ETEBASE_TYPE_ADDRESS_BOOK -> {
+                title.setHint(R.string.create_addressbook_display_name_hint)
+
+                val colorGroup = v.findViewById<View>(R.id.color_group)
+                colorGroup.visibility = View.GONE
+            }
+        }
+    }
+
+    override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+        menuInflater.inflate(R.menu.fragment_edit_collection, menu)
+        if (isCreating) {
+            menu.findItem(R.id.on_delete).isVisible = false
+        }
+    }
+
+    override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+        when (menuItem.itemId) {
+            R.id.on_delete -> {
+                deleteColection()
+            }
+            R.id.on_save -> {
+                saveCollection()
+            }
+            else -> return false
+        }
+        return true
+    }
+
+    private fun deleteColection() {
+        val meta = cachedCollection.meta
+        val name = meta.name
+
+        AlertDialog.Builder(requireContext())
+                .setTitle(R.string.delete_collection_confirm_title)
+                .setMessage(getString(R.string.delete_collection_confirm_warning, name))
+                .setPositiveButton(android.R.string.yes) { dialog, _ ->
+                    doDeleteCollection()
+                    dialog.dismiss()
+                }
+                .setNegativeButton(android.R.string.no) { _, _ -> }
+                .show()
+    }
+
+    private fun doDeleteCollection() {
+        val accountHolder = model.value ?: return
+        val applicationContext = requireContext().applicationContext
+        loadingModel.setLoading(true)
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    val col = cachedCollection.col
+                    col.setMeta(col.meta().copy(mtime = System.currentTimeMillis()))
+                    col.markDeleted()
+                    uploadCollection(col, accountHolder)
+                    requestSync(applicationContext, accountHolder.account)
+                }
+                collectionModel.loadCollection(accountHolder, cachedCollection.col.uid())
+                activity?.finish()
+            } catch (e: EtebaseException) {
+                Logger.log.warning(e.localizedMessage)
+                context?.let { context ->
+                    AlertDialog.Builder(context)
+                            .setIcon(R.drawable.ic_info_dark)
+                            .setTitle(R.string.exception)
+                            .setMessage(e.localizedMessage)
+                            .setPositiveButton(android.R.string.yes) { _, _ -> }.show()
+                }
+            } finally {
+                loadingModel.setLoading(false)
+            }
+        }
+    }
+
+    private fun saveCollection() {
+        var ok = true
+
+        val v = requireView()
+
+        var edit = v.findViewById<EditText>(R.id.display_name)
+        // Names are single-line titles: drop surrounding blanks and line breaks.
+        val name = edit.text.toString().trim()
+        if (TextUtils.isEmpty(name)) {
+            edit.error = getString(R.string.create_collection_display_name_required)
+            ok = false
+        }
+
+        edit = v.findViewById<EditText>(R.id.description)
+        val description = edit.text.toString().trim().ifEmpty { null }
+
+        var meta = cachedCollection.meta.copy(name = name, description = description, mtime = System.currentTimeMillis())
+
+        if (ok) {
+            when (cachedCollection.collectionType) {
+                Constants.ETEBASE_TYPE_CALENDAR, Constants.ETEBASE_TYPE_TASKS -> {
+                    val view = v.findViewById<View>(R.id.color)
+                    val color = (view.background as ColorDrawable).color
+                    meta = meta.copy(color = String.format("#%06X", 0xFFFFFF and color))
+                }
+                Constants.ETEBASE_TYPE_ADDRESS_BOOK -> {
+                }
+            }
+
+            val accountHolder = model.value ?: return
+            val applicationContext = requireContext().applicationContext
+            loadingModel.setLoading(true)
+            viewLifecycleOwner.lifecycleScope.launch {
+                try {
+                    withContext(Dispatchers.IO) {
+                        val col = cachedCollection.col
+                        col.setMeta(meta)
+                        uploadCollection(col, accountHolder)
+                        requestSync(applicationContext, accountHolder.account)
+                    }
+                    collectionModel.loadCollection(accountHolder, cachedCollection.col.uid())
+                    if (isCreating) {
+                        // Load the items since we just created it
+                        itemsModel.loadItems(model.value!!, cachedCollection)
+                        parentFragmentManager.commit {
+                            replace(R.id.fragment_container, ViewCollectionFragment())
+                        }
+                    } else {
+                        parentFragmentManager.popBackStack()
+                    }
+                } catch (e: EtebaseException) {
+                    val context = context
+                    if (context != null) {
+                        AlertDialog.Builder(requireContext())
+                                .setIcon(R.drawable.ic_info_dark)
+                                .setTitle(R.string.exception)
+                                .setMessage(e.localizedMessage)
+                                .setPositiveButton(android.R.string.yes) { _, _ -> }.show()
+                    }
+                } finally {
+                    loadingModel.setLoading(false)
+                }
+            }
+        }
+    }
+
+    private fun uploadCollection(col: Collection, accountHolder: AccountHolder) {
+        val etebaseLocalCache = accountHolder.etebaseLocalCache
+        val colMgr = accountHolder.colMgr
+        colMgr.upload(col)
+        synchronized(etebaseLocalCache) {
+            etebaseLocalCache.collectionSet(colMgr, col)
+        }
+    }
+
+    companion object {
+        fun newInstance(cachedCollection: CachedCollection, isCreating: Boolean = false): EditCollectionFragment {
+            val ret = EditCollectionFragment()
+            ret.cachedCollection = cachedCollection
+            ret.isCreating = isCreating
+            return ret
+        }
+    }
+}

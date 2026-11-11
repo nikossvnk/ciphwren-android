@@ -62,13 +62,13 @@ val releaseSigningProperties = listOf("releaseStoreFile", "releaseStorePassword"
         .associateWith { providers.gradleProperty(it).orNull }
 
 android {
-    namespace = "com.etesync.syncadapter"
+    namespace = "com.ciphwren.android"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.etesync.syncadapter"
+        applicationId = "com.ciphwren.android"
 
         minSdk = 23
         targetSdk = 36
