@@ -3,11 +3,11 @@ package com.ciphwren.android.utils
 import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.annotation.StringRes
 import com.ciphwren.android.R
+import kotlin.math.max
 import kotlin.math.min
 
 /**
@@ -30,10 +30,18 @@ object HintPopup {
             val margin = res.getDimensionPixelSize(R.dimen.hint_popup_margin)
             val width = min(res.displayMetrics.widthPixels - 2 * margin, res.getDimensionPixelSize(R.dimen.hint_popup_max_width))
 
-            val popup = PopupWindow(content, width, ViewGroup.LayoutParams.WRAP_CONTENT, true)
+            // With WRAP_CONTENT the popup doesn't know its height when it's placed, so next to an
+            // anchor at the bottom (the add button) it was squeezed under it instead of going above
+            content.measure(
+                    View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED))
+            val popup = PopupWindow(content, width, content.measuredHeight, true)
             popup.elevation = res.getDimension(R.dimen.hint_popup_elevation)
             content.setOnClickListener { popup.dismiss() }
-            popup.showAsDropDown(anchor)
+            // Keep the margin to the right edge of the screen too (the add button is next to it)
+            val anchorX = IntArray(2).also { anchor.getLocationOnScreen(it) }[0]
+            val overflow = anchorX + width - (res.displayMetrics.widthPixels - margin)
+            popup.showAsDropDown(anchor, -max(overflow, 0), 0)
         }
     }
 }
