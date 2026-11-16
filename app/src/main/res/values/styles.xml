@@ -6,65 +6,64 @@
   ~ http://www.gnu.org/licenses/gpl.html
   -->
 
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- colors -->
+    <!-- app theme: light or dark (values-night) as chosen in the app settings, in the brand's colours -->
 
-    <!-- FIXME: Colours are no longer correctly named. -->
-
-    <color name="light_green500">#ffc107</color>
-    <color name="light_green700">#ffa100</color>
-
-    <color name="orange400">#29b6f6</color>
-    <color name="orangeA700">#0288d1</color>
-
-    <color name="grey200">#eeeeee</color>
-    <color name="grey700">#616161</color>
-
-    <!-- preference-v14 uses this color for categories text -->
-    <color name="preference_fallback_accent_color">@color/orangeA700</color>
-
-    <color name="primaryColor">#FFC107</color>
-    <color name="primaryLightColor">#FFD54F</color>
-    <color name="primaryDarkColor">#FFA000</color>
-    <color name="secondaryColor">#29B6F6</color>
-    <color name="secondaryLightColor">#81D4FA</color>
-    <color name="secondaryDarkColor">#039BE5</color>
-    <color name="primaryTextColor">#000000</color>
-
-    <color name="errorColor">#d32f2f</color>
-
-
-    <!-- app theme -->
-
-    <style name="AppTheme" parent="Theme.MaterialComponents.Light">
+    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight">
         <!-- see https://github.com/material-components/material-components-android/blob/master/docs/theming/Color.md for component color names -->
-        <item name="colorPrimary">@color/primaryColor</item>
-        <item name="colorPrimaryDark">@color/primaryDarkColor</item>       <!-- additionally required for AppCompatActivity -->
-        <item name="colorPrimaryVariant">@color/primaryLightColor</item>
-        <item name="colorOnPrimary">@android:color/black</item>
+        <item name="colorPrimary">@color/cw_primary</item>
+        <!-- the status bar before Android 15 draws apps edge to edge -->
+        <item name="colorPrimaryDark">@color/cw_background</item>
+        <item name="colorPrimaryVariant">@color/cw_primary</item>
+        <item name="colorOnPrimary">@color/cw_on_primary</item>
 
-        <item name="colorSecondary">@color/secondaryColor</item>
-        <item name="colorSecondaryVariant">@color/secondaryLightColor</item>
-        <item name="colorOnSecondary">@android:color/white</item>
+        <item name="colorSecondary">@color/cw_primary</item>
+        <item name="colorSecondaryVariant">@color/cw_primary</item>
+        <item name="colorOnSecondary">@color/cw_on_primary</item>
 
-        <item name="colorError">@color/errorColor</item>
-        <item name="colorOnError">@android:color/white</item>
+        <item name="colorError">@color/cw_error</item>
+        <item name="colorOnError">@color/cw_on_error</item>
 
-        <item name="android:colorBackground">@color/grey200</item>
-        <item name="colorSurface">@android:color/white</item>
+        <item name="android:colorBackground">@color/cw_background</item>
+        <item name="colorOnBackground">@color/cw_text</item>
+        <item name="colorSurface">@color/cw_surface</item>
+        <item name="colorOnSurface">@color/cw_text</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+
+        <item name="android:windowLightStatusBar">@bool/cw_light_system_bars</item>
+        <item name="android:navigationBarColor" tools:targetApi="27">@color/cw_background</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">@bool/cw_light_system_bars</item>
+
+        <item name="android:windowSplashScreenBackground" tools:targetApi="31">@color/cw_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon" tools:targetApi="31">@drawable/splashscreen_icon</item>
+
+        <!-- the top bars are the colour of the screen, with a line under them -->
+        <item name="actionBarStyle">@style/Widget.Ciphwren.ActionBar</item>
+        <item name="actionBarTheme">@style/ThemeOverlay.MaterialComponents.ActionBar.Surface</item>
+        <item name="appBarLayoutStyle">@style/Widget.Ciphwren.AppBarLayout</item>
+        <item name="cardViewStyle">@style/Widget.Ciphwren.CardView</item>
     </style>
 
     <style name="AppTheme.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
+    <style name="Widget.Ciphwren.ActionBar" parent="Widget.MaterialComponents.ActionBar.Surface">
+        <item name="background">@drawable/app_bar_background</item>
+    </style>
 
-    <!-- dialogs -->
+    <style name="Widget.Ciphwren.AppBarLayout" parent="Widget.MaterialComponents.AppBarLayout.Surface">
+        <item name="android:background">@drawable/app_bar_background</item>
+        <item name="elevation">0dp</item>
+    </style>
 
-    <style name="AppTheme.Dialog.Alert" parent="Theme.AppCompat.Light.Dialog.Alert">
-        <item name="colorAccent">@color/orangeA700</item>
+    <style name="Widget.Ciphwren.CardView" parent="CardView">
+        <item name="cardBackgroundColor">@color/cw_surface</item>
     </style>
 
 
@@ -91,7 +90,7 @@
     <!-- stepper (wizard) -->
 
     <style name="stepper_nav_bar">
-        <item name="android:background">@color/grey200</item>
+        <item name="android:background">@color/cw_surface_alt</item>
     </style>
 
     <style name="stepper_nav_button">
@@ -110,16 +109,18 @@
 
     <!-- widgets -->
 
-    <style name="tablayout" parent="Base.Widget.Design.TabLayout">
-        <item name="android:background">@color/light_green700</item>
+    <!-- the tabs under the top bar: the colour of the screen too -->
+    <style name="tablayout" parent="Widget.MaterialComponents.TabLayout">
+        <item name="android:background">@android:color/transparent</item>
     </style>
 
+    <!-- the coloured headers of the cards on the account screen -->
     <style name="toolbar_theme">
-        <item name="android:textColorSecondary">@android:color/white</item>
+        <item name="android:textColorSecondary">@color/cw_on_header</item>
     </style>
     <style name="toolbar_style" parent="Widget.AppCompat.Toolbar">
-        <item name="android:background">@color/light_green700</item>
-        <item name="titleTextColor">@android:color/white</item>
+        <item name="android:background">@color/cw_header</item>
+        <item name="titleTextColor">@color/cw_on_header</item>
     </style>
 
 
@@ -127,7 +128,7 @@
 
     <style name="TextView.Heading" parent="AppTheme">
         <item name="android:textSize">22sp</item>
-        <item name="android:textColor">@color/orangeA700</item>
+        <item name="android:textColor">@color/cw_primary</item>
     </style>
 
 </resources>

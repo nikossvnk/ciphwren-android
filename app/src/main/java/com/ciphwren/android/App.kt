@@ -32,6 +32,7 @@ import com.ciphwren.android.utils.HintManager
 import com.ciphwren.android.utils.LanguageUtils
 import com.ciphwren.android.utils.NotificationUtils
 import com.ciphwren.android.utils.TaskProviderHandling
+import com.ciphwren.android.utils.ThemeUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -55,6 +56,7 @@ class App : Application() {
         addressBooksAuthority = getString(R.string.address_books_authority)
 
         LanguageUtils.migrateForcedLanguage(this)
+        ThemeUtils.applyTheme(this)
 
         // don't block UI for some background checks
         applicationScope.launch(Dispatchers.IO) {

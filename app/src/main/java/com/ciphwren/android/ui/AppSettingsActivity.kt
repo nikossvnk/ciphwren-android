@@ -21,6 +21,7 @@ import com.ciphwren.android.model.ServiceDB
 import com.ciphwren.android.model.Settings
 import com.ciphwren.android.utils.HintManager
 import com.ciphwren.android.utils.LanguageUtils
+import com.ciphwren.android.utils.ThemeUtils
 import com.ciphwren.android.utils.defaultSharedPreferences
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
@@ -70,6 +71,11 @@ class AppSettingsActivity : BaseActivity() {
 
         override fun onCreatePreferences(bundle: Bundle?, s: String?) {
             addPreferencesFromResource(R.xml.settings_app)
+
+            findPreference<ListPreference>(ThemeUtils.PREF_THEME)!!.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _, newValue ->
+                ThemeUtils.applyTheme(newValue as String)
+                true
+            }
 
             findPreference<Preference>("notification_settings")!!.apply {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)

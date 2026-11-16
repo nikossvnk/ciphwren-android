@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The top bars: the colour of the screen, with a thin line under them -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <color android:color="@color/cw_border" />
+    </item>
+    <item android:bottom="1dp">
+        <color android:color="@color/cw_background" />
+    </item>
+</layer-list>

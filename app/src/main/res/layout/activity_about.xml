@@ -17,7 +17,7 @@
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:theme="@style/ThemeOverlay.AppCompat.ActionBar">
+        app:theme="@style/ThemeOverlay.MaterialComponents.ActionBar.Surface">
         
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
@@ -26,7 +26,6 @@
 
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/tabs"
-            app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
             style="@style/tablayout"
             app:tabMode="scrollable"
             android:layout_width="match_parent"

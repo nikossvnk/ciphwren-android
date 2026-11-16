@@ -7,7 +7,6 @@
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabs"
-        app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         style="@style/tablayout"
         app:tabMode="fixed"
         android:layout_width="match_parent"
