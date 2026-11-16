@@ -1,15 +1,37 @@
 <p align="center">
-  <img width="120" src="app/src/main/res/mipmap/ic_launcher.png" />
-  <h1 align="center">Ciphwren</h1>
+  <img src=".github/banner.png" alt="Ciphwren for Android — contacts, calendars and tasks synced with your own Etebase server. App previews show an account in the light and dark themes." width="100%" />
 </p>
 
-Secure, end-to-end encrypted, and privacy respecting sync for your contacts, calendars and tasks (Android client).
+<p align="center">
+  End-to-end encrypted sync for your contacts, calendars and tasks on Android.<br />
+  Works with an Etebase server you run yourself.
+</p>
+
+<p align="center">
+  <a href="https://github.com/nikossvnk/ciphwren-android/releases"><strong>Download for Android</strong></a>
+  &nbsp;·&nbsp;
+  <a href="#screenshots">Screenshots</a>
+  &nbsp;·&nbsp;
+  <a href="#building">Building</a>
+</p>
 
 > [!NOTE]
 > **This is an independent fork** of [EteSync for Android](https://github.com/etesync/android), the
 > original project of the EteSync authors, and is not affiliated with or supported by EteSync. It's a
 > separate app (`com.ciphwren.android`): an EteSync install doesn't update to it, and its accounts
 > are added again in it. The APKs are on the [releases page](https://github.com/nikossvnk/ciphwren-android/releases).
+
+# Screenshots
+
+Select an image to view it at full size.
+
+| Account | Calendar | Event |
+| :---: | :---: | :---: |
+| [![An account with its address book, calendars and task list](fastlane/metadata/android/en-US/images/phoneScreenshots/1-account.png)](fastlane/metadata/android/en-US/images/phoneScreenshots/1-account.png) | [![A calendar and its change journal](fastlane/metadata/android/en-US/images/phoneScreenshots/2-calendar.png)](fastlane/metadata/android/en-US/images/phoneScreenshots/2-calendar.png) | [![An event of the change journal](fastlane/metadata/android/en-US/images/phoneScreenshots/3-event.png)](fastlane/metadata/android/en-US/images/phoneScreenshots/3-event.png) |
+
+| Menu | Settings | Dark theme |
+| :---: | :---: | :---: |
+| [![The navigation drawer](fastlane/metadata/android/en-US/images/phoneScreenshots/4-drawer.png)](fastlane/metadata/android/en-US/images/phoneScreenshots/4-drawer.png) | [![The settings, with the theme: auto, light or dark](fastlane/metadata/android/en-US/images/phoneScreenshots/5-settings.png)](fastlane/metadata/android/en-US/images/phoneScreenshots/5-settings.png) | [![An account in the dark theme](fastlane/metadata/android/en-US/images/phoneScreenshots/6-dark-mode.png)](fastlane/metadata/android/en-US/images/phoneScreenshots/6-dark-mode.png) |
 
 # Overview
 
