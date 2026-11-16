@@ -19,9 +19,9 @@ open class BaseActivity : AppCompatActivity() {
     }
 
     /**
-     * Keeps fragments placed directly in [android.R.id.content] clear of the navigation bar,
-     * display cutouts and the keyboard. Android 15+ draws apps edge to edge, and the action bar
-     * only covers the top inset.
+     * Keeps fragments placed directly in [android.R.id.content] clear of the action bar, the
+     * system bars, display cutouts and the keyboard. Android 15+ draws apps edge to edge, and
+     * AppCompat's top inset for the content includes the action bar.
      */
     protected fun padContentForSystemBars() {
         val content = findViewById<View>(android.R.id.content)
@@ -29,7 +29,7 @@ open class BaseActivity : AppCompatActivity() {
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout() or WindowInsetsCompat.Type.ime()
             )
-            view.updatePadding(left = bars.left, right = bars.right, bottom = bars.bottom)
+            view.updatePadding(left = bars.left, top = bars.top, right = bars.right, bottom = bars.bottom)
             insets
         }
     }
