@@ -1,13 +1,11 @@
 # Changelog
 *NOTE:* may be removed in the future in favor of the fastlane changelog.
 
-## Unreleased
+## Version 3.0.0
 * Renamed to Ciphwren, a separate app (`com.ciphwren.android`, with its own account type): an EteSync install doesn't update to it, so add the accounts again in Ciphwren, then remove them from EteSync.
 * New look in the Ciphwren brand colours, with a light and a dark theme: Settings → Theme (Auto follows the system's dark theme). New launcher icon, with a themed icon on Android 13+, and a splash screen with the Ciphwren mark on Android 12+ that follows the chosen theme.
 * The login, settings and account settings screens no longer start under the top bar on Android 15+.
 * The first-run hints next to the add button show above it instead of squeezed under it.
-
-## Version 3.0.0
 * Require Android 6.0 or newer and target Android 16.
 * Remove EteSync 1.0 synchronization and migration. Export legacy data with the previous client before upgrading; existing legacy databases are not deleted automatically.
 * Build Etebase from maintained Rust sources through UniFFI-generated Kotlin bindings instead of flapigen JNI glue, with 16 KB native-library alignment and the repeated-chunk fix. Internal Etebase failures now surface as catchable exceptions (sync/setup errors) instead of aborting the app.
