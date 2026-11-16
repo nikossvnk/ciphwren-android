@@ -73,7 +73,7 @@ class AppSettingsActivity : BaseActivity() {
             addPreferencesFromResource(R.xml.settings_app)
 
             findPreference<ListPreference>(ThemeUtils.PREF_THEME)!!.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _, newValue ->
-                ThemeUtils.applyTheme(newValue as String)
+                ThemeUtils.applyTheme(requireContext(), newValue as String)
                 true
             }
 
