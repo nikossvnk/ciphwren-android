@@ -3,6 +3,9 @@
 
 ## Unreleased
 * Renamed to Ciphwren, a separate app (`com.ciphwren.android`, with its own account type): an EteSync install doesn't update to it, so add the accounts again in Ciphwren, then remove them from EteSync.
+* New look in the Ciphwren brand colours, with a light and a dark theme: Settings → Theme (Auto follows the system's dark theme). New launcher icon, with a themed icon on Android 13+, and a splash screen with the Ciphwren mark on Android 12+ that follows the chosen theme.
+* The login, settings and account settings screens no longer start under the top bar on Android 15+.
+* The first-run hints next to the add button show above it instead of squeezed under it.
 
 ## Version 3.0.0
 * Require Android 6.0 or newer and target Android 16.

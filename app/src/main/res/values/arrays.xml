@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The theme list of the app settings. The values are the ones of ThemeUtils. -->
+    <string-array name="app_settings_theme_entries">
+        <item>@string/app_settings_theme_auto</item>
+        <item>@string/app_settings_theme_light</item>
+        <item>@string/app_settings_theme_dark</item>
+    </string-array>
+    <string-array name="app_settings_theme_values" translatable="false">
+        <item>auto</item>
+        <item>light</item>
+        <item>dark</item>
+    </string-array>
+</resources>

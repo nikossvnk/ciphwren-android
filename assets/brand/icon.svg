@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Ciphwren logo"><defs>
+<linearGradient id="wing" x1="100" y1="190" x2="310" y2="325" gradientUnits="userSpaceOnUse"><stop stop-color="#13C2C2"/><stop offset="1" stop-color="#0B3559"/></linearGradient>
+<linearGradient id="body" x1="250" y1="100" x2="355" y2="380" gradientUnits="userSpaceOnUse"><stop stop-color="#0B3559"/><stop offset="1" stop-color="#0B1F33"/></linearGradient>
+<linearGradient id="arc" x1="80" y1="60" x2="425" y2="415" gradientUnits="userSpaceOnUse"><stop stop-color="#0E7C86"/><stop offset=".55" stop-color="#13C2C2"/><stop offset="1" stop-color="#9AE8E8"/></linearGradient></defs>
+<g>
+<path d="M120 106A194 194 0 0 1 345 85" fill="none" stroke="url(#arc)" stroke-width="13" stroke-linecap="round"/>
+<path d="M393 296A194 194 0 0 1 152 384" fill="none" stroke="url(#arc)" stroke-width="13" stroke-linecap="round"/>
+<path d="M248 163C300 110 368 138 401 183L433 190 386 216C371 251 352 301 308 341L223 412 243 333C217 299 190 274 166 249Z" fill="url(#body)"/>
+<path d="M335 185C317 206 296 248 275 281C263 300 253 319 243 333C287 329 332 295 355 254C364 238 372 218 386 216Z" fill="#13C2C2"/>
+<path d="M71 174C141 178 225 203 296 253C266 308 210 344 137 353C107 304 86 243 71 174Z" fill="url(#wing)"/>
+<path d="M163 222C206 232 247 253 270 276" fill="none" stroke="#F4FFFF" stroke-width="10" stroke-linecap="round"/>
+<path d="M108 229H139M118 260H152M129 291H160" stroke="#E6F9FA" stroke-width="10" stroke-linecap="round"/>
+<circle cx="198" cy="268" r="16" fill="white"/><path d="M188 281H208L214 313H182Z" fill="white"/>
+<circle cx="361" cy="181" r="9" fill="white"/>
+</g></svg>

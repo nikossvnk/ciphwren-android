@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Ciphwren monochrome mark">
+  <!-- Only opacity matters to Android's themed-icon renderer. The eye, keyhole
+       and wing details are transparent cutouts, not a second painted color. -->
+  <!-- Cutouts wind opposite to the outer rectangle, so they also survive
+       Android renderers that apply the nonzero winding rule to clip paths. -->
+  <defs>
+    <clipPath id="details">
+      <path clip-rule="evenodd" d="M0 0H512V512H0Z M352 181a9 9 0 1 0 18 0a9 9 0 1 0-18 0Z M188 281L182 313H214L208 281a16 16 0 1 0-20 0Z M108 224a5 5 0 0 0 0 10H139a5 5 0 0 0 0-10Z M118 255a5 5 0 0 0 0 10H152a5 5 0 0 0 0-10Z M129 286a5 5 0 0 0 0 10H160a5 5 0 0 0 0-10Z"/>
+    </clipPath>
+  </defs>
+  <g fill="white" clip-path="url(#details)">
+    <path d="M120 106A194 194 0 0 1 345 85" fill="none" stroke="white" stroke-width="13" stroke-linecap="round"/>
+    <path d="M393 296A194 194 0 0 1 152 384" fill="none" stroke="white" stroke-width="13" stroke-linecap="round"/>
+    <path d="M248 163C300 110 368 138 401 183L433 190 386 216C371 251 352 301 308 341L223 412 243 333C217 299 190 274 166 249Z"/>
+    <path d="M71 174C141 178 225 203 296 253C266 308 210 344 137 353C107 304 86 243 71 174Z"/>
+  </g>
+</svg>

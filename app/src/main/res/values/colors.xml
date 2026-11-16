@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The colours of the Ciphwren brand guidelines (v1), for the light theme. values-night has the same
+     names for the dark theme. On dark backgrounds the slates and the status colours are mixed with a light
+     colour until they can be read, as in ciphwren-notes. -->
+<resources>
+    <!-- Teal on light: white text can be read on it and it on white, which cyan can't -->
+    <color name="cw_primary">#0E7C86</color>
+    <color name="cw_on_primary">#FFFFFF</color>
+
+    <color name="cw_background">#F6FAFB</color>
+    <color name="cw_surface">#FFFFFF</color>
+    <color name="cw_surface_alt">#EEF7F8</color>
+    <color name="cw_border">#D9E8EB</color>
+
+    <color name="cw_text">#081726</color>
+    <color name="cw_text_secondary">#365265</color>
+    <color name="cw_text_disabled">#A8B5BE</color>
+    <color name="cw_icon">#0B1F33</color>
+
+    <!-- The headers of the cards and of the event, task and contact screens -->
+    <color name="cw_header">#0E7C86</color>
+    <color name="cw_on_header">#FFFFFF</color>
+    <!-- The top of the navigation drawer and the hints: deep navy, with the light mark and white text -->
+    <color name="cw_navy">#0B1F33</color>
+
+    <color name="cw_error">#B93843</color>
+    <color name="cw_on_error">#FFFFFF</color>
+    <color name="cw_warning">#A96F13</color>
+
+    <!-- Behind the adaptive launcher icon, in both themes -->
+    <color name="ic_launcher_background">#0B1F33</color>
+
+    <!-- preference-v14 uses this color for categories text -->
+    <color name="preference_fallback_accent_color">@color/cw_primary</color>
+
+    <!-- Dark icons in the status and navigation bars, on the light background -->
+    <bool name="cw_light_system_bars">true</bool>
+</resources>

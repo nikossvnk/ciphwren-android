@@ -11,17 +11,17 @@
               xmlns:tools="http://schemas.android.com/tools"
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
-              android:background="@color/grey700"
+              android:background="@color/cw_navy"
               android:gravity="bottom"
               android:orientation="vertical"
               android:padding="@dimen/activity_margin"
               android:theme="@style/ThemeOverlay.AppCompat.Dark">
 
     <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
         android:layout_marginTop="24dp"
-        android:src="@mipmap/ic_launcher"
+        android:src="@drawable/ic_brand_mark"
         tools:ignore="ContentDescription"/>
 
     <TextView
